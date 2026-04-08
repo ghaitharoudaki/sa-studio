@@ -1,0 +1,15 @@
+# Dependencies
+node_modules/
+client/node_modules/
+
+# Environment variables — NEVER commit these
+.env
+.env.local
+.env.production
+
+# Build output
+client/dist/
+
+# Editor
+.DS_Store
+.vscode/
