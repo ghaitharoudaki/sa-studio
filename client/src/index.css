@@ -3,11 +3,54 @@
 @tailwind utilities;
 
 @layer base {
+  * {
+    box-sizing: border-box;
+    margin: 0;
+    padding: 0;
+  }
+  html {
+    scroll-behavior: smooth;
+  }
   body {
-    background-color: #FAF7F2;
-    color: #1A1814;
+    background-color: #F0EFED;
+    color: #1C1C1A;
     font-family: 'Jost', system-ui, sans-serif;
     font-weight: 300;
     overflow-x: hidden;
   }
+}
+
+@layer utilities {
+  @keyframes marquee {
+    0%   { transform: translateX(0); }
+    100% { transform: translateX(-50%); }
+  }
+  .animate-marquee {
+    animation: marquee 32s linear infinite;
+  }
+
+  @keyframes fadeUp {
+    from { opacity: 0; transform: translateY(24px); }
+    to   { opacity: 1; transform: translateY(0); }
+  }
+  .animate-fade-up {
+    animation: fadeUp 0.8s ease forwards;
+  }
+  .animation-delay-200 { animation-delay: 0.2s; opacity: 0; }
+  .animation-delay-400 { animation-delay: 0.4s; opacity: 0; }
+  .animation-delay-600 { animation-delay: 0.6s; opacity: 0; }
+  .animation-delay-800 { animation-delay: 0.8s; opacity: 0; }
+
+  /* Fabric texture placeholders — replace each with a real image later */
+  .tex-velvet   { background: linear-gradient(145deg, #3B2A5A, #2A1D42, #4A3568); }
+  .tex-linen    { background: linear-gradient(135deg, #C8B89A, #B0A080, #C4B090); }
+  .tex-damask   { background: linear-gradient(145deg, #1E3A5F, #152B46, #243F6B); }
+  .tex-cashmere { background: linear-gradient(135deg, #D4C4A0, #BCA880, #C8B890); }
+  .tex-boucle   { background: linear-gradient(135deg, #E8E0D0, #D0C8B8, #E0D8C8); }
+  .tex-silk     { background: linear-gradient(135deg, #D4B8A0, #C09878, #D8C0A8); }
+  .tex-mohair   { background: linear-gradient(135deg, #8B9E7A, #6E8060, #90A880); }
+  .tex-ottoman  { background: linear-gradient(135deg, #8B6A50, #6E5038, #90705A); }
+  .tex-quartz   { background: linear-gradient(135deg, #B8B0C8, #9890A8, #C0B8D0); }
+  .tex-forest   { background: linear-gradient(135deg, #2D4A3E, #1E3329, #3D6B59); }
+  .tex-burgundy { background: linear-gradient(135deg, #6B2D2D, #4A1E1E, #8B4040); }
 }
