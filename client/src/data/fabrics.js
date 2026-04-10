@@ -1,4 +1,4 @@
-export const WHATSAPP_NUMBER = '963XXXXXXXXX' // replace with real number later
+export const WHATSAPP_NUMBER = '963 944 231 337' // replace with real number later
 export const WHATSAPP_BASE = `https://wa.me/${WHATSAPP_NUMBER}`
 export const MAPS_LINK = 'https://maps.google.com/?q=Mazzeh+Street+Damascus+Syria'
 
@@ -7,14 +7,14 @@ export const PARTNER_BRANDS = [
   'Pierre Frey',
   'Dedar',
   'Loro Piana',
-  'Zimmer + Rohde',
-  'Lelièvre',
-  'Nobilis',
-  'Romo',
-  'Osborne & Little',
-  'Manuel Canovas',
-  'Designers Guild',
-  'GP & J Baker',
+  'Armani Casa',
+  'Fine',
+  'Omexco',
+  'Arte',          
+  'Casamance',
+  'Texam',
+  'Roberto Cavali', 
+  'Marburg',
 ]
 
 export const fabrics = [

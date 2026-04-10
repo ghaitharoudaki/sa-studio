@@ -100,7 +100,7 @@ export default function Home() {
       <section className="min-h-[90vh] grid grid-cols-1 lg:grid-cols-2">
         <div className="flex flex-col justify-center px-8 lg:px-20 py-20 lg:py-32">
           <p className="animate-fade-up animation-delay-200 text-[11px] tracking-[0.35em] uppercase text-forest mb-8">
-            Damascus · Est. 1994
+            Damascus · Est. 2005
           </p>
           <h1 className="animate-fade-up animation-delay-400 font-serif text-5xl lg:text-7xl font-light leading-[1.05] text-charcoal mb-6">
             Fabrics of<br />
@@ -170,7 +170,7 @@ export default function Home() {
           className="opacity-0 translate-y-6 transition-all duration-700 delay-200 bg-cream-dark grid grid-cols-2"
         >
           {[
-            { num: '30+',  label: 'Years of excellence' },
+            { num: '20+',  label: 'Years of excellence' },
             { num: '500+', label: 'Fabric references' },
             { num: '12',   label: 'Partner maisons' },
             { num: '1',    label: 'Damascus showroom' },
@@ -224,7 +224,7 @@ export default function Home() {
             Get in touch
           </p>
           <h2 className="font-serif text-3xl lg:text-4xl font-light text-white">
-            Speak directly with <em>Samer Aroudaki</em>
+            Speak directly with <em>Our Team</em>
           </h2>
         </div>
         
