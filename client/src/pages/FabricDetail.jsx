@@ -1,6 +1,6 @@
 import { useParams, Link, useNavigate } from 'react-router-dom'
 import { fabrics, WHATSAPP_BASE, MAPS_LINK } from '../data/fabrics'
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 
 function QuoteModal({ fabric, onClose }) {
   const [submitted, setSubmitted] = useState(false)
@@ -107,8 +107,21 @@ export default function FabricDetail() {
   const { id } = useParams()
   const navigate = useNavigate()
   const [modalOpen, setModalOpen] = useState(false)
+  const [scrollProgress, setScrollProgress] = useState(0)
 
   const fabric = fabrics.find((f) => f.id === id)
+
+  useEffect(() => {
+    const updateProgress = () => {
+      const scrollY = window.scrollY
+      const maxScroll = document.body.scrollHeight - window.innerHeight
+      setScrollProgress(maxScroll > 0 ? Math.min(100, Math.round((scrollY / maxScroll) * 100)) : 0)
+    }
+
+    updateProgress()
+    window.addEventListener('scroll', updateProgress)
+    return () => window.removeEventListener('scroll', updateProgress)
+  }, [])
 
   if (!fabric) {
     return (
@@ -136,6 +149,12 @@ export default function FabricDetail() {
 
   return (
     <div className="pt-[72px]">
+      <div className="fixed top-[72px] left-0 right-0 h-1 bg-cream-dark z-40">
+        <div
+          className="h-full bg-forest transition-all duration-200"
+          style={{ width: `${scrollProgress}%` }}
+        />
+      </div>
 
       {/* Back link */}
       <div className="px-8 lg:px-16 py-4 border-b border-cream-dark">
@@ -177,9 +196,22 @@ export default function FabricDetail() {
           <h1 className="font-serif text-4xl lg:text-5xl font-light text-charcoal leading-tight mb-2">
             {fabric.name}
           </h1>
-          <p className="text-xs text-charcoal-light italic mb-8">
+          <p className="text-xs text-charcoal-light italic mb-4">
             Premium Luxury Textile — SA Studio Damascus
           </p>
+
+          <div className="flex flex-wrap gap-2 mb-6">
+            {Object.entries(fabric.specs)
+              .slice(0, 4)
+              .map(([key, value]) => (
+                <span
+                  key={key}
+                  className="rounded-full border border-cream-dark px-3 py-1 text-[10px] uppercase tracking-[0.18em] text-charcoal-light"
+                >
+                  {key}: {value}
+                </span>
+              ))}
+          </div>
 
           <p
             className="text-sm leading-loose text-charcoal-light mb-8 pl-4"

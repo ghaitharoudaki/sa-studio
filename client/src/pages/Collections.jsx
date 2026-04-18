@@ -6,7 +6,7 @@ function FabricCard({ fabric }) {
   return (
     <Link
       to={`/collections/${fabric.id}`}
-      className="group block overflow-hidden bg-cream"
+      className="group block overflow-hidden bg-cream shadow-sm transition-transform duration-500 hover:-translate-y-1 hover:shadow-deep"
     >
       <div className="relative h-80 overflow-hidden">
         {fabric.image ? (
@@ -48,11 +48,21 @@ function FabricCard({ fabric }) {
 
 export default function Collections() {
   const [activeCategory, setActiveCategory] = useState('All')
+  const [viewMode, setViewMode] = useState('grid')
+  const [sortMode, setSortMode] = useState('A–Z')
 
   const filtered =
     activeCategory === 'All'
       ? fabrics
       : fabrics.filter((f) => f.category === activeCategory)
+
+  const sorted = [...filtered].sort((a, b) => {
+    if (sortMode === 'A–Z') return a.name.localeCompare(b.name)
+    if (sortMode === 'Z–A') return b.name.localeCompare(a.name)
+    return a.collection.localeCompare(b.collection)
+  })
+
+  const displayMode = viewMode === 'list' ? 'grid grid-cols-1 gap-4' : 'grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-0.5'
 
   return (
     <div className="pt-[72px]">
@@ -94,17 +104,53 @@ export default function Collections() {
         ))}
       </div>
 
-      {/* Results count */}
-      <div className="px-8 lg:px-16 py-4 border-b border-cream-dark">
+      {/* Controls */}
+      <div className="px-8 lg:px-16 py-4 border-b border-cream-dark bg-cream flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
         <p className="text-xs text-charcoal-light tracking-[0.15em] uppercase">
-          Showing {filtered.length} {filtered.length === 1 ? 'result' : 'results'}
+          Showing {sorted.length} {sorted.length === 1 ? 'result' : 'results'}
           {activeCategory !== 'All' ? ` in ${activeCategory}` : ''}
         </p>
+
+        <div className="flex flex-wrap items-center gap-3">
+          <div className="flex items-center gap-2 text-[11px] uppercase tracking-[0.18em] text-charcoal-light">
+            <span>Sort</span>
+            {['A–Z', 'Z–A', 'Collection'].map((option) => (
+              <button
+                key={option}
+                onClick={() => setSortMode(option)}
+                className={`min-h-[36px] px-3 py-2 border text-[11px] tracking-[0.18em] uppercase transition-all duration-200 ${
+                  sortMode === option
+                    ? 'bg-forest text-white border-forest'
+                    : 'bg-transparent text-charcoal-light border-cream-dark hover:border-forest hover:text-forest'
+                }`}
+              >
+                {option}
+              </button>
+            ))}
+          </div>
+
+          <div className="flex items-center gap-2 text-[11px] uppercase tracking-[0.18em] text-charcoal-light">
+            <span>View</span>
+            {['grid', 'list'].map((mode) => (
+              <button
+                key={mode}
+                onClick={() => setViewMode(mode)}
+                className={`min-h-[36px] px-3 py-2 border text-[11px] tracking-[0.18em] uppercase transition-all duration-200 ${
+                  viewMode === mode
+                    ? 'bg-forest text-white border-forest'
+                    : 'bg-transparent text-charcoal-light border-cream-dark hover:border-forest hover:text-forest'
+                }`}
+              >
+                {mode}
+              </button>
+            ))}
+          </div>
+        </div>
       </div>
 
       {/* Grid */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-0.5 bg-cream-dark p-0.5">
-        {filtered.map((fabric) => (
+      <div className={`${displayMode} bg-cream-dark p-0.5`}>
+        {sorted.map((fabric) => (
           <FabricCard key={fabric.id} fabric={fabric} />
         ))}
       </div>

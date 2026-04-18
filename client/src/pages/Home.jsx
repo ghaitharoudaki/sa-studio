@@ -1,5 +1,5 @@
 import { Link } from 'react-router-dom'
-import { useEffect, useRef } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import { fabrics, PARTNER_BRANDS, WHATSAPP_BASE } from '../data/fabrics'
 
 function Marquee() {
@@ -90,48 +90,66 @@ export default function Home() {
   const aboutRef = useFadeIn()
   const statsRef = useFadeIn()
   const previewRef = useFadeIn()
+  const heroRef = useRef(null)
+  const [heroPos, setHeroPos] = useState({ x: 50, y: 50 })
 
   const featured = fabrics.slice(0, 3)
+
+  useEffect(() => {
+    const hero = heroRef.current
+    if (!hero) return
+    hero.style.setProperty('--hero-bg-x', `${heroPos.x}%`)
+    hero.style.setProperty('--hero-bg-y', `${heroPos.y}%`)
+  }, [heroPos])
+
+  const handleHeroMove = (event) => {
+    const hero = heroRef.current
+    if (!hero) return
+    const rect = hero.getBoundingClientRect()
+    const x = ((event.clientX - rect.left) / rect.width) * 100
+    const y = ((event.clientY - rect.top) / rect.height) * 100
+    setHeroPos({ x: Math.min(70, Math.max(30, x)), y: Math.min(70, Math.max(30, y)) })
+  }
+
+  const resetHero = () => setHeroPos({ x: 50, y: 50 })
 
   return (
     <div className="pt-[72px]">
 
-      {/* HERO */}
-      <section className="min-h-[90vh] grid grid-cols-1 lg:grid-cols-2">
-        <div className="flex flex-col justify-center px-8 lg:px-20 py-20 lg:py-32">
-          <p className="animate-fade-up animation-delay-200 text-[11px] tracking-[0.35em] uppercase text-forest mb-8">
-            Damascus · Est. 2005
-          </p>
-          <h1 className="animate-fade-up animation-delay-400 font-serif text-5xl lg:text-7xl font-light leading-[1.05] text-charcoal mb-6">
-            Fabrics of<br />
-            <em className="text-forest">Exceptional</em><br />
-            Character
-          </h1>
-          <p className="animate-fade-up animation-delay-600 text-sm leading-relaxed text-charcoal-light max-w-sm mb-10">
-            Curated collections from the world's most distinguished textile
-            houses. Where craft meets luxury, and material speaks before a
-            word is said.
-          </p>
-          <div className="animate-fade-up animation-delay-800 flex flex-wrap gap-4">
-            <Link
-              to="/collections"
-              className="inline-flex items-center min-h-[44px] px-8 py-3 bg-forest text-white text-[11px] tracking-[0.2em] uppercase hover:bg-forest-light transition-colors duration-200"
-            >
-              Explore Collections
-            </Link>
-            <Link
-              to="/about"
-              className="inline-flex items-center min-h-[44px] px-8 py-3 border border-charcoal/30 text-charcoal text-[11px] tracking-[0.2em] uppercase hover:border-forest hover:text-forest transition-colors duration-200"
-            >
-              Our Story
-            </Link>
+      <section
+        ref={heroRef}
+        className="relative h-[calc(100vh-72px)] overflow-hidden home-hero-wallpaper"
+        onMouseMove={handleHeroMove}
+        onMouseLeave={resetHero}
+        onMouseEnter={handleHeroMove}
+      >
+        <div className="interactive-hero-bg" />
+        <div className="absolute inset-0 flex items-center justify-center px-8 lg:px-20">
+          <div className="text-center max-w-4xl">
+            <div className="mb-8 inline-flex items-center gap-3 rounded-full border border-white/15 bg-white/10 px-4 py-2 text-[10px] uppercase tracking-[0.35em] text-cream shadow-sm backdrop-blur-sm">
+              Damascus · Est. 2005
+            </div>
+            <h1 className="font-serif text-5xl lg:text-7xl font-light leading-tight text-white mb-8">
+              Luxury Textiles, Crafted for the Senses
+            </h1>
+            <p className="text-base leading-loose text-slate-300 max-w-2xl mx-auto mb-10">
+              Discover unparalleled fabrics that blend Damascus heritage with contemporary elegance, where every thread tells a story of craftsmanship and refinement.
+            </p>
+            <div className="flex flex-wrap gap-4 justify-center">
+              <Link
+                to="/collections"
+                className="inline-flex items-center min-h-[50px] px-10 py-4 rounded-full bg-forest text-white text-[11px] tracking-[0.2em] uppercase hover:bg-forest-light transition-all duration-200 shadow-deep"
+              >
+                Explore Collections
+              </Link>
+              <Link
+                to="/about"
+                className="inline-flex items-center min-h-[50px] px-10 py-4 rounded-full border border-white/20 bg-white/10 text-white text-[11px] tracking-[0.2em] uppercase hover:bg-white/15 hover:border-forest hover:text-white transition-all duration-200"
+              >
+                View Our Story
+              </Link>
+            </div>
           </div>
-        </div>
-
-        <div className="hidden lg:grid grid-cols-2 grid-rows-2 gap-0.5 bg-cream-dark min-h-[90vh]">
-          <div className="tex-velvet row-span-2" />
-          <div className="tex-linen" />
-          <div className="tex-damask" />
         </div>
       </section>
 
@@ -172,8 +190,7 @@ export default function Home() {
           {[
             { num: '20+',  label: 'Years of excellence' },
             { num: '500+', label: 'Fabric references' },
-            { num: '12',   label: 'Partner maisons' },
-            { num: '1',    label: 'Damascus showroom' },
+            { num: '2',    label: 'Damascus showroom' },
           ].map(({ num, label }) => (
             <div
               key={label}
@@ -191,25 +208,60 @@ export default function Home() {
         </div>
       </section>
 
-      {/* FEATURED COLLECTIONS */}
-      <section className="py-20 px-8 lg:px-16">
-        <div
-          ref={previewRef}
-          className="opacity-0 translate-y-6 transition-all duration-700 flex items-baseline justify-between mb-10 flex-wrap gap-4"
-        >
-          <h2 className="font-serif text-4xl lg:text-5xl font-light text-charcoal">
-            Featured <em className="text-forest">Collections</em>
-          </h2>
-          <Link
-            to="/collections"
-            className="text-[11px] tracking-[0.2em] uppercase text-charcoal-light hover:text-forest transition-colors border-b border-charcoal-light/30 pb-0.5"
-          >
-            View All &#8594;
-          </Link>
+      <section className="px-8 lg:px-16 py-20">
+        <div className="max-w-4xl mx-auto text-center mb-12">
+          <p className="text-[11px] tracking-[0.35em] uppercase text-forest mb-4">Material Lab</p>
+          <h2 className="font-serif text-4xl lg:text-5xl font-light text-charcoal mb-4">Touch, compare, and decide with confidence</h2>
+          <p className="text-sm text-charcoal-light max-w-2xl mx-auto">Interactive previews and carefully curated material stories let your next design decision feel elevated before you even visit the showroom.</p>
         </div>
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-0.5 bg-cream-dark">
+
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
           {featured.map((fabric) => (
-            <FabricCard key={fabric.id} fabric={fabric} />
+            <article
+              key={fabric.id}
+              className="group relative overflow-hidden rounded-[32px] bg-white shadow-deep border border-cream-dark transition-transform duration-500 hover:-translate-y-2 hover:shadow-2xl"
+            >
+              <div className="relative h-72 overflow-hidden">
+                {fabric.image ? (
+                  <img
+                    src={fabric.image}
+                    alt={fabric.name}
+                    className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-105"
+                  />
+                ) : (
+                  <div
+                    className={`w-full h-full ${fabric.texture} transition-transform duration-700 group-hover:scale-105`}
+                  />
+                )}
+                <div className="pointer-events-none absolute inset-0 bg-gradient-to-t from-charcoal/60 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-500" />
+                <div className="absolute bottom-6 left-6 text-white opacity-90">
+                  <p className="text-[10px] uppercase tracking-[0.25em] mb-2">{fabric.collection}</p>
+                  <h3 className="font-serif text-2xl font-light">{fabric.name}</h3>
+                </div>
+              </div>
+              <div className="p-6">
+                <div className="flex flex-wrap gap-2 mb-4">
+                  {Object.entries(fabric.specs)
+                    .slice(0, 3)
+                    .map(([key]) => (
+                      <span
+                        key={key}
+                        className="rounded-full border border-cream-dark px-3 py-1 text-[10px] uppercase tracking-[0.18em] text-charcoal-light"
+                      >
+                        {key}
+                      </span>
+                    ))}
+                </div>
+                <p className="text-sm text-charcoal-light mb-6">{fabric.description}</p>
+                <Link
+                  to={`/collections/${fabric.id}`}
+                  className="inline-flex items-center gap-2 text-[11px] tracking-[0.2em] uppercase text-forest"
+                >
+                  Explore fabric
+                  <span aria-hidden="true">→</span>
+                </Link>
+              </div>
+            </article>
           ))}
         </div>
       </section>

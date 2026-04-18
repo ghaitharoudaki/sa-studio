@@ -29,12 +29,12 @@ export default function Navbar() {
     <>
       <nav
         className={`fixed top-0 left-0 right-0 z-50 transition-all duration-300 ${
-          scrolled ? 'shadow-sm' : ''
+          scrolled ? 'shadow-deep' : ''
         }`}
         style={{
-          background: 'rgba(240,239,237,0.93)',
-          backdropFilter: 'blur(12px)',
-          borderBottom: '1px solid rgba(45,74,62,0.15)',
+          background: 'rgba(255,255,255,0.84)',
+          backdropFilter: 'blur(22px)',
+          borderBottom: '1px solid rgba(45,74,62,0.12)',
         }}
       >
         <div className="max-w-screen-xl mx-auto px-6 lg:px-16 h-[72px] flex items-center justify-between">
@@ -54,13 +54,20 @@ export default function Navbar() {
               <Link
                 key={to}
                 to={to}
-                className={`text-xs tracking-[0.2em] uppercase transition-colors duration-200 ${
+                className={`relative text-xs tracking-[0.2em] uppercase transition-colors duration-200 ${
                   isActive(to)
                     ? 'text-forest'
                     : 'text-charcoal-light hover:text-forest'
                 }`}
               >
-                {label}
+                <span className="relative inline-flex items-center gap-1">
+                  {label}
+                  <span
+                    className={`absolute -bottom-2 left-0 h-[2px] w-full rounded-full bg-forest transition-opacity duration-200 ${
+                      isActive(to) ? 'opacity-100' : 'opacity-0'
+                    }`}
+                  />
+                </span>
               </Link>
             ))}
           </div>
@@ -68,7 +75,7 @@ export default function Navbar() {
           {/* Desktop CTA */}
           <Link
             to="/about"
-            className="hidden md:inline-flex items-center text-[11px] tracking-[0.18em] uppercase px-5 py-2.5 border border-forest text-forest hover:bg-forest hover:text-white transition-all duration-200 min-h-[44px]"
+            className="hidden md:inline-flex items-center text-[11px] tracking-[0.18em] uppercase px-6 py-2.5 rounded-full border border-forest text-forest hover:bg-forest hover:text-white transition-all duration-200 min-h-[44px]"
           >
             Request Quotation
           </Link>
@@ -86,27 +93,35 @@ export default function Navbar() {
         </div>
       </nav>
 
-      {/* Mobile drawer */}
       <div
-        className={`fixed inset-0 z-40 bg-cream flex flex-col px-6 pt-24 pb-10 gap-8 transition-transform duration-300 md:hidden ${
+        className={`fixed inset-0 z-40 bg-black/40 transition-opacity duration-300 md:hidden ${
+          mobileOpen ? 'opacity-100 pointer-events-auto' : 'opacity-0 pointer-events-none'
+        }`}
+        onClick={() => setMobileOpen(false)}
+      />
+
+      <div
+        className={`fixed top-0 right-0 z-50 h-full w-[85vw] max-w-sm bg-cream shadow-deep transition-transform duration-300 md:hidden ${
           mobileOpen ? 'translate-x-0' : 'translate-x-full'
         }`}
       >
-        {links.map(({ to, label }) => (
+        <div className="flex flex-col px-6 pt-24 pb-10 gap-8 h-full">
+          {links.map(({ to, label }) => (
+            <Link
+              key={to}
+              to={to}
+              className="font-serif text-4xl font-light text-charcoal border-b border-cream-dark pb-6 hover:text-forest transition-colors"
+            >
+              {label}
+            </Link>
+          ))}
           <Link
-            key={to}
-            to={to}
-            className="font-serif text-4xl font-light text-charcoal border-b border-cream-dark pb-6 hover:text-forest transition-colors"
+            to="/about"
+            className="mt-auto text-center text-xs tracking-[0.2em] uppercase px-5 py-4 border border-forest text-forest min-h-[44px] flex items-center justify-center hover:bg-forest hover:text-white transition-all duration-200"
           >
-            {label}
+            Request Quotation
           </Link>
-        ))}
-        <Link
-          to="/about"
-          className="mt-auto text-center text-xs tracking-[0.2em] uppercase px-5 py-4 border border-forest text-forest min-h-[44px] flex items-center justify-center hover:bg-forest hover:text-white transition-all duration-200"
-        >
-          Request Quotation
-        </Link>
+        </div>
       </div>
     </>
   )

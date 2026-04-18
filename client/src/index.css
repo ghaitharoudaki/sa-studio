@@ -12,11 +12,23 @@
     scroll-behavior: smooth;
   }
   body {
-    background-color: #F0EFED;
-    color: #1C1C1A;
+    background-color: #12100f;
+    color: #f8f4ed;
     font-family: 'Jost', system-ui, sans-serif;
     font-weight: 300;
     overflow-x: hidden;
+    background-image:
+      radial-gradient(circle at 20% 25%, rgba(255,255,255,0.12), transparent 14%),
+      radial-gradient(circle at 85% 15%, rgba(255,255,255,0.08), transparent 10%),
+      linear-gradient(125deg, rgba(255,255,255,0.04) 1px, transparent 1px),
+      linear-gradient(215deg, rgba(255,255,255,0.04) 1px, transparent 1px),
+      repeating-linear-gradient(90deg, rgba(255,255,255,0.05), rgba(255,255,255,0.05) 1px, transparent 1px, transparent 40px),
+      repeating-linear-gradient(0deg, rgba(255,255,255,0.05), rgba(255,255,255,0.05) 1px, transparent 1px, transparent 40px),
+      radial-gradient(circle at 50% 50%, rgba(255,255,255,0.08), transparent 20%);
+    background-size: 100% 100%, 100% 100%, 84px 84px, 84px 84px, 40px 40px, 40px 40px, 180% 180%;
+    background-position: 0 0, 0 0, 0 0, 0 0, 0 0, 0 0, 50% 50%;
+    background-blend-mode: normal, normal, overlay, overlay, multiply, multiply, normal;
+    background-attachment: fixed;
   }
 }
 
@@ -40,6 +52,99 @@
   .animation-delay-400 { animation-delay: 0.4s; opacity: 0; }
   .animation-delay-600 { animation-delay: 0.6s; opacity: 0; }
   .animation-delay-800 { animation-delay: 0.8s; opacity: 0; }
+
+  @keyframes float {
+    0%, 100% { transform: translateY(0); }
+    50% { transform: translateY(-10px); }
+  }
+  .animate-float {
+    animation: float 6s ease-in-out infinite;
+  }
+
+  @keyframes bgPulse {
+    0%, 100% { background-position: 0% 50%; }
+    50% { background-position: 100% 50%; }
+  }
+  .bg-dynamic-wave {
+    background-image:
+      radial-gradient(circle at 20% 15%, rgba(255,255,255,0.18), transparent 14%),
+      radial-gradient(circle at 85% 20%, rgba(45,74,62,0.14), transparent 18%),
+      linear-gradient(135deg, rgba(250,248,244,0.96), rgba(226,216,204,0.92));
+    background-size: 220% 220%;
+    animation: bgPulse 18s ease infinite;
+  }
+  .hero-accent-overlay {
+    position: relative;
+  }
+  .hero-accent-overlay::before {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background: radial-gradient(circle at 10% 25%, rgba(255,255,255,0.18), transparent 18%),
+                radial-gradient(circle at 85% 30%, rgba(107,45,45,0.10), transparent 22%);
+    pointer-events: none;
+  }
+
+  .glass-card {
+    background: rgba(255,255,255,0.82);
+    backdrop-filter: blur(18px);
+    border: 1px solid rgba(255,255,255,0.35);
+  }
+  .shadow-deep {
+    box-shadow: 0 30px 90px rgba(28, 28, 26, 0.18);
+  }
+  .hover-glow:hover {
+    box-shadow: 0 0 0 1px rgba(45, 74, 62, 0.12), 0 24px 70px rgba(45, 74, 62, 0.14);
+  }
+  .bg-hero-wave {
+    background-image:
+      radial-gradient(circle at 15% 10%, rgba(45, 74, 62, 0.18), transparent 18%),
+      radial-gradient(circle at 78% 20%, rgba(107, 45, 45, 0.12), transparent 16%),
+      radial-gradient(circle at 60% 80%, rgba(255, 255, 255, 0.12), transparent 14%);
+  }
+  .home-hero-bg {
+    background-image:
+      radial-gradient(circle at 12% 20%, rgba(45, 74, 62, 0.14), transparent 18%),
+      radial-gradient(circle at 90% 10%, rgba(107, 45, 45, 0.12), transparent 14%),
+      linear-gradient(180deg, rgba(255,255,255,0.96), rgba(238,230,219,0.96));
+    background-size: cover;
+    position: relative;
+  }
+  .home-hero-wallpaper {
+    background: transparent;
+    position: relative;
+  }
+  .interactive-hero-bg {
+    position: absolute;
+    inset: 0;
+    background-color: rgba(18,16,15,0.92);
+    background-image:
+      radial-gradient(circle at 20% 25%, rgba(255,255,255,0.12), transparent 14%),
+      radial-gradient(circle at 85% 15%, rgba(255,255,255,0.08), transparent 10%),
+      linear-gradient(125deg, rgba(255,255,255,0.04) 1px, transparent 1px),
+      linear-gradient(215deg, rgba(255,255,255,0.04) 1px, transparent 1px),
+      repeating-linear-gradient(90deg, rgba(255,255,255,0.05), rgba(255,255,255,0.05) 1px, transparent 1px, transparent 40px),
+      repeating-linear-gradient(0deg, rgba(255,255,255,0.05), rgba(255,255,255,0.05) 1px, transparent 1px, transparent 40px),
+      radial-gradient(circle at var(--hero-bg-x, 50%) var(--hero-bg-y, 50%), rgba(255,255,255,0.08), transparent 18%);
+    background-size: 100% 100%, 100% 100%, 84px 84px, 84px 84px, 40px 40px, 40px 40px, 180% 180%;
+    background-position: 0 0, 0 0, 0 0, 0 0, 0 0, 0 0, 50% 50%;
+    pointer-events: none;
+    opacity: 0.98;
+    transition: background-position 0.12s ease-out;
+  }
+  .home-hero-lines {
+    background-image:
+      linear-gradient(135deg, rgba(255,255,255,0.12) 1px, transparent 1px),
+      linear-gradient(225deg, rgba(255,255,255,0.08) 1px, transparent 1px);
+    background-size: 72px 72px;
+    opacity: 0.55;
+  }
+  .glass-ring {
+    background: rgba(255,255,255,0.08);
+    border: 1px solid rgba(255,255,255,0.22);
+    box-shadow: inset 0 0 0 1px rgba(255,255,255,0.08);
+    backdrop-filter: blur(12px);
+  }
 
   /* Fabric texture placeholders — replace each with a real image later */
   .tex-velvet   { background: linear-gradient(145deg, #3B2A5A, #2A1D42, #4A3568); }
