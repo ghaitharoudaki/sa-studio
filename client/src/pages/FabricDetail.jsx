@@ -1,5 +1,5 @@
 import { useParams, Link, useNavigate } from 'react-router-dom'
-import { fabrics, WHATSAPP_BASE, MAPS_LINK } from '../data/fabrics'
+import { fetchFabrics, WHATSAPP_BASE, MAPS_LINK } from '../data/fabrics'
 import { useState, useEffect } from 'react'
 
 function QuoteModal({ fabric, onClose }) {
@@ -13,7 +13,7 @@ function QuoteModal({ fabric, onClose }) {
   return (
     <div
       className="fixed inset-0 z-50 flex items-center justify-center p-4"
-      style={{ background: 'rgba(28,28,26,0.75)' }}
+      style={{ background: 'color-mix(in srgb, var(--footer-bg) 75%, transparent)' }}
       onClick={onClose}
     >
       <div
@@ -30,7 +30,7 @@ function QuoteModal({ fabric, onClose }) {
         {submitted ? (
           <div className="text-center py-8">
             <p className="text-forest text-4xl mb-4">✓</p>
-            <h3 className="font-serif text-2xl font-light text-charcoal mb-3">
+            <h3 className="font-sans text-2xl font-light text-charcoal mb-3">
               Request Sent
             </h3>
             <p className="text-sm text-charcoal-light leading-loose">
@@ -46,10 +46,10 @@ function QuoteModal({ fabric, onClose }) {
           </div>
         ) : (
           <>
-            <p className="text-[11px] tracking-[0.25em] uppercase text-forest mb-2">
+            <p className="eyebrow mb-2">
               Request a Quotation
             </p>
-            <h3 className="font-serif text-2xl font-light text-charcoal mb-1">
+            <h3 className="font-sans text-2xl font-light text-charcoal mb-1">
               {fabric.name}
             </h3>
             <p className="text-xs text-charcoal-light mb-6">
@@ -108,8 +108,19 @@ export default function FabricDetail() {
   const navigate = useNavigate()
   const [modalOpen, setModalOpen] = useState(false)
   const [scrollProgress, setScrollProgress] = useState(0)
+  const [fabrics, setFabrics] = useState([])
 
-  const fabric = fabrics.find((f) => f.id === id)
+  useEffect(() => {
+    let ignore = false
+
+    fetchFabrics().then((items) => {
+      if (!ignore) setFabrics(items)
+    })
+
+    return () => {
+      ignore = true
+    }
+  }, [])
 
   useEffect(() => {
     const updateProgress = () => {
@@ -122,6 +133,8 @@ export default function FabricDetail() {
     window.addEventListener('scroll', updateProgress)
     return () => window.removeEventListener('scroll', updateProgress)
   }, [])
+
+  const fabric = fabrics.find((f) => f.id === id)
 
   if (!fabric) {
     return (
@@ -190,7 +203,7 @@ export default function FabricDetail() {
 
         {/* Content */}
         <div className="px-8 lg:px-16 py-12 flex flex-col justify-center">
-          <p className="text-[11px] tracking-[0.3em] uppercase text-forest mb-3">
+          <p className="eyebrow mb-3">
             {fabric.collection} Collection
           </p>
           <h1 className="font-serif text-4xl lg:text-5xl font-light text-charcoal leading-tight mb-2">
@@ -298,10 +311,10 @@ export default function FabricDetail() {
                   )}
                 </div>
                 <div className="p-4 border-b border-cream-dark">
-                  <p className="text-[10px] tracking-[0.2em] uppercase text-forest mb-1">
+                  <p className="eyebrow mb-1">
                     {f.category}
                   </p>
-                  <h3 className="font-serif text-lg font-light text-charcoal">
+                  <h3 className="font-sans text-lg font-light text-charcoal">
                     {f.name}
                   </h3>
                 </div>

@@ -1,15 +1,27 @@
 # Dependencies
 node_modules/
-client/node_modules/
 
-# Environment variables — NEVER commit these
-.env
-.env.local
-.env.production
+# Environment variables and credentials - never commit these
+.env*
+*.local
+*.pem
+*.key
+*.p12
+*.pfx
+*.jks
+!.env.example
 
-# Build output
-client/dist/
+# Build output and generated reports
+dist/
+coverage/
 
-# Editor
+# Local agent tooling
+.agents/
+/skills-lock.json
+/package-lock.json
+
+# Logs and local tooling
+*.log
 .DS_Store
 .vscode/
+.idea/

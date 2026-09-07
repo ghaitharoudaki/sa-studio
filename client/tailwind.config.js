@@ -5,28 +5,28 @@ export default {
     extend: {
       colors: {
         cream: {
-          DEFAULT: '#F0EFED',
-          dark: '#E3E1DE',
+          DEFAULT: 'var(--bg-elevated)',
+          dark: 'var(--surface-muted)',
         },
         charcoal: {
-          DEFAULT: '#1C1C1A',
-          mid: '#3D3A35',
-          light: '#7A7670',
+          DEFAULT: 'var(--text-primary)',
+          mid: 'var(--text-secondary)',
+          light: 'var(--text-secondary)',
         },
         forest: {
-          DEFAULT: '#2D4A3E',
-          light: '#3D6B59',
-          pale: '#E8EFEC',
+          DEFAULT: 'var(--green)',
+          light: 'var(--green)',
+          pale: 'var(--accent-soft)',
         },
         burgundy: {
-          DEFAULT: '#6B2D2D',
-          light: '#8B4040',
-          pale: '#F2E8E8',
+          DEFAULT: 'var(--burgundy)',
+          light: 'var(--burgundy)',
+          pale: 'var(--bg-accent-block)',
         },
       },
       fontFamily: {
         serif: ['"Cormorant Garamond"', 'Georgia', 'serif'],
-        sans: ['Jost', 'system-ui', 'sans-serif'],
+        sans: ['Inter', 'Jost', 'system-ui', 'sans-serif'],
       },
     },
   },

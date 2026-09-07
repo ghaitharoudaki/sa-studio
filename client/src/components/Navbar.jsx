@@ -1,11 +1,30 @@
 import { useState, useEffect } from 'react'
 import { Link, useLocation } from 'react-router-dom'
 import logo from '../assets/logo.jpg'
+import { useSite } from '../context/SiteContext'
+
+function ThemeIcon({ theme }) {
+  if (theme === 'light') {
+    return (
+      <svg viewBox="0 0 24 24" aria-hidden="true" className="theme-icon">
+        <circle cx="12" cy="12" r="4" fill="currentColor" />
+        <path d="M12 2v2M12 20v2M4.93 4.93l1.41 1.41M17.66 17.66l1.41 1.41M2 12h2M20 12h2M4.93 19.07l1.41-1.41M17.66 6.34l1.41-1.41" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" />
+      </svg>
+    )
+  }
+
+  return (
+    <svg viewBox="0 0 24 24" aria-hidden="true" className="theme-icon">
+      <path d="M20.5 14.7A8.5 8.5 0 0 1 9.3 3.5 8.5 8.5 0 1 0 20.5 14.7Z" fill="currentColor" />
+    </svg>
+  )
+}
 
 export default function Navbar() {
   const [scrolled, setScrolled]   = useState(false)
   const [mobileOpen, setMobileOpen] = useState(false)
   const location = useLocation()
+  const { theme, toggleTheme, toggleLanguage, t } = useSite()
 
   useEffect(() => {
     const onScroll = () => setScrolled(window.scrollY > 20)
@@ -14,13 +33,15 @@ export default function Navbar() {
   }, [])
 
   useEffect(() => {
+    // Navigation changes intentionally close the mobile drawer.
+    // eslint-disable-next-line react-hooks/set-state-in-effect
     setMobileOpen(false)
   }, [location.pathname])
 
   const links = [
-    { to: '/',            label: 'Home' },
-    { to: '/collections', label: 'Collections' },
-    { to: '/about',       label: 'About' },
+    { to: '/',            label: t('home') },
+    { to: '/collections', label: t('collections') },
+    { to: '/about',       label: t('about') },
   ]
 
   const isActive = (path) => location.pathname === path
@@ -28,13 +49,13 @@ export default function Navbar() {
   return (
     <>
       <nav
-        className={`fixed top-0 left-0 right-0 z-50 transition-all duration-300 ${
+        className={`site-nav fixed top-0 left-0 right-0 z-50 transition-all duration-300 ${
           scrolled ? 'shadow-deep' : ''
         }`}
         style={{
-          background: 'rgba(255,255,255,0.84)',
+          background: 'var(--nav-bg)',
           backdropFilter: 'blur(22px)',
-          borderBottom: '1px solid rgba(45,74,62,0.12)',
+          borderBottom: '1px solid var(--line)',
         }}
       >
         <div className="max-w-screen-xl mx-auto px-6 lg:px-16 h-[72px] flex items-center justify-between">
@@ -44,7 +65,7 @@ export default function Navbar() {
             <img
               src={logo}
               alt="SA Studio"
-              className="h-10 w-auto object-contain"
+              className="site-logo h-10 w-auto object-contain"
             />
           </Link>
 
@@ -72,13 +93,30 @@ export default function Navbar() {
             ))}
           </div>
 
-          {/* Desktop CTA */}
-          <Link
-            to="/about"
-            className="hidden md:inline-flex items-center text-[11px] tracking-[0.18em] uppercase px-6 py-2.5 rounded-full border border-forest text-forest hover:bg-forest hover:text-white transition-all duration-200 min-h-[44px]"
-          >
-            Request Quotation
-          </Link>
+          <div className="hidden md:flex items-center gap-2">
+            <button
+              type="button"
+              onClick={toggleLanguage}
+              className="min-h-[44px] px-3 text-[11px] tracking-[0.12em] uppercase text-charcoal-light hover:text-forest transition-colors"
+              aria-label="Change language"
+            >
+              {t('language')}
+            </button>
+            <button
+              type="button"
+              onClick={toggleTheme}
+              className="theme-toggle min-h-[40px] min-w-[40px] text-charcoal-light hover:text-forest transition-colors"
+              aria-label={theme === 'light' ? 'Switch to dark mode' : 'Switch to light mode'}
+            >
+              <ThemeIcon theme={theme} />
+            </button>
+            <Link
+              to="/about"
+              className="inline-flex items-center text-[11px] tracking-[0.18em] uppercase px-6 py-2.5 rounded-full border border-forest text-forest hover:bg-forest hover:text-white transition-all duration-200 min-h-[44px]"
+            >
+              {t('requestQuotation')}
+            </Link>
+          </div>
 
           {/* Hamburger */}
           <button
@@ -110,7 +148,7 @@ export default function Navbar() {
             <Link
               key={to}
               to={to}
-              className="font-serif text-4xl font-light text-charcoal border-b border-cream-dark pb-6 hover:text-forest transition-colors"
+              className="font-sans text-4xl font-light text-charcoal border-b border-cream-dark pb-6 hover:text-forest transition-colors"
             >
               {label}
             </Link>
@@ -119,8 +157,16 @@ export default function Navbar() {
             to="/about"
             className="mt-auto text-center text-xs tracking-[0.2em] uppercase px-5 py-4 border border-forest text-forest min-h-[44px] flex items-center justify-center hover:bg-forest hover:text-white transition-all duration-200"
           >
-            Request Quotation
+            {t('requestQuotation')}
           </Link>
+          <div className="mt-6 flex items-center justify-between border-t border-cream-dark pt-6">
+            <button type="button" onClick={toggleLanguage} className="text-xs text-charcoal-light hover:text-forest">
+              {t('language')}
+            </button>
+            <button type="button" onClick={toggleTheme} className="theme-toggle min-h-[40px] min-w-[40px] text-charcoal-light hover:text-forest" aria-label={theme === 'light' ? 'Switch to dark mode' : 'Switch to light mode'}>
+              <ThemeIcon theme={theme} />
+            </button>
+          </div>
         </div>
       </div>
     </>
