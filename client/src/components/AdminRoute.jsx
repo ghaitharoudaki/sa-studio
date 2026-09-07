@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react'
 import { Navigate, useNavigate } from 'react-router-dom'
-import Admin from '../pages/Admin'
+import AdminDashboard from '../pages/AdminDashboard'
 import { supabase } from '../lib/supabase'
 
 function AdminLogin() {
@@ -69,9 +69,14 @@ export default function AdminRoute() {
     if (!supabase) return undefined
 
     let mounted = true
-    supabase.auth.getSession().then(({ data }) => {
+    supabase.auth.getSession().then(async ({ data }) => {
+      let session = data.session
+      if (session) {
+        const { data: refreshed } = await supabase.auth.refreshSession()
+        if (refreshed?.session) session = refreshed.session
+      }
       if (mounted) {
-        setSession(data.session)
+        setSession(session)
         setLoading(false)
       }
     })
@@ -119,7 +124,7 @@ export default function AdminRoute() {
           Sign out
         </button>
       </div>
-      <Admin />
+      <AdminDashboard />
     </>
   )
 }

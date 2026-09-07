@@ -149,7 +149,7 @@
   .collections-controls select { cursor: pointer; }
   .collections-products {
     display: grid;
-    grid-template-columns: repeat(4, minmax(0, 1fr));
+    grid-template-columns: repeat(6, minmax(0, 1fr));
     gap: 1px;
     padding: 1px;
     background: var(--border);
@@ -175,23 +175,23 @@
   .collections-product-card:hover .collections-product-image img { transform: scale(1.04); }
   .collections-product-tag {
     position: absolute;
-    top: 16px;
-    left: 16px;
-    padding: 6px 9px;
+    top: 10px;
+    left: 10px;
+    padding: 4px 7px;
     background: var(--bg-accent-block);
     color: var(--text-on-accent);
     font-family: Inter, Jost, system-ui, sans-serif;
-    font-size: 11px;
+    font-size: 10px;
     letter-spacing: 0.12em;
     text-transform: uppercase;
   }
-  .collections-product-copy { padding: 20px 18px 28px; }
+  .collections-product-copy { padding: 12px 12px 16px; }
   .collections-product-copy h2 {
     color: var(--text-primary);
     font-family: Cormorant Garamond, Georgia, serif;
-    font-size: 1.7rem;
+    font-size: 1.15rem;
     font-weight: 400;
-    line-height: 1;
+    line-height: 1.1;
   }
   .collections-product-copy p {
     margin-top: 8px;
@@ -261,14 +261,25 @@
     text-transform: uppercase;
   }
   .collections-closing-cta:hover { background: var(--text-on-accent); color: var(--bg-accent-block); }
+  @media (max-width: 1279px) {
+    .collections-products { grid-template-columns: repeat(4, minmax(0, 1fr)); }
+  }
   @media (max-width: 1023px) {
-    .collections-products { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+    .collections-products { grid-template-columns: repeat(3, minmax(0, 1fr)); }
   }
   @media (max-width: 639px) {
     .collections-content-card { margin: 16px; border-radius: 12px; }
     .collections-controls { align-items: flex-start; flex-direction: column; }
-    .collections-products { grid-template-columns: 1fr; }
-    .collections-product-image { aspect-ratio: 1.1; }
+    .collections-controls select { width: 100%; }
+    .collections-products { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+    .collections-product-image { aspect-ratio: 1; }
+    .collections-intro h1 { font-size: clamp(2.8rem, 15vw, 4rem); }
+  }
+
+  @media (max-width: 420px) {
+    .site-nav > div { padding-left: 16px; padding-right: 16px; }
+    .site-logo { max-width: 150px; }
+    .site-footer { padding-left: 16px; padding-right: 16px; }
   }
 
   .bg-cream { background-color: var(--bg-elevated) !important; }

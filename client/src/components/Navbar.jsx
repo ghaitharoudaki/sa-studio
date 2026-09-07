@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react'
 import { Link, useLocation } from 'react-router-dom'
 import logo from '../assets/logo.jpg'
 import { useSite } from '../context/SiteContext'
+import { WHATSAPP_BASE } from '../data/fabrics'
 
 function ThemeIcon({ theme }) {
   if (theme === 'light') {
@@ -25,6 +26,7 @@ export default function Navbar() {
   const [mobileOpen, setMobileOpen] = useState(false)
   const location = useLocation()
   const { theme, toggleTheme, toggleLanguage, t } = useSite()
+  const quotationLink = `${WHATSAPP_BASE}?text=${encodeURIComponent('Hello, I would like to request a quotation from SA Studio.')}`
 
   useEffect(() => {
     const onScroll = () => setScrolled(window.scrollY > 20)
@@ -110,12 +112,14 @@ export default function Navbar() {
             >
               <ThemeIcon theme={theme} />
             </button>
-            <Link
-              to="/about"
+            <a
+              href={quotationLink}
+              target="_blank"
+              rel="noreferrer"
               className="inline-flex items-center text-[11px] tracking-[0.18em] uppercase px-6 py-2.5 rounded-full border border-forest text-forest hover:bg-forest hover:text-white transition-all duration-200 min-h-[44px]"
             >
               {t('requestQuotation')}
-            </Link>
+            </a>
           </div>
 
           {/* Hamburger */}
@@ -153,12 +157,14 @@ export default function Navbar() {
               {label}
             </Link>
           ))}
-          <Link
-            to="/about"
+          <a
+            href={quotationLink}
+            target="_blank"
+            rel="noreferrer"
             className="mt-auto text-center text-xs tracking-[0.2em] uppercase px-5 py-4 border border-forest text-forest min-h-[44px] flex items-center justify-center hover:bg-forest hover:text-white transition-all duration-200"
           >
             {t('requestQuotation')}
-          </Link>
+          </a>
           <div className="mt-6 flex items-center justify-between border-t border-cream-dark pt-6">
             <button type="button" onClick={toggleLanguage} className="text-xs text-charcoal-light hover:text-forest">
               {t('language')}

@@ -1,238 +1,383 @@
-import { useRef, useEffect } from 'react'
-import { Link } from 'react-router-dom'
+import { useCallback, useEffect, useState } from 'react'
 import { WHATSAPP_BASE, MAPS_LINK } from '../data/fabrics'
 import { useSite } from '../context/SiteContext'
 
-function useFadeIn() {
-  const ref = useRef(null)
+function useReveal(threshold = 0.16) {
+  const [element, setElement] = useState(null)
+  const [isVisible, setIsVisible] = useState(false)
+  const ref = useCallback((node) => setElement(node), [])
+
   useEffect(() => {
-    const el = ref.current
-    if (!el) return
+    if (!element) return
+
     const observer = new IntersectionObserver(
       ([entry]) => {
         if (entry.isIntersecting) {
-          el.classList.add('opacity-100', 'translate-y-0')
-          el.classList.remove('opacity-0', 'translate-y-6')
+          setIsVisible(true)
           observer.disconnect()
         }
       },
-      { threshold: 0.12 }
+      { threshold, rootMargin: '40px' }
     )
-    observer.observe(el)
+
+    observer.observe(element)
     return () => observer.disconnect()
-  }, [])
-  return ref
+  }, [element, threshold])
+
+  return { elementRef: ref, isVisible }
 }
+
+const pillars = [
+  {
+    title: 'Curation',
+    text: 'Every reference is chosen by hand from Europe’s most respected textile houses, with a focus on character, performance and atmosphere.',
+  },
+  {
+    title: 'Precision',
+    text: 'We work across technical specifications, texture, durability and scale so each fabric feels as considered in application as it does in the room.',
+  },
+  {
+    title: 'Service',
+    text: 'From first sample to final installation, clients receive thoughtful guidance and a seamless, design-led process.',
+  },
+]
+
+const partners = ['Armani Casa', 'Casamance', 'Texam', 'Omexco', 'Fine', 'Arte', 'Marburg', 'Roberto Cavalli']
 
 export default function About() {
   const { t } = useSite()
-  const storyRef    = useFadeIn()
-  const valuesRef   = useFadeIn()
-  const contactRef  = useFadeIn()
+  const { elementRef: heroRef, isVisible: heroVisible } = useReveal(0.2)
+  const { elementRef: quoteRef, isVisible: quoteVisible } = useReveal(0.18)
+  const { elementRef: storyRef, isVisible: storyVisible } = useReveal(0.18)
+  const { elementRef: valuesRef, isVisible: valuesVisible } = useReveal(0.18)
+  const { elementRef: contactRef, isVisible: contactVisible } = useReveal(0.18)
+  const [pointer, setPointer] = useState({ x: 0, y: 0 })
+
+  useEffect(() => {
+    const handleMove = (event) => {
+      setPointer({ x: event.clientX, y: event.clientY })
+    }
+
+    window.addEventListener('mousemove', handleMove)
+    return () => window.removeEventListener('mousemove', handleMove)
+  }, [])
+
+  const storyLabel = t?.('ourStory') || 'Our Story'
 
   return (
-    <div className="pt-[72px]">
-
-      {/* Hero */}
-      <div
-        className="px-8 lg:px-20 py-24 lg:py-32"
-        style={{ background: 'var(--footer-bg)' }}
-      >
-        <p className="eyebrow mb-6">
-          {t('ourStory')}
-        </p>
-        <h1 className="font-serif text-5xl lg:text-7xl font-light text-white leading-tight max-w-3xl">
-          Samer Aroudaki<br />
-          <em className="text-burgundy">& SA Studio</em>
-        </h1>
-        <div className="mt-8 w-16 h-px bg-forest" />
-      </div>
-
-      {/* Story section */}
-      <section className="grid grid-cols-1 lg:grid-cols-2 border-b border-cream-dark">
-        <div
-          ref={storyRef}
-          className="opacity-0 translate-y-6 transition-all duration-700 px-8 lg:px-20 py-20 flex flex-col justify-center"
-        >
-          <p className="eyebrow mb-6">
-            Est. 2005 · Damascus
-          </p>
-          <h2 className="font-serif text-4xl font-light text-charcoal leading-tight mb-6">
-            Twenty One years of<br />
-            <em className="text-burgundy">personal curation</em>
-          </h2>
-          <p className="text-sm leading-loose text-charcoal-light mb-5">
-            Founded in Damascus in 2005, SA Studio has been the region's most
-            trusted source for exceptional luxury textiles. Samer Aroudaki built
-            the atelier on a philosophy of personal curation — every fabric and
-            wallpaper in our showroom has been selected by hand.
-          </p>
-          <p className="text-sm leading-loose text-charcoal-light mb-5">
-            Chosen not merely for beauty but for the conversation it begins when
-            brought into a space. We travel to Milan, Paris, and Frankfurt so our
-            clients don't have to — returning with the finest pieces from
-            Europe's most distinguished textile houses.
-          </p>
-          <p className="text-sm leading-loose text-charcoal-light">
-            Today SA Studio represents over twelve international maisons in Syria
-            and the wider region, offering an unmatched breadth of fabric,
-            wallpaper, and interior textile references to architects, interior
-            designers, and private clients alike.
-          </p>
-        </div>
-
-        {/* Visual block */}
-        <div className="grid grid-rows-2 min-h-[400px]">
-          <div className="tex-forest" />
-          <div className="tex-burgundy" />
-        </div>
-      </section>
-
-      {/* Values */}
+    <div className="pt-[72px] overflow-hidden" style={{ background: 'var(--bg)' }}>
       <section
-        ref={valuesRef}
-        className="opacity-0 translate-y-6 transition-all duration-700 grid grid-cols-1 md:grid-cols-3 gap-0.5 bg-cream-dark"
+        ref={heroRef}
+        className={`relative px-6 md:px-10 lg:px-16 py-12 lg:py-16 transition-all duration-700 ${heroVisible ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-8'}`}
       >
-        {[
-          {
-            num: '01',
-            title: 'Curation',
-            body: 'Every reference in our collection has been personally sourced from the finest European textile houses. We travel to Milan, Paris, and Brussels so you don\'t have to.',
-          },
-          {
-            num: '02',
-            title: 'Expertise',
-            body: 'With three decades of experience, our team offers deep knowledge of technical specifications, performance characteristics, and aesthetic suitability for every application.',
-          },
-          {
-            num: '03',
-            title: 'Service',
-            body: 'From first consultation to final installation, SA Studio accompanies every client through the process — sampling, specification support, and project planning included.',
-          },
-        ].map(({ num, title, body }) => (
-          <div key={num} className="bg-cream px-8 py-12">
-            <p className="font-serif text-5xl font-light text-cream-dark leading-none mb-6">
-              {num}
-            </p>
-            <p className="eyebrow mb-4">
-              {title}
-            </p>
-            <p className="text-sm leading-loose text-charcoal-light">{body}</p>
-          </div>
-        ))}
-      </section>
+        <div
+          className="absolute inset-0 opacity-80"
+          style={{
+            background: 'radial-gradient(circle at 20% 20%, rgba(31, 61, 46, 0.16), transparent 30%), radial-gradient(circle at 80% 30%, rgba(107, 42, 42, 0.12), transparent 35%)',
+            transform: `translate(${pointer.x * 0.015}px, ${pointer.y * 0.015}px)`,
+            transition: 'transform 220ms ease-out',
+          }}
+        />
 
-      {/* Partners */}
-      <section className="px-8 lg:px-20 py-16 border-b border-cream-dark">
-        <p className="eyebrow mb-8">
-          Our Partners
-        </p>
-        <div className="partner-grid grid grid-cols-2 md:grid-cols-4">
-          {[
-            'Armani Casa', 'Fine', 'Omexco', 'Arte',
-            'Casamance', 'Texam', 'Roberto Cavali', 'Marburg',
-          ].map((brand) => (
-            <div
-              key={brand}
-              className="partner-cell bg-cream px-6 py-12 flex items-center justify-center"
+        <div className="relative mx-auto grid max-w-7xl items-center gap-8 lg:grid-cols-[1.1fr_0.9fr]">
+          <div className="relative z-10">
+            <p
+              className="mb-6 text-[11px] uppercase tracking-[0.28em]"
+              style={{ color: 'var(--green)' }}
             >
-              <span className="partner-mark font-sans text-sm tracking-[0.12em] uppercase">
-                {brand}
+              {storyLabel} · Damascus · Est. 2005
+            </p>
+
+            <h1
+              style={{
+                color: 'var(--text-primary)',
+                fontFamily: 'Cormorant Garamond, Georgia, serif',
+                fontWeight: 400,
+                letterSpacing: '-0.04em',
+                lineHeight: 0.9,
+              }}
+              className="text-5xl sm:text-6xl md:text-7xl lg:text-[7rem]"
+            >
+              Samer Aroudaki
+            </h1>
+
+            <div className="mt-4 flex items-center gap-5">
+              <span className="block h-px w-20" style={{ background: 'var(--burgundy)' }} />
+              <span
+                style={{
+                  color: 'var(--burgundy)',
+                  fontFamily: 'Cormorant Garamond, Georgia, serif',
+                  fontStyle: 'italic',
+                  fontSize: 'clamp(2.1rem, 4vw, 4rem)',
+                  lineHeight: 1,
+                }}
+              >
+                & SA Studio
               </span>
             </div>
-          ))}
+
+            <p
+              className="mt-7 max-w-lg text-base leading-8"
+              style={{ color: 'var(--text-secondary)' }}
+            >
+              Twenty-one years of carefully sourced European textiles, designed to bring warmth, clarity and enduring character into the spaces people live in.
+            </p>
+
+            <div className="mt-10 flex flex-wrap gap-4">
+              <a
+                href={MAPS_LINK}
+                target="_blank"
+                rel="noreferrer"
+                className="inline-flex min-h-[48px] items-center justify-center rounded-full border px-6 text-[11px] uppercase tracking-[0.18em] transition-all duration-200 hover:-translate-y-0.5"
+                style={{
+                  borderColor: 'var(--green)',
+                  color: 'var(--green)',
+                  background: 'transparent',
+                }}
+              >
+                Visit showroom
+              </a>
+
+              <a
+                href={WHATSAPP_BASE}
+                target="_blank"
+                rel="noreferrer"
+                className="inline-flex min-h-[48px] items-center justify-center rounded-full px-6 text-[11px] uppercase tracking-[0.18em] transition-all duration-200 hover:-translate-y-0.5"
+                style={{
+                  background: 'var(--burgundy)',
+                  color: 'var(--text-on-accent)',
+                }}
+              >
+                WhatsApp
+              </a>
+            </div>
+          </div>
+
+          <div className="relative h-[440px] w-full overflow-hidden rounded-[28px] border" style={{ borderColor: 'var(--border)', background: 'linear-gradient(135deg, rgba(31, 61, 46, 0.08), rgba(107, 42, 42, 0.12))' }}>
+            <div
+              className="absolute inset-0"
+              style={{
+                background: 'linear-gradient(135deg, rgba(28, 24, 21, 0.08), rgba(28, 24, 21, 0.34)), radial-gradient(circle at top left, rgba(255,255,255,0.5), transparent 32%)',
+              }}
+            />
+            <div className="absolute inset-x-10 bottom-10 top-10 rounded-[22px] border border-white/40 bg-[radial-gradient(circle_at_top_left,_rgba(255,255,255,0.4),_transparent_28%),linear-gradient(160deg,_rgba(31,61,46,0.9)_0%,_rgba(31,61,46,0.35)_42%,_rgba(107,42,42,0.3)_100%)] shadow-[0_35px_70px_rgba(28,24,21,0.12)]" />
+            <div className="absolute bottom-10 left-10 h-32 w-32 rounded-full border border-white/30 bg-white/8 backdrop-blur-[2px]" />
+            <div className="absolute right-10 top-10 h-44 w-44 rounded-full border border-white/20 bg-white/8 backdrop-blur-[2px]" />
+            <div className="absolute bottom-20 right-16 h-48 w-48 rounded-full border border-white/25 bg-[rgba(250,248,243,0.14)]" />
+            <div className="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 rounded-full border border-white/30 bg-white/5 px-6 py-4 text-[10px] uppercase tracking-[0.26em] text-white backdrop-blur-sm">
+              Atelier Damascus
+            </div>
+          </div>
         </div>
       </section>
 
-      {/* Contact */}
       <section
-        id="contact"
-        ref={contactRef}
-        className="opacity-0 translate-y-6 transition-all duration-700 grid grid-cols-1 lg:grid-cols-2"
+        ref={quoteRef}
+        className={`px-6 py-16 md:py-24 transition-all duration-700 ${quoteVisible ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-8'}`}
+        style={{ background: 'var(--bg-elevated)' }}
       >
-        {/* Left */}
-        <div
-          className="px-8 lg:px-20 py-20 flex flex-col justify-center"
-          style={{ background: 'var(--bg-accent-block)' }}
-        >
-          <p className="eyebrow eyebrow-on-accent mb-6">
-            {t('visitUs')}
-          </p>
-          <h2 className="font-serif text-4xl font-light text-white leading-tight mb-8">
-            {t('ourStory')}<br />
-            <em>{t('showroom')}</em>
-          </h2>
-          <div className="flex flex-col gap-6 text-sm text-white/60">
-            <div>
-              <p className="eyebrow eyebrow-on-accent mb-1">
-                {t('address')}
-              </p>
-              <p>Abou Rummaneh, Nizzar Kabbani St, Damascus, Syria</p>
-            </div>
-            <div>
-              <p className="eyebrow eyebrow-on-accent mb-1">
-                {t('hours')}
-              </p>
-              <p>Saturday – Thursday<br />11:00 AM – 7:00 PM</p>
-            </div>
-            <div>
-              <p className="eyebrow eyebrow-on-accent mb-1">
-                {t('whatsapp')}
-              </p>
-              <p>+963 944 231 337</p>
-            </div>
-          </div>
-          
-          <a
-            href={MAPS_LINK}
-            target="_blank"
-            rel="noreferrer"
-            className="secondary-cta mt-10 self-start inline-flex items-center gap-2 min-h-[44px] px-8 py-3 transition-all duration-200"
+        <div className="mx-auto max-w-5xl text-center">
+          <p
+            style={{
+              color: 'var(--text-primary)',
+              fontFamily: 'Cormorant Garamond, Georgia, serif',
+              fontWeight: 400,
+              fontStyle: 'italic',
+              letterSpacing: '-0.03em',
+              lineHeight: 1,
+            }}
+            className="text-4xl md:text-6xl"
           >
-            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5">
-              <path d="M12 2C8.13 2 5 5.13 5 9c0 5.25 7 13 7 13s7-7.75 7-13c0-3.87-3.13-7-7-7zm0 9.5c-1.38 0-2.5-1.12-2.5-2.5s1.12-2.5 2.5-2.5 2.5 1.12 2.5 2.5-1.12 2.5-2.5 2.5z" />
-            </svg>
-            {t('viewMaps')}
-          </a>
+            “Chosen not merely for beauty, but for the <span style={{ color: 'var(--burgundy)' }}>conversation</span> it begins when brought into a space.”
+          </p>
+
+          <p className="mt-8 text-[11px] uppercase tracking-[0.3em]" style={{ color: 'var(--text-secondary)' }}>
+            Samer Aroudaki · Founder
+          </p>
+        </div>
+      </section>
+
+      <section
+        ref={storyRef}
+        className={`mx-auto grid max-w-7xl gap-8 px-6 py-16 lg:grid-cols-[0.95fr_1.05fr] lg:items-center lg:py-24 transition-all duration-700 ${storyVisible ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-8'}`}
+      >
+        <div className="relative h-[520px] overflow-hidden rounded-[30px] border" style={{ borderColor: 'var(--border)', background: 'linear-gradient(150deg, rgba(31, 61, 46, 0.14), rgba(107, 42, 42, 0.12))' }}>
+          <div className="absolute inset-6 rounded-[24px] border border-white/40 bg-[linear-gradient(140deg,_rgba(255,255,255,0.22),_rgba(31,61,46,0.28)_38%,_rgba(107,42,42,0.22))]" />
+          <div className="absolute bottom-10 left-10 h-36 w-36 rounded-full border border-white/25 bg-white/10 backdrop-blur-sm" />
+          <div className="absolute right-10 top-10 h-20 w-20 rounded-full border border-white/25 bg-white/10" />
+          <div className="absolute bottom-10 right-10 h-52 w-52 rounded-full border border-white/20 bg-[rgba(250,248,243,0.12)]" />
         </div>
 
-        {/* Right */}
-        <div className="px-8 lg:px-20 py-20 flex flex-col justify-center bg-cream-dark">
-          <p className="eyebrow mb-6">
-            {t('getInTouch')}
+        <div>
+          <p className="text-[11px] uppercase tracking-[0.28em]" style={{ color: 'var(--green)' }}>
+            Est. 2005 · Damascus
           </p>
-          <h2 className="font-serif text-4xl font-light text-charcoal leading-tight mb-4">
-            Speak with<br />
-            <em className="text-burgundy">Our Team</em>
+
+          <h2
+            className="mt-6 text-4xl md:text-5xl"
+            style={{
+              color: 'var(--text-primary)',
+              fontFamily: 'Cormorant Garamond, Georgia, serif',
+              fontWeight: 400,
+              lineHeight: 0.95,
+              letterSpacing: '-0.04em',
+            }}
+          >
+            Twenty-one years of personal curation.
           </h2>
-          <p className="text-sm leading-loose text-charcoal-light mb-10">
-            Whether you're an interior designer sourcing materials for a
-            project, or a private client furnishing your home — we're here
-            to help you find exactly the right fabric or wallpaper.
-          </p>
-          <div className="flex flex-col gap-3">
-            
-            <a
-              href={WHATSAPP_BASE}
-              target="_blank"
-              rel="noreferrer"
-              className="primary-cta inline-flex items-center justify-center gap-3 min-h-[44px] px-8 py-3 text-[11px] tracking-[0.2em] uppercase transition-colors duration-200"
-            >
-              <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor">
-                <path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 005.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 00-3.48-8.413z" />
-              </svg>
-              Chat on WhatsApp
-            </a>
-            <Link
-              to="/collections"
-              className="inline-flex items-center justify-center min-h-[44px] px-8 py-3 border border-charcoal/20 text-charcoal text-[11px] tracking-[0.2em] uppercase hover:border-forest hover:text-forest transition-colors duration-200"
-            >
-              {t('browseCollections')}
-            </Link>
+
+          <div className="mt-8 space-y-5 text-base leading-8" style={{ color: 'var(--text-secondary)' }}>
+            <p>
+              Founded in Damascus in 2005, SA Studio grew from a personal conviction: the most memorable interiors are built from materials chosen with care, not mass-produced for convenience.
+            </p>
+            <p>
+              Samer Aroudaki began sourcing European textiles with a collector’s eye, focusing on depth of texture, integrity of material and the emotional tone a fabric lends to a room.
+            </p>
+            <p>
+              Today, the studio represents international maisons and supports architects, designers and private clients with a considered, tailored approach to luxury textiles.
+            </p>
           </div>
         </div>
       </section>
 
+      <section
+        ref={valuesRef}
+        className={`px-6 py-16 lg:px-10 lg:py-24 transition-all duration-700 ${valuesVisible ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-8'}`}
+        style={{ background: 'var(--bg-elevated)' }}
+      >
+        <div className="mx-auto max-w-7xl">
+          <p className="text-[11px] uppercase tracking-[0.28em]" style={{ color: 'var(--green)' }}>
+            Our foundation
+          </p>
+
+          <div className="mt-10 grid gap-6 md:grid-cols-3">
+            {pillars.map((item, index) => (
+              <div
+                key={item.title}
+                className="group rounded-[26px] border p-8 transition-all duration-300 hover:-translate-y-1"
+                style={{
+                  background: 'var(--bg)',
+                  borderColor: 'var(--border)',
+                  boxShadow: index === 1 ? '0 20px 50px rgba(31, 61, 46, 0.08)' : 'none',
+                }}
+              >
+                <div className="mb-5 inline-flex h-12 w-12 items-center justify-center rounded-full border text-lg" style={{ borderColor: 'var(--border)', color: 'var(--burgundy)' }}>
+                  {index + 1}
+                </div>
+                <h3
+                  className="text-3xl"
+                  style={{
+                    color: 'var(--text-primary)',
+                    fontFamily: 'Cormorant Garamond, Georgia, serif',
+                    fontWeight: 400,
+                    lineHeight: 1,
+                    letterSpacing: '-0.03em',
+                  }}
+                >
+                  {item.title}
+                </h3>
+                <p className="mt-5 text-base leading-8" style={{ color: 'var(--text-secondary)' }}>
+                  {item.text}
+                </p>
+              </div>
+            ))}
+          </div>
+        </div>
+      </section>
+
+      <section className="px-6 py-16 lg:px-10 lg:py-24" style={{ background: 'var(--bg)' }}>
+        <div className="mx-auto max-w-7xl">
+          <p className="text-[11px] uppercase tracking-[0.28em]" style={{ color: 'var(--green)' }}>
+            Trusted partners
+          </p>
+
+          <div className="mt-8 grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
+            {partners.map((brand) => (
+              <div
+                key={brand}
+                className="flex min-h-[120px] items-center justify-center border text-center"
+                style={{
+                  borderColor: 'var(--border)',
+                  background: 'rgba(255,255,255,0.2)',
+                  color: 'var(--text-primary)',
+                  fontFamily: 'Cormorant Garamond, Georgia, serif',
+                  fontSize: '2rem',
+                  fontStyle: 'italic',
+                  letterSpacing: '-0.03em',
+                }}
+              >
+                {brand}
+              </div>
+            ))}
+          </div>
+        </div>
+      </section>
+
+      <section
+        ref={contactRef}
+        className={`grid gap-0 lg:grid-cols-2 transition-all duration-700 ${contactVisible ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-8'}`}
+      >
+        <div className="relative min-h-[420px] overflow-hidden lg:min-h-[620px]" style={{ background: 'linear-gradient(135deg, rgba(31, 61, 46, 0.2), rgba(107, 42, 42, 0.2))' }}>
+          <div className="absolute inset-0" style={{ transform: `translate(${pointer.x * 0.02}px, ${pointer.y * 0.02}px)`, transition: 'transform 220ms ease-out' }}>
+            <div className="absolute inset-6 rounded-[30px] border border-white/30 bg-[linear-gradient(150deg,_rgba(255,255,255,0.16),_rgba(31,61,46,0.38)_45%,_rgba(107,42,42,0.30))]" />
+            <div className="absolute left-10 top-10 h-28 w-28 rounded-full border border-white/25 bg-white/10 backdrop-blur-sm" />
+            <div className="absolute bottom-12 right-12 h-52 w-52 rounded-full border border-white/25 bg-white/10" />
+          </div>
+        </div>
+
+        <div className="flex items-center px-6 py-12 md:px-10 lg:px-14" style={{ background: 'var(--burgundy)' }}>
+          <div className="max-w-xl text-white">
+            <p className="text-[11px] uppercase tracking-[0.28em] text-white/75">Visit our showroom</p>
+
+            <h2
+              className="mt-6 text-4xl md:text-5xl"
+              style={{
+                fontFamily: 'Cormorant Garamond, Georgia, serif',
+                fontWeight: 400,
+                letterSpacing: '-0.04em',
+                lineHeight: 0.95,
+              }}
+            >
+              Damascus showroom
+            </h2>
+
+            <div className="mt-10 space-y-7 text-base text-white/80">
+              <div>
+                <p className="text-[11px] uppercase tracking-[0.24em] text-white/60">Address</p>
+                <p className="mt-2">Abou Rummaneh, Nizzar Kabbani St, Damascus, Syria</p>
+              </div>
+              <div>
+                <p className="text-[11px] uppercase tracking-[0.24em] text-white/60">Hours</p>
+                <p className="mt-2">Saturday – Thursday, 11:00 AM – 7:00 PM</p>
+              </div>
+              <div>
+                <p className="text-[11px] uppercase tracking-[0.24em] text-white/60">WhatsApp</p>
+                <p className="mt-2">+963 944 231 337</p>
+              </div>
+            </div>
+
+            <div className="mt-10 flex flex-wrap gap-4">
+              <a
+                href={MAPS_LINK}
+                target="_blank"
+                rel="noreferrer"
+                className="inline-flex min-h-[48px] items-center justify-center rounded-full border border-white/40 px-6 text-[11px] uppercase tracking-[0.18em] text-white transition-all duration-200 hover:border-white hover:bg-white/8"
+              >
+                View on maps
+              </a>
+              <a
+                href={WHATSAPP_BASE}
+                target="_blank"
+                rel="noreferrer"
+                className="inline-flex min-h-[48px] items-center justify-center rounded-full bg-white px-6 text-[11px] uppercase tracking-[0.18em] transition-all duration-200 hover:-translate-y-0.5"
+                style={{ color: 'var(--burgundy)' }}
+              >
+                Message us
+              </a>
+            </div>
+          </div>
+        </div>
+      </section>
     </div>
   )
 }

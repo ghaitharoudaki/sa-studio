@@ -20,7 +20,7 @@ function FabricCard({ fabric }) {
     <Link to={`/collections/${fabric.id}`} className="collections-product-card group">
       <div className="collections-product-image">
         {fabric.image ? (
-          <img src={fabric.image} alt={fabric.name} />
+          <img src={fabric.image} alt={fabric.name} loading="lazy" decoding="async" />
         ) : (
           <div className={`h-full w-full ${fabric.texture || 'tex-forest'}`} />
         )}

@@ -2,113 +2,12 @@ import { useParams, Link, useNavigate } from 'react-router-dom'
 import { fetchFabrics, WHATSAPP_BASE, MAPS_LINK } from '../data/fabrics'
 import { useState, useEffect } from 'react'
 
-function QuoteModal({ fabric, onClose }) {
-  const [submitted, setSubmitted] = useState(false)
-
-  const handleSubmit = (e) => {
-    e.preventDefault()
-    setSubmitted(true)
-  }
-
-  return (
-    <div
-      className="fixed inset-0 z-50 flex items-center justify-center p-4"
-      style={{ background: 'color-mix(in srgb, var(--footer-bg) 75%, transparent)' }}
-      onClick={onClose}
-    >
-      <div
-        className="bg-cream w-full max-w-lg p-8 relative max-h-[90vh] overflow-y-auto"
-        onClick={(e) => e.stopPropagation()}
-      >
-        <button
-          onClick={onClose}
-          className="absolute top-4 right-4 w-[44px] h-[44px] flex items-center justify-center text-charcoal-light hover:text-charcoal transition-colors text-xl"
-        >
-          ✕
-        </button>
-
-        {submitted ? (
-          <div className="text-center py-8">
-            <p className="text-forest text-4xl mb-4">✓</p>
-            <h3 className="font-sans text-2xl font-light text-charcoal mb-3">
-              Request Sent
-            </h3>
-            <p className="text-sm text-charcoal-light leading-loose">
-              Thank you. Samer will contact you within 24 hours with
-              personalised pricing and availability.
-            </p>
-            <button
-              onClick={onClose}
-              className="mt-8 inline-flex items-center min-h-[44px] px-8 py-3 bg-forest text-white text-[11px] tracking-[0.2em] uppercase hover:bg-forest-light transition-colors"
-            >
-              Close
-            </button>
-          </div>
-        ) : (
-          <>
-            <p className="eyebrow mb-2">
-              Request a Quotation
-            </p>
-            <h3 className="font-sans text-2xl font-light text-charcoal mb-1">
-              {fabric.name}
-            </h3>
-            <p className="text-xs text-charcoal-light mb-6">
-              {fabric.collection} Collection
-            </p>
-
-            <form onSubmit={handleSubmit} className="flex flex-col gap-4">
-              <div>
-                <label className="block text-[10px] tracking-[0.2em] uppercase text-charcoal-light mb-1.5">
-                  Full Name
-                </label>
-                <input
-                  required
-                  type="text"
-                  placeholder="Your name"
-                  className="w-full px-4 py-3 border border-cream-dark bg-white text-charcoal text-sm focus:outline-none focus:border-forest transition-colors min-h-[44px]"
-                />
-              </div>
-              <div>
-                <label className="block text-[10px] tracking-[0.2em] uppercase text-charcoal-light mb-1.5">
-                  Phone / WhatsApp
-                </label>
-                <input
-                  required
-                  type="tel"
-                  placeholder="+963 944 231 337"
-                  className="w-full px-4 py-3 border border-cream-dark bg-white text-charcoal text-sm focus:outline-none focus:border-forest transition-colors min-h-[44px]"
-                />
-              </div>
-              <div>
-                <label className="block text-[10px] tracking-[0.2em] uppercase text-charcoal-light mb-1.5">
-                  Project Details
-                </label>
-                <textarea
-                  rows={4}
-                  placeholder="Describe your project, required quantity, and any special requirements..."
-                  className="w-full px-4 py-3 border border-cream-dark bg-white text-charcoal text-sm focus:outline-none focus:border-forest transition-colors resize-none"
-                />
-              </div>
-              <button
-                type="submit"
-                className="min-h-[44px] px-8 py-3 bg-forest text-white text-[11px] tracking-[0.2em] uppercase hover:bg-forest-light transition-colors duration-200 mt-2"
-              >
-                Send Request
-              </button>
-            </form>
-          </>
-        )}
-      </div>
-    </div>
-  )
-}
-
 export default function FabricDetail() {
   const { id } = useParams()
   const navigate = useNavigate()
-  const [modalOpen, setModalOpen] = useState(false)
   const [scrollProgress, setScrollProgress] = useState(0)
   const [fabrics, setFabrics] = useState([])
+  const [magnifier, setMagnifier] = useState(null)
 
   useEffect(() => {
     let ignore = false
@@ -153,7 +52,7 @@ export default function FabricDetail() {
   }
 
   const waMessage = encodeURIComponent(
-    `Hello, I am interested in the ${fabric.name} from the ${fabric.collection} collection at SA Studio.`
+    `Hello, I would like to request a quotation for the ${fabric.name} from the ${fabric.collection} collection at SA Studio.`
   )
 
   const related = fabrics
@@ -181,18 +80,58 @@ export default function FabricDetail() {
       </div>
 
       {/* Main layout */}
-      <div className="grid grid-cols-1 lg:grid-cols-2 min-h-[80vh]">
+      <div className="grid grid-cols-1 lg:grid-cols-2">
 
-        {/* Image */}
-        <div className="relative min-h-[50vh] lg:min-h-full">
+        {/* Image - Fixed square aspect ratio */}
+        <div className="relative bg-cream-light flex items-center justify-center p-6 sm:p-8 lg:p-12 min-h-0 lg:min-h-screen">
           {fabric.image ? (
-            <img
-              src={fabric.image}
-              alt={fabric.name}
-              className="w-full h-full object-cover"
-            />
+            <div
+              className="relative w-full max-w-[550px] aspect-square cursor-default lg:cursor-crosshair"
+              style={{ touchAction: 'none' }}
+              onPointerMove={(event) => {
+                const bounds = event.currentTarget.getBoundingClientRect()
+                const lensSize = 221
+                const zoom = 2.5
+                const x = Math.min(Math.max(event.clientX - bounds.left, 0), bounds.width)
+                const y = Math.min(Math.max(event.clientY - bounds.top, 0), bounds.height)
+                const isSmallScreen = window.matchMedia('(max-width: 1023px)').matches
+
+                setMagnifier({
+                  left: isSmallScreen
+                    ? Math.max(0, Math.min(x - lensSize / 2, Math.max(0, bounds.width - lensSize)))
+                    : bounds.width + 16,
+                  top: Math.max(0, Math.min(y - lensSize / 2, Math.max(0, bounds.height - lensSize))),
+                  backgroundSize: `${bounds.width * zoom}px ${bounds.height * zoom}px`,
+                  backgroundPosition: `${lensSize / 2 - x * zoom}px ${lensSize / 2 - y * zoom}px`,
+                })
+              }}
+              onPointerDown={(event) => event.currentTarget.setPointerCapture?.(event.pointerId)}
+              onPointerLeave={() => setMagnifier(null)}
+            >
+              <div className="w-full h-full flex items-center justify-center overflow-hidden">
+                <img
+                  src={fabric.image}
+                  alt={fabric.name}
+                  decoding="async"
+                  className="w-full h-full object-contain"
+                />
+              </div>
+              {magnifier && (
+                <div
+                  aria-hidden="true"
+                  className="pointer-events-none absolute z-10 h-[221px] w-[221px] border-2 border-white bg-no-repeat shadow-[0_4px_18px_rgba(0,0,0,0.28)]"
+                  style={{
+                    left: magnifier.left,
+                    top: magnifier.top,
+                    backgroundImage: `url(${fabric.image})`,
+                    backgroundSize: magnifier.backgroundSize,
+                    backgroundPosition: magnifier.backgroundPosition,
+                  }}
+                />
+              )}
+            </div>
           ) : (
-            <div className={`w-full h-full min-h-[50vh] ${fabric.texture}`} />
+            <div className={`w-full max-w-[550px] aspect-square ${fabric.texture}`} />
           )}
           <div className="absolute top-6 left-6 bg-charcoal/70 px-4 py-1.5">
             <span className="text-white text-[10px] tracking-[0.2em] uppercase">
@@ -202,45 +141,25 @@ export default function FabricDetail() {
         </div>
 
         {/* Content */}
-        <div className="px-8 lg:px-16 py-12 flex flex-col justify-center">
-          <p className="eyebrow mb-3">
+        <div className="px-8 lg:px-16 py-12 lg:py-16 flex flex-col justify-start lg:justify-center">
+          <p className="eyebrow mb-2">
             {fabric.collection} Collection
           </p>
-          <h1 className="font-serif text-4xl lg:text-5xl font-light text-charcoal leading-tight mb-2">
+          <h1 className="font-serif text-4xl lg:text-5xl font-light text-charcoal leading-tight mb-1">
             {fabric.name}
           </h1>
-          <p className="text-xs text-charcoal-light italic mb-4">
-            Premium Luxury Textile — SA Studio Damascus
-          </p>
-
-          <div className="flex flex-wrap gap-2 mb-6">
-            {Object.entries(fabric.specs)
-              .slice(0, 4)
-              .map(([key, value]) => (
-                <span
-                  key={key}
-                  className="rounded-full border border-cream-dark px-3 py-1 text-[10px] uppercase tracking-[0.18em] text-charcoal-light"
-                >
-                  {key}: {value}
-                </span>
-              ))}
-          </div>
-
-          <p
-            className="text-sm leading-loose text-charcoal-light mb-8 pl-4"
-            style={{ borderLeft: '2px solid #2D4A3E' }}
-          >
+          <p className="text-sm text-charcoal-light font-light mb-8 leading-relaxed">
             {fabric.description}
           </p>
 
-          {/* Specs */}
-          <div className="mb-8">
+          {/* Specs table */}
+          <div className="mb-8 space-y-0">
             {Object.entries(fabric.specs).map(([key, value]) => (
               <div
                 key={key}
-                className="grid grid-cols-2 py-3 border-b border-cream-dark"
+                className="grid grid-cols-2 py-3 border-b border-cream-dark last:border-b-0"
               >
-                <span className="text-[11px] tracking-[0.15em] uppercase text-charcoal-light">
+                <span className="text-[11px] tracking-[0.2em] uppercase text-charcoal-light font-light">
                   {key}
                 </span>
                 <span className="text-sm text-charcoal text-right font-light">
@@ -251,13 +170,7 @@ export default function FabricDetail() {
           </div>
 
           {/* Actions */}
-          <div className="flex flex-wrap gap-3">
-            <button
-              onClick={() => setModalOpen(true)}
-              className="inline-flex items-center min-h-[44px] px-8 py-3 bg-forest text-white text-[11px] tracking-[0.2em] uppercase hover:bg-forest-light transition-colors duration-200"
-            >
-              Request Quotation
-            </button>
+          <div className="flex flex-wrap gap-3 pt-4">
             <a
               href={`${WHATSAPP_BASE}?text=${waMessage}`}
               target="_blank"
@@ -267,7 +180,7 @@ export default function FabricDetail() {
               <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor">
                 <path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 005.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 00-3.48-8.413z" />
               </svg>
-              WhatsApp
+              Request a Quotation
             </a>
             <a
               href={MAPS_LINK}
@@ -302,6 +215,8 @@ export default function FabricDetail() {
                     <img
                       src={f.image}
                       alt={f.name}
+                      loading="lazy"
+                      decoding="async"
                       className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-105"
                     />
                   ) : (
@@ -325,9 +240,6 @@ export default function FabricDetail() {
       )}
 
       {/* Quote modal */}
-      {modalOpen && (
-        <QuoteModal fabric={fabric} onClose={() => setModalOpen(false)} />
-      )}
 
     </div>
   )

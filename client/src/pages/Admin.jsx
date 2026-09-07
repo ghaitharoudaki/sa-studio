@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react'
-import { createFabric, uploadFabricImage } from '../data/fabrics'
+import { createFabric, uploadFabricImage, validateFabricImage } from '../data/fabrics'
 
 const initialForm = {
   name: '',
@@ -31,6 +31,13 @@ export default function Admin() {
   const handleImage = (event) => {
     const file = event.target.files?.[0]
     if (!file) return
+    const validationError = validateFabricImage(file)
+    if (validationError) {
+      setMessage(validationError)
+      event.target.value = ''
+      return
+    }
+    setMessage('')
     setImageFile(file)
     setPreviewUrl(URL.createObjectURL(file))
   }
@@ -100,7 +107,7 @@ export default function Admin() {
 
         <div className="md:col-span-2">
           <label className={labelClass}>Image *</label>
-          <input required type="file" accept="image/*" onChange={handleImage} className={`${inputClass} file:mr-4 file:border-0 file:bg-forest file:px-4 file:py-2 file:text-white`} />
+          <input required type="file" accept="image/jpeg,image/png,image/webp,image/avif" onChange={handleImage} className={`${inputClass} file:mr-4 file:border-0 file:bg-forest file:px-4 file:py-2 file:text-white`} />
           {previewUrl && <img src={previewUrl} alt="Selected fabric preview" className="mt-4 h-40 w-full object-cover" />}
         </div>
 
