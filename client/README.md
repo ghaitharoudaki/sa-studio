@@ -8,6 +8,7 @@ The repository includes the database migration at `supabase/schema.sql`.
 
 1. Create a project at [supabase.com](https://supabase.com).
 2. Open **SQL Editor**, paste in `supabase/schema.sql`, and run it.
+   This creates the table and seeds the initial catalog. If the site currently shows no fabrics, rerun this script against the same project shown in `VITE_SUPABASE_URL`.
 3. Open **Project Settings > API** and copy the project URL and anon key into `.env.local` using `.env.example` as the template.
 4. In **Authentication > Users**, create the administrator account.
 5. In SQL Editor, uncomment the final `update auth.users` statement in the schema and replace the email with the administrator email.
