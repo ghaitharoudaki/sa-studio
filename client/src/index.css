@@ -169,8 +169,8 @@
     white-space: nowrap;
     transition: color 150ms ease;
   }
-  .site-nav-links a:hover,
-  .site-nav-links a.is-active { color: var(--nav-accent); }
+  .site-nav-links a.is-active { color: var(--nav-accent) !important; }
+  .site-nav-links a:hover { color: var(--primary-hover) !important; }
   .site-nav-chevron {
     position: absolute;
     bottom: -14px;
@@ -523,8 +523,8 @@
       text-transform: uppercase;
       transition: color 150ms ease;
     }
-    .site-nav-mobile-links a:hover,
-    .site-nav-mobile-links a.is-active { color: var(--nav-accent); }
+    .site-nav-mobile-links a.is-active { color: var(--nav-accent) !important; }
+    .site-nav-mobile-links a:hover { color: var(--primary-hover) !important; }
     .site-nav-mobile-settings {
       display: flex;
       align-items: center;
