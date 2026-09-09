@@ -1,19 +1,20 @@
 import { Link } from 'react-router-dom'
-import logo from '../assets/logo.jpg'
+import logo from '../assets/logo.png'
+import darkLogo from '../assets/logo-dark.png'
 import { useSite } from '../context/SiteContext'
 import { INSTAGRAM_LINK } from '../data/fabrics'
 
 export default function Footer() {
-  const { t } = useSite()
+  const { theme, t } = useSite()
   return (
     <footer
       className="site-footer px-6 lg:px-16 py-10 flex flex-col md:flex-row items-center justify-between gap-6 text-center md:text-left"
       style={{ background: 'var(--footer-bg)' }}
     >
       <img
-        src={logo}
+        src={theme === 'dark' ? darkLogo : logo}
         alt="SA Studio"
-        className="h-8 w-auto object-contain brightness-0 invert"
+        className="h-8 w-auto object-contain"
       />
 
       <p className="text-xs tracking-[0.12em] text-white/70">
@@ -25,6 +26,8 @@ export default function Footer() {
           { to: '/',            label: t('home') },
           { to: '/collections', label: t('collections') },
           { to: '/about',       label: t('about') },
+          { to: '/contact',     label: t('contactUs') },
+          { to: '/privacy',     label: 'Privacy' },
         ].map(({ to, label }) => (
           <Link
             key={to}

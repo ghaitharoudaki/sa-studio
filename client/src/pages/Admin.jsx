@@ -84,7 +84,7 @@ export default function Admin() {
   const labelClass = 'block text-[10px] tracking-[0.2em] uppercase text-charcoal-light mb-2'
 
   return (
-    <div className="pt-[72px] px-8 lg:px-16 py-16 max-w-5xl mx-auto">
+    <div className="px-8 lg:px-16 py-16 max-w-5xl mx-auto">
       <div className="mb-10">
         <p className="eyebrow mb-4">Admin</p>
         <h1 className="font-serif text-5xl font-light text-charcoal">Add a fabric</h1>

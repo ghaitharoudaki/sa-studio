@@ -2,8 +2,10 @@ import { useEffect, useState } from 'react'
 import { Navigate, useNavigate } from 'react-router-dom'
 import AdminDashboard from '../pages/AdminDashboard'
 import { supabase } from '../lib/supabase'
+import { useSite } from '../context/SiteContext'
 
 function AdminLogin() {
+  const { t } = useSite()
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
   const [error, setError] = useState('')
@@ -18,17 +20,17 @@ function AdminLogin() {
     setSubmitting(false)
 
     if (signInError) {
-      setError('Unable to sign in with those details.')
+      setError(t('unableToSignIn'))
     }
   }
 
   return (
-    <div className="pt-[72px] px-6 lg:px-16 py-24 max-w-md mx-auto">
-      <p className="eyebrow mb-4">Private area</p>
-      <h1 className="font-serif text-5xl font-light text-charcoal mb-10">Admin sign in</h1>
+    <div className="px-6 lg:px-16 py-24 max-w-md mx-auto">
+      <p className="eyebrow mb-4">{t('privateArea')}</p>
+      <h1 className="font-serif text-5xl font-light text-charcoal mb-10">{t('adminSignIn')}</h1>
       <form onSubmit={handleSubmit} className="space-y-5">
         <label className="block">
-          <span className="block text-[10px] tracking-[0.2em] uppercase text-charcoal-light mb-2">Email</span>
+          <span className="block text-[10px] tracking-[0.2em] uppercase text-charcoal-light mb-2">{t('email')}</span>
           <input
             required
             type="email"
@@ -38,7 +40,7 @@ function AdminLogin() {
           />
         </label>
         <label className="block">
-          <span className="block text-[10px] tracking-[0.2em] uppercase text-charcoal-light mb-2">Password</span>
+          <span className="block text-[10px] tracking-[0.2em] uppercase text-charcoal-light mb-2">{t('password')}</span>
           <input
             required
             type="password"
@@ -52,7 +54,7 @@ function AdminLogin() {
           disabled={submitting}
           className="min-h-[44px] px-8 py-3 bg-forest text-white text-[11px] tracking-[0.2em] uppercase hover:bg-forest-light transition-colors disabled:opacity-60"
         >
-          {submitting ? 'Signing in...' : 'Sign in'}
+          {submitting ? t('signingIn') : t('signIn')}
         </button>
         {error && <p className="text-sm text-charcoal-light" role="alert">{error}</p>}
       </form>
@@ -62,6 +64,7 @@ function AdminLogin() {
 
 export default function AdminRoute() {
   const navigate = useNavigate()
+  const { t } = useSite()
   const [session, setSession] = useState(null)
   const [loading, setLoading] = useState(Boolean(supabase))
 
@@ -97,7 +100,7 @@ export default function AdminRoute() {
   }
 
   if (loading) {
-    return <div className="pt-[72px] px-6 lg:px-16 py-24 text-sm text-charcoal-light">Checking access...</div>
+    return <div className="px-6 lg:px-16 py-24 text-sm text-charcoal-light">{t('checkingAccess')}</div>
   }
 
   if (!session) {
@@ -121,7 +124,7 @@ export default function AdminRoute() {
           }}
           className="text-[10px] tracking-[0.2em] uppercase text-charcoal-light hover:text-forest transition-colors"
         >
-          Sign out
+          {t('signOut')}
         </button>
       </div>
       <AdminDashboard />

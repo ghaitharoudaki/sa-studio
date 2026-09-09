@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useState } from 'react'
-import { WHATSAPP_BASE, MAPS_LINK } from '../data/fabrics'
+import { WHATSAPP_BASE, SHOWROOMS } from '../data/fabrics'
 import { useSite } from '../context/SiteContext'
+import SEO from '../components/SEO'
 
 function useReveal(threshold = 0.16) {
   const [element, setElement] = useState(null)
@@ -28,18 +29,9 @@ function useReveal(threshold = 0.16) {
 }
 
 const pillars = [
-  {
-    title: 'Curation',
-    text: 'Every reference is chosen by hand from Europe’s most respected textile houses, with a focus on character, performance and atmosphere.',
-  },
-  {
-    title: 'Precision',
-    text: 'We work across technical specifications, texture, durability and scale so each fabric feels as considered in application as it does in the room.',
-  },
-  {
-    title: 'Service',
-    text: 'From first sample to final installation, clients receive thoughtful guidance and a seamless, design-led process.',
-  },
+  { titleKey: 'curation', textKey: 'curationText' },
+  { titleKey: 'precision', textKey: 'precisionText' },
+  { titleKey: 'service', textKey: 'serviceText' },
 ]
 
 const partners = ['Armani Casa', 'Casamance', 'Texam', 'Omexco', 'Fine', 'Arte', 'Marburg', 'Roberto Cavalli']
@@ -65,7 +57,8 @@ export default function About() {
   const storyLabel = t?.('ourStory') || 'Our Story'
 
   return (
-    <div className="pt-[72px] overflow-hidden" style={{ background: 'var(--bg)' }}>
+    <div className="overflow-hidden" style={{ background: 'var(--bg)' }}>
+      <SEO title="Our Story | SA Studio Damascus" description="Meet SA Studio and discover two decades of personal curation, European textiles and design-led service in Damascus." />
       <section
         ref={heroRef}
         className={`relative px-6 md:px-10 lg:px-16 py-12 lg:py-16 transition-all duration-700 ${heroVisible ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-8'}`}
@@ -85,20 +78,20 @@ export default function About() {
               className="mb-6 text-[11px] uppercase tracking-[0.28em]"
               style={{ color: 'var(--green)' }}
             >
-              {storyLabel} · Damascus · Est. 2005
+              {storyLabel} · <span dir="ltr" style={{ unicodeBidi: 'isolate' }}>Damascus · Est. 2005</span>
             </p>
 
             <h1
               style={{
                 color: 'var(--text-primary)',
-                fontFamily: 'Cormorant Garamond, Georgia, serif',
+                fontFamily: 'var(--font-display)',
                 fontWeight: 400,
                 letterSpacing: '-0.04em',
                 lineHeight: 0.9,
               }}
               className="text-5xl sm:text-6xl md:text-7xl lg:text-[7rem]"
             >
-              Samer Aroudaki
+              {t('aboutName')}
             </h1>
 
             <div className="mt-4 flex items-center gap-5">
@@ -106,13 +99,13 @@ export default function About() {
               <span
                 style={{
                   color: 'var(--burgundy)',
-                  fontFamily: 'Cormorant Garamond, Georgia, serif',
+                  fontFamily: 'var(--font-display)',
                   fontStyle: 'italic',
                   fontSize: 'clamp(2.1rem, 4vw, 4rem)',
                   lineHeight: 1,
                 }}
               >
-                & SA Studio
+                {t('aboutAndStudio')}
               </span>
             </div>
 
@@ -120,12 +113,12 @@ export default function About() {
               className="mt-7 max-w-lg text-base leading-8"
               style={{ color: 'var(--text-secondary)' }}
             >
-              Twenty-one years of carefully sourced European textiles, designed to bring warmth, clarity and enduring character into the spaces people live in.
+              {t('aboutYears')}
             </p>
 
             <div className="mt-10 flex flex-wrap gap-4">
               <a
-                href={MAPS_LINK}
+                href={SHOWROOMS[0].mapsLink}
                 target="_blank"
                 rel="noreferrer"
                 className="inline-flex min-h-[48px] items-center justify-center rounded-full border px-6 text-[11px] uppercase tracking-[0.18em] transition-all duration-200 hover:-translate-y-0.5"
@@ -135,7 +128,7 @@ export default function About() {
                   background: 'transparent',
                 }}
               >
-                Visit showroom
+                {t('visitShowroom')}
               </a>
 
               <a
@@ -148,7 +141,7 @@ export default function About() {
                   color: 'var(--text-on-accent)',
                 }}
               >
-                WhatsApp
+                {t('whatsapp')}
               </a>
             </div>
           </div>
@@ -164,7 +157,7 @@ export default function About() {
             <div className="absolute bottom-10 left-10 h-32 w-32 rounded-full border border-white/30 bg-white/8 backdrop-blur-[2px]" />
             <div className="absolute right-10 top-10 h-44 w-44 rounded-full border border-white/20 bg-white/8 backdrop-blur-[2px]" />
             <div className="absolute bottom-20 right-16 h-48 w-48 rounded-full border border-white/25 bg-[rgba(250,248,243,0.14)]" />
-            <div className="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 rounded-full border border-white/30 bg-white/5 px-6 py-4 text-[10px] uppercase tracking-[0.26em] text-white backdrop-blur-sm">
+            <div className="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 rounded-full border border-white/30 bg-white/5 px-6 py-4 text-[10px] uppercase tracking-[0.26em] text-white backdrop-blur-sm" dir="ltr" style={{ unicodeBidi: 'isolate' }}>
               Atelier Damascus
             </div>
           </div>
@@ -180,7 +173,7 @@ export default function About() {
           <p
             style={{
               color: 'var(--text-primary)',
-              fontFamily: 'Cormorant Garamond, Georgia, serif',
+              fontFamily: 'var(--font-display)',
               fontWeight: 400,
               fontStyle: 'italic',
               letterSpacing: '-0.03em',
@@ -188,11 +181,11 @@ export default function About() {
             }}
             className="text-4xl md:text-6xl"
           >
-            “Chosen not merely for beauty, but for the <span style={{ color: 'var(--burgundy)' }}>conversation</span> it begins when brought into a space.”
+            {t('aboutQuote')}
           </p>
 
           <p className="mt-8 text-[11px] uppercase tracking-[0.3em]" style={{ color: 'var(--text-secondary)' }}>
-            Samer Aroudaki · Founder
+            {t('aboutFounder')}
           </p>
         </div>
       </section>
@@ -210,31 +203,31 @@ export default function About() {
 
         <div>
           <p className="text-[11px] uppercase tracking-[0.28em]" style={{ color: 'var(--green)' }}>
-            Est. 2005 · Damascus
+            <span dir="ltr" style={{ unicodeBidi: 'isolate' }}>Est. 2005 · Damascus</span>
           </p>
 
           <h2
             className="mt-6 text-4xl md:text-5xl"
             style={{
               color: 'var(--text-primary)',
-              fontFamily: 'Cormorant Garamond, Georgia, serif',
+              fontFamily: 'var(--font-display)',
               fontWeight: 400,
               lineHeight: 0.95,
               letterSpacing: '-0.04em',
             }}
           >
-            Twenty-one years of personal curation.
+            {t('aboutStoryHeading')}
           </h2>
 
           <div className="mt-8 space-y-5 text-base leading-8" style={{ color: 'var(--text-secondary)' }}>
             <p>
-              Founded in Damascus in 2005, SA Studio grew from a personal conviction: the most memorable interiors are built from materials chosen with care, not mass-produced for convenience.
+              {t('aboutStoryOne')}
             </p>
             <p>
-              Samer Aroudaki began sourcing European textiles with a collector’s eye, focusing on depth of texture, integrity of material and the emotional tone a fabric lends to a room.
+              {t('aboutStoryTwo')}
             </p>
             <p>
-              Today, the studio represents international maisons and supports architects, designers and private clients with a considered, tailored approach to luxury textiles.
+              {t('aboutStoryThree')}
             </p>
           </div>
         </div>
@@ -247,7 +240,7 @@ export default function About() {
       >
         <div className="mx-auto max-w-7xl">
           <p className="text-[11px] uppercase tracking-[0.28em]" style={{ color: 'var(--green)' }}>
-            Our foundation
+            {t('aboutFoundation')}
           </p>
 
           <div className="mt-10 grid gap-6 md:grid-cols-3">
@@ -268,16 +261,16 @@ export default function About() {
                   className="text-3xl"
                   style={{
                     color: 'var(--text-primary)',
-                    fontFamily: 'Cormorant Garamond, Georgia, serif',
+                    fontFamily: 'var(--font-display)',
                     fontWeight: 400,
                     lineHeight: 1,
                     letterSpacing: '-0.03em',
                   }}
                 >
-                  {item.title}
+                  {t(item.titleKey)}
                 </h3>
                 <p className="mt-5 text-base leading-8" style={{ color: 'var(--text-secondary)' }}>
-                  {item.text}
+                  {t(item.textKey)}
                 </p>
               </div>
             ))}
@@ -288,7 +281,7 @@ export default function About() {
       <section className="px-6 py-16 lg:px-10 lg:py-24" style={{ background: 'var(--bg)' }}>
         <div className="mx-auto max-w-7xl">
           <p className="text-[11px] uppercase tracking-[0.28em]" style={{ color: 'var(--green)' }}>
-            Trusted partners
+            {t('trustedPartners')}
           </p>
 
           <div className="mt-8 grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
@@ -300,7 +293,7 @@ export default function About() {
                   borderColor: 'var(--border)',
                   background: 'rgba(255,255,255,0.2)',
                   color: 'var(--text-primary)',
-                  fontFamily: 'Cormorant Garamond, Georgia, serif',
+                  fontFamily: 'var(--font-display)',
                   fontSize: '2rem',
                   fontStyle: 'italic',
                   letterSpacing: '-0.03em',
@@ -327,54 +320,42 @@ export default function About() {
 
         <div className="flex items-center px-6 py-12 md:px-10 lg:px-14" style={{ background: 'var(--burgundy)' }}>
           <div className="max-w-xl text-white">
-            <p className="text-[11px] uppercase tracking-[0.28em] text-white/75">Visit our showroom</p>
+            <p className="text-[11px] uppercase tracking-[0.28em] text-white/75">{t('visitOurShowroom')}</p>
 
             <h2
               className="mt-6 text-4xl md:text-5xl"
               style={{
-                fontFamily: 'Cormorant Garamond, Georgia, serif',
+                fontFamily: 'var(--font-display)',
                 fontWeight: 400,
                 letterSpacing: '-0.04em',
                 lineHeight: 0.95,
               }}
             >
-              Damascus showroom
+              {t('damascusShowroomHeading')}
             </h2>
 
-            <div className="mt-10 space-y-7 text-base text-white/80">
-              <div>
-                <p className="text-[11px] uppercase tracking-[0.24em] text-white/60">Address</p>
-                <p className="mt-2">Abou Rummaneh, Nizzar Kabbani St, Damascus, Syria</p>
-              </div>
-              <div>
-                <p className="text-[11px] uppercase tracking-[0.24em] text-white/60">Hours</p>
-                <p className="mt-2">Saturday – Thursday, 11:00 AM – 7:00 PM</p>
-              </div>
-              <div>
-                <p className="text-[11px] uppercase tracking-[0.24em] text-white/60">WhatsApp</p>
-                <p className="mt-2">+963 944 231 337</p>
-              </div>
+            <div className="mt-10 space-y-8 text-base text-white/80">
+              {SHOWROOMS.map((showroom) => (
+                <div key={showroom.id}>
+                  <h3 className="text-lg text-white" dir="ltr" style={{ unicodeBidi: 'isolate' }}>{showroom.name}</h3>
+                  <p className="mt-2" dir="ltr" style={{ unicodeBidi: 'isolate' }}>{showroom.address}</p>
+                  <p className="mt-2 text-sm text-white/70">{t('showroomHours')} · <span dir="ltr" style={{ unicodeBidi: 'isolate' }}>{showroom.whatsapp}</span></p>
+                  <a href={showroom.mapsLink} target="_blank" rel="noreferrer" className="mt-3 inline-flex min-h-[44px] items-center rounded-full border border-white/40 px-5 text-[11px] uppercase tracking-[0.18em] text-white transition-all duration-200 hover:border-white hover:bg-white/8">
+                    {t('viewGoogleMaps')}
+                  </a>
+                </div>
+              ))}
             </div>
 
-            <div className="mt-10 flex flex-wrap gap-4">
-              <a
-                href={MAPS_LINK}
-                target="_blank"
-                rel="noreferrer"
-                className="inline-flex min-h-[48px] items-center justify-center rounded-full border border-white/40 px-6 text-[11px] uppercase tracking-[0.18em] text-white transition-all duration-200 hover:border-white hover:bg-white/8"
-              >
-                View on maps
-              </a>
-              <a
-                href={WHATSAPP_BASE}
-                target="_blank"
-                rel="noreferrer"
-                className="inline-flex min-h-[48px] items-center justify-center rounded-full bg-white px-6 text-[11px] uppercase tracking-[0.18em] transition-all duration-200 hover:-translate-y-0.5"
-                style={{ color: 'var(--burgundy)' }}
-              >
-                Message us
-              </a>
-            </div>
+            <a
+              href={WHATSAPP_BASE}
+              target="_blank"
+              rel="noreferrer"
+              className="mt-10 inline-flex min-h-[48px] items-center justify-center rounded-full bg-white px-6 text-[11px] uppercase tracking-[0.18em] transition-all duration-200 hover:-translate-y-0.5"
+              style={{ color: 'var(--burgundy)' }}
+            >
+              {t('messageUs')}
+            </a>
           </div>
         </div>
       </section>

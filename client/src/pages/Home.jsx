@@ -2,6 +2,7 @@ import { Link } from 'react-router-dom'
 import { useEffect, useRef, useState } from 'react'
 import { fetchFabrics, PARTNER_BRANDS, WHATSAPP_BASE } from '../data/fabrics'
 import { useSite } from '../context/SiteContext'
+import SEO from '../components/SEO'
 
 function Marquee() {
   const doubled = [...PARTNER_BRANDS, ...PARTNER_BRANDS]
@@ -28,6 +29,7 @@ function Marquee() {
 }
 
 function FabricCard({ fabric }) {
+  const { t } = useSite()
   return (
     <Link
       to={`/collections/${fabric.id}`}
@@ -37,7 +39,7 @@ function FabricCard({ fabric }) {
         {fabric.image ? (
           <img
             src={fabric.image}
-            alt={fabric.name}
+            alt={`${fabric.name} ${fabric.collection || ''} textile`}
             loading="lazy"
             decoding="async"
             className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-105"
@@ -49,7 +51,7 @@ function FabricCard({ fabric }) {
         )}
         <div className="absolute inset-0 bg-charcoal/40 opacity-0 group-hover:opacity-100 transition-opacity duration-300 flex items-center justify-center">
           <span className="text-white text-[11px] tracking-[0.25em] uppercase border border-white/60 px-5 py-2.5">
-            View Details
+            {t('viewDetails')}
           </span>
         </div>
       </div>
@@ -61,7 +63,7 @@ function FabricCard({ fabric }) {
           {fabric.name}
         </h3>
         <p className="text-xs text-charcoal-light mt-0.5">
-          {fabric.collection} Collection
+          {fabric.collection} {t('collection')}
         </p>
       </div>
     </Link>
@@ -93,8 +95,6 @@ export default function Home() {
   const { t } = useSite()
   const aboutRef = useFadeIn()
   const statsRef = useFadeIn()
-  const heroRef = useRef(null)
-  const [heroPos, setHeroPos] = useState({ x: 50, y: 50 })
   const [featured, setFeatured] = useState([])
 
   useEffect(() => {
@@ -109,47 +109,17 @@ export default function Home() {
     }
   }, [])
 
-  useEffect(() => {
-    const hero = heroRef.current
-    if (!hero) return
-    hero.style.setProperty('--hero-bg-x', `${heroPos.x}%`)
-    hero.style.setProperty('--hero-bg-y', `${heroPos.y}%`)
-  }, [heroPos])
-
-  const handleHeroMove = (event) => {
-    const hero = heroRef.current
-    if (!hero) return
-    const rect = hero.getBoundingClientRect()
-    const x = ((event.clientX - rect.left) / rect.width) * 100
-    const y = ((event.clientY - rect.top) / rect.height) * 100
-    setHeroPos({ x: Math.min(70, Math.max(30, x)), y: Math.min(70, Math.max(30, y)) })
-  }
-
-  const resetHero = () => setHeroPos({ x: 50, y: 50 })
-
   return (
-    <div className="pt-[72px]">
+    <div>
+      <SEO title="Luxury Textiles & Wallpaper in Damascus | SA Studio" description="Discover SA Studio's curated European fabrics and wallpaper for distinctive interiors in Damascus and the wider region." image="https://sa-studio.sy/hero-texture.webp" />
 
-      <section
-        ref={heroRef}
-        className="hero relative h-[calc(100vh-72px)] overflow-hidden home-hero-wallpaper"
-        onMouseMove={handleHeroMove}
-        onMouseLeave={resetHero}
-        onMouseEnter={handleHeroMove}
-      >
-        <div className="interactive-hero-bg" />
-        <div className="absolute inset-0 flex items-center justify-center px-8 lg:px-20">
-          <div className="text-center max-w-4xl">
-            <div className="hero-readable-soft mb-8 inline-flex items-center gap-3 rounded-full border border-white/30 bg-black/25 px-4 py-2 text-[10px] uppercase tracking-[0.35em] text-white shadow-sm backdrop-blur-sm">
-              Damascus · Est. 2005
-            </div>
-            <h1 className="hero-readable font-serif text-5xl lg:text-7xl font-light leading-tight text-white mb-8">
-              {t('luxuryFurniture')}
-            </h1>
-            <p className="hero-readable-soft text-base leading-loose text-slate-300 max-w-2xl mx-auto mb-10">
-              {t('heroDescription')}
-            </p>
-            <div className="flex flex-wrap gap-4 justify-center">
+      <section className="home-hero-split">
+        <div className="home-hero-copy">
+          <div className="home-hero-badge"><span dir="ltr" style={{ unicodeBidi: 'isolate' }}>Damascus · Est. 2005</span></div>
+          <h1 className="font-serif text-5xl lg:text-7xl font-normal leading-tight text-charcoal">
+            {t('luxuryTextiles')}
+          </h1>
+          <div className="home-hero-actions">
               <Link
                 to="/collections"
                 className="primary-cta inline-flex items-center min-h-[50px] px-10 py-4 rounded-full text-[11px] tracking-[0.2em] uppercase transition-all duration-200 shadow-deep"
@@ -158,13 +128,13 @@ export default function Home() {
               </Link>
               <Link
                 to="/about"
-                className="hero-readable-soft inline-flex items-center min-h-[50px] px-10 py-4 rounded-full border border-white/45 bg-black/25 text-white text-[11px] tracking-[0.2em] uppercase hover:bg-black/40 hover:border-forest hover:text-white transition-all duration-200"
+                className="inline-flex items-center min-h-[50px] px-10 py-4 rounded-full border border-charcoal/30 text-charcoal text-[11px] tracking-[0.2em] uppercase hover:border-forest hover:text-forest transition-all duration-200"
               >
                 {t('viewOurStory')}
               </Link>
-            </div>
           </div>
         </div>
+        <div className="home-hero-image" role="img" aria-label="SA Studio textile texture" />
       </section>
 
       {/* MARQUEE */}
@@ -183,10 +153,7 @@ export default function Home() {
             {t('excellence')}
           </h2>
           <p className="text-sm leading-loose text-charcoal-light mb-8 max-w-md">
-            SA Studio was founded with a singular vision: to bring the world's
-            most distinguished textiles to the discerning interiors of Damascus
-            and the wider region. Each collection is personally selected for its
-            technical mastery and aesthetic distinction.
+            {t('homeAtelierDescription')}
           </p>
           <Link
             to="/about"
@@ -201,9 +168,9 @@ export default function Home() {
           className="opacity-0 translate-y-6 transition-all duration-700 delay-200 bg-cream-dark grid grid-cols-2"
         >
           {[
-            { num: '20+',  label: 'Years of excellence' },
-            { num: '500+', label: 'Fabric references' },
-            { num: '2',    label: 'Damascus showroom' },
+            { num: '20+',  label: t('yearsExcellence') },
+            { num: '500+', label: t('fabricReferences') },
+            { num: '2',    label: t('damascusShowrooms') },
           ].map(({ num, label }) => (
             <div
               key={label}
@@ -238,7 +205,7 @@ export default function Home() {
                 {fabric.image ? (
                   <img
                     src={fabric.image}
-                    alt={fabric.name}
+                    alt={`${fabric.name} ${fabric.collection || ''} textile`}
                     loading="lazy"
                     decoding="async"
                     className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-105"

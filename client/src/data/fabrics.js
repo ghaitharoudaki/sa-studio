@@ -3,16 +3,38 @@ import { supabase } from '../lib/supabase'
 export const WHATSAPP_NUMBER = '963944231337'
 export const WHATSAPP_BASE = `https://wa.me/${WHATSAPP_NUMBER}`
 export const INSTAGRAM_LINK = 'https://www.instagram.com/sa.studio.sy?utm_source=ig_web_button_share_sheet&stkn=ZDNlZDc0MzIxNw=='
-export const MAPS_LINK = 'https://maps.google.com/?q=Mazzeh+Street+Damascus+Syria'
+
+export const SHOWROOMS = [
+  {
+    id: 'abou-rummaneh',
+    name: 'Showroom 1 · Abou Rummaneh',
+    address: 'Abou Rummaneh, Nizzar Kabbani St, Damascus, Syria',
+    coordinates: { latitude: 33.51924786999333, longitude: 36.28299557671981 },
+    mapsLink: 'https://www.google.com/maps?q=33.51924786999333,36.28299557671981',
+    hours: 'Saturday - Thursday, 11:00 AM - 7:00 PM',
+    whatsapp: '+963 944 231 337',
+  },
+  {
+    id: 'al-somariah',
+    name: 'Showroom 2 · Al Somariah',
+    address: 'Al Somariah Highway, Damascus, Syria',
+    coordinates: { latitude: 33.473495, longitude: 36.201130 },
+    mapsLink: 'https://www.google.com/maps?q=33.473495,36.201130',
+    hours: 'Saturday - Thursday, 11:00 AM - 7:00 PM',
+    whatsapp: '+963 944 231 337',
+  },
+]
+
+export const MAPS_LINK = SHOWROOMS[0].mapsLink
 
 export const PARTNER_BRANDS = [
-  'Rubelli',
-  'Pierre Frey',
-  'Dedar',
-  'Loro Piana',
+  'Jannelli&Volpi',
+  'Agena',
+  'Zoffany',
+  'Harlequin',
   'Armani Casa',
   'Fine',
-  'Omexco',
+  'Lizzo',
   'Arte',
   'Casamance',
   'Texam',

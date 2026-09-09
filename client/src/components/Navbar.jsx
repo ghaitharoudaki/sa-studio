@@ -1,6 +1,7 @@
-import { useState, useEffect } from 'react'
+import { useState } from 'react'
 import { Link, useLocation } from 'react-router-dom'
-import logo from '../assets/logo.jpg'
+import logo from '../assets/logo.png'
+import darkLogo from '../assets/logo-dark.png'
 import { useSite } from '../context/SiteContext'
 import { WHATSAPP_BASE } from '../data/fabrics'
 
@@ -22,159 +23,83 @@ function ThemeIcon({ theme }) {
 }
 
 export default function Navbar() {
-  const [scrolled, setScrolled]   = useState(false)
+  const [navExpanded, setNavExpanded] = useState(true)
   const [mobileOpen, setMobileOpen] = useState(false)
   const location = useLocation()
   const { theme, toggleTheme, toggleLanguage, t } = useSite()
   const quotationLink = `${WHATSAPP_BASE}?text=${encodeURIComponent('Hello, I would like to request a quotation from SA Studio.')}`
 
-  useEffect(() => {
-    const onScroll = () => setScrolled(window.scrollY > 20)
-    window.addEventListener('scroll', onScroll)
-    return () => window.removeEventListener('scroll', onScroll)
-  }, [])
-
-  useEffect(() => {
-    // Navigation changes intentionally close the mobile drawer.
-    // eslint-disable-next-line react-hooks/set-state-in-effect
-    setMobileOpen(false)
-  }, [location.pathname])
-
   const links = [
-    { to: '/',            label: t('home') },
+    { to: '/', label: t('home') },
+    { to: '/about', label: t('about') },
     { to: '/collections', label: t('collections') },
-    { to: '/about',       label: t('about') },
+    { to: '/contact', label: t('contactUs') },
   ]
 
   const isActive = (path) => location.pathname === path
+  const closeMobileMenu = () => setMobileOpen(false)
 
   return (
     <>
-      <nav
-        className={`site-nav fixed top-0 left-0 right-0 z-50 transition-all duration-300 ${
-          scrolled ? 'shadow-deep' : ''
-        }`}
-        style={{
-          background: 'var(--nav-bg)',
-          backdropFilter: 'blur(22px)',
-          borderBottom: '1px solid var(--line)',
-        }}
-      >
-        <div className="max-w-screen-xl mx-auto px-6 lg:px-16 h-[72px] flex items-center justify-between">
+      <nav className="site-nav">
+        <div className="site-nav-inner mx-auto max-w-screen-xl px-4 sm:px-6 lg:px-16">
+          <div className="site-nav-top">
+            <Link to="/" className="site-nav-logo-link">
+              <img src={theme === 'dark' ? darkLogo : logo} alt="SA Studio" className="site-logo" />
+            </Link>
 
-          {/* Logo */}
-          <Link to="/" className="flex items-center">
-            <img
-              src={logo}
-              alt="SA Studio"
-              className="site-logo h-10 w-auto object-contain"
-            />
-          </Link>
+            <div className="site-nav-desktop-tools">
+              <button type="button" onClick={toggleLanguage} className="site-nav-language" aria-label="Change language">
+                {t('language')}
+              </button>
+              <button type="button" onClick={toggleTheme} className="theme-toggle" aria-label={theme === 'light' ? 'Switch to dark mode' : 'Switch to light mode'}>
+                <ThemeIcon theme={theme} />
+              </button>
+              <a href={quotationLink} target="_blank" rel="noreferrer" className="site-nav-quotation">
+                <span className="mobile-quotation-full">{t('requestQuotation')}</span>
+                <span className="mobile-quotation-short">{t('requestQuotationShort')}</span>
+              </a>
+            </div>
 
-          {/* Desktop links */}
-          <div className="hidden md:flex items-center gap-10">
-            {links.map(({ to, label }) => (
-              <Link
-                key={to}
-                to={to}
-                className={`relative text-xs tracking-[0.2em] uppercase transition-colors duration-200 ${
-                  isActive(to)
-                    ? 'text-forest'
-                    : 'text-charcoal-light hover:text-forest'
-                }`}
-              >
-                <span className="relative inline-flex items-center gap-1">
+            <div className="site-nav-mobile-tools">
+              <a href={quotationLink} target="_blank" rel="noreferrer" className="site-nav-quotation">
+                {t('requestQuotation')}
+              </a>
+              <button type="button" className={`site-nav-hamburger ${mobileOpen ? 'is-open' : ''}`} onClick={() => setMobileOpen((open) => !open)} aria-label={mobileOpen ? 'Close menu' : 'Open menu'} aria-expanded={mobileOpen}>
+                <span />
+                <span />
+                <span />
+              </button>
+            </div>
+          </div>
+
+          <div className={`site-nav-row ${navExpanded ? 'is-open' : ''}`} aria-hidden={!navExpanded}>
+            <div className="site-nav-links">
+              {links.map(({ to, label }) => (
+                <Link key={to} to={to} onClick={closeMobileMenu} className={isActive(to) ? 'is-active' : ''}>
                   {label}
-                  <span
-                    className={`absolute -bottom-2 left-0 h-[2px] w-full rounded-full bg-forest transition-opacity duration-200 ${
-                      isActive(to) ? 'opacity-100' : 'opacity-0'
-                    }`}
-                  />
-                </span>
-              </Link>
-            ))}
+                </Link>
+              ))}
+            </div>
           </div>
-
-          <div className="hidden md:flex items-center gap-2">
-            <button
-              type="button"
-              onClick={toggleLanguage}
-              className="min-h-[44px] px-3 text-[11px] tracking-[0.12em] uppercase text-charcoal-light hover:text-forest transition-colors"
-              aria-label="Change language"
-            >
-              {t('language')}
-            </button>
-            <button
-              type="button"
-              onClick={toggleTheme}
-              className="theme-toggle min-h-[40px] min-w-[40px] text-charcoal-light hover:text-forest transition-colors"
-              aria-label={theme === 'light' ? 'Switch to dark mode' : 'Switch to light mode'}
-            >
-              <ThemeIcon theme={theme} />
-            </button>
-            <a
-              href={quotationLink}
-              target="_blank"
-              rel="noreferrer"
-              className="inline-flex items-center text-[11px] tracking-[0.18em] uppercase px-6 py-2.5 rounded-full border border-forest text-forest hover:bg-forest hover:text-white transition-all duration-200 min-h-[44px]"
-            >
-              {t('requestQuotation')}
-            </a>
-          </div>
-
-          {/* Hamburger */}
-          <button
-            className="md:hidden flex flex-col gap-1.5 p-2 min-w-[44px] min-h-[44px] items-center justify-center"
-            onClick={() => setMobileOpen(!mobileOpen)}
-            aria-label="Toggle menu"
-          >
-            <span className={`w-6 h-px bg-charcoal block transition-all duration-300 ${mobileOpen ? 'rotate-45 translate-y-[7px]' : ''}`} />
-            <span className={`w-6 h-px bg-charcoal block transition-all duration-300 ${mobileOpen ? 'opacity-0' : ''}`} />
-            <span className={`w-6 h-px bg-charcoal block transition-all duration-300 ${mobileOpen ? '-rotate-45 -translate-y-[7px]' : ''}`} />
-          </button>
         </div>
+        <button type="button" className={`site-nav-chevron ${navExpanded ? 'is-open' : ''}`} onClick={() => setNavExpanded((expanded) => !expanded)} aria-label={navExpanded ? 'Collapse navigation' : 'Expand navigation'} aria-expanded={navExpanded}>
+          <svg viewBox="0 0 24 24" aria-hidden="true"><path d="m6 9 6 6 6-6" fill="none" stroke="currentColor" strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" /></svg>
+        </button>
       </nav>
 
-      <div
-        className={`fixed inset-0 z-40 bg-black/40 transition-opacity duration-300 md:hidden ${
-          mobileOpen ? 'opacity-100 pointer-events-auto' : 'opacity-0 pointer-events-none'
-        }`}
-        onClick={() => setMobileOpen(false)}
-      />
-
-      <div
-        className={`fixed top-0 right-0 z-50 h-full w-[85vw] max-w-sm bg-cream shadow-deep transition-transform duration-300 md:hidden ${
-          mobileOpen ? 'translate-x-0' : 'translate-x-full'
-        }`}
-      >
-        <div className="flex flex-col px-6 pt-24 pb-10 gap-8 h-full">
+      <div className={`site-nav-backdrop ${mobileOpen ? 'is-open' : ''}`} onClick={closeMobileMenu} />
+      <aside className={`site-nav-mobile-panel ${mobileOpen ? 'is-open' : ''}`} aria-hidden={!mobileOpen}>
+        <div className="site-nav-mobile-links">
           {links.map(({ to, label }) => (
-            <Link
-              key={to}
-              to={to}
-              className="font-sans text-4xl font-light text-charcoal border-b border-cream-dark pb-6 hover:text-forest transition-colors"
-            >
-              {label}
-            </Link>
+            <Link key={to} to={to} onClick={closeMobileMenu} className={isActive(to) ? 'is-active' : ''}>{label}</Link>
           ))}
-          <a
-            href={quotationLink}
-            target="_blank"
-            rel="noreferrer"
-            className="mt-auto text-center text-xs tracking-[0.2em] uppercase px-5 py-4 border border-forest text-forest min-h-[44px] flex items-center justify-center hover:bg-forest hover:text-white transition-all duration-200"
-          >
-            {t('requestQuotation')}
-          </a>
-          <div className="mt-6 flex items-center justify-between border-t border-cream-dark pt-6">
-            <button type="button" onClick={toggleLanguage} className="text-xs text-charcoal-light hover:text-forest">
-              {t('language')}
-            </button>
-            <button type="button" onClick={toggleTheme} className="theme-toggle min-h-[40px] min-w-[40px] text-charcoal-light hover:text-forest" aria-label={theme === 'light' ? 'Switch to dark mode' : 'Switch to light mode'}>
-              <ThemeIcon theme={theme} />
-            </button>
-          </div>
         </div>
-      </div>
+        <div className="site-nav-mobile-settings">
+          <button type="button" onClick={toggleLanguage}>{t('language')}</button>
+          <button type="button" onClick={toggleTheme} aria-label={theme === 'light' ? 'Switch to dark mode' : 'Switch to light mode'}><ThemeIcon theme={theme} /></button>
+        </div>
+      </aside>
     </>
   )
 }

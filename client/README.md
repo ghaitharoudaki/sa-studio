@@ -18,6 +18,17 @@ Before launch, also set Supabase Auth Site URL and redirect URLs to the final HT
 
 The public site reads fabrics anonymously. The `/admin` page is intentionally absent from public navigation and requires a signed-in Supabase user whose `app_metadata.role` is `admin`. Do not put a Supabase service-role key in this Vite app or in deployment environment variables.
 
+### Vercel deployment
+
+Set the Vercel project root directory to `client`, then add these environment variables for **Production**, **Preview**, and **Development** before redeploying:
+
+```text
+VITE_SUPABASE_URL=https://jthchzbfhtkqcruhxfcg.supabase.co
+VITE_SUPABASE_ANON_KEY=<the publishable anon key from Supabase Project Settings > API>
+```
+
+Vite embeds `VITE_*` variables during the build, so changing them in Vercel requires a new deployment. The app includes the public project configuration as a fallback for this project, but setting the variables explicitly is recommended when changing Supabase projects.
+
 ## Development
 
 ```bash
