@@ -6,6 +6,7 @@ import Footer from './components/Footer'
 const Home = lazy(() => import('./pages/Home'))
 const Collections = lazy(() => import('./pages/Collections'))
 const FabricDetail = lazy(() => import('./pages/FabricDetail'))
+const Favorites = lazy(() => import('./pages/Favorites'))
 const About = lazy(() => import('./pages/About'))
 const Contact = lazy(() => import('./pages/Contact'))
 const Privacy = lazy(() => import('./pages/Privacy'))
@@ -22,6 +23,7 @@ export default function App() {
             <Route path="/"                element={<Home />} />
             <Route path="/collections"     element={<Collections />} />
             <Route path="/collections/:id" element={<FabricDetail />} />
+            <Route path="/favorites"        element={<Favorites />} />
             <Route path="/about"           element={<About />} />
             <Route path="/contact"         element={<Contact />} />
             <Route path="/privacy"         element={<Privacy />} />

@@ -354,6 +354,38 @@
     letter-spacing: 0.12em;
     text-transform: uppercase;
   }
+  .collections-favorite-button {
+    position: absolute;
+    top: 8px;
+    right: 8px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 36px;
+    height: 36px;
+    background: var(--bg-elevated);
+    color: var(--text-primary);
+  }
+  .collections-favorite-button svg { width: 18px; height: 18px; }
+  .collections-favorite-button.is-favorite { color: var(--burgundy); }
+  .collections-search {
+    display: flex;
+    align-items: center;
+    min-height: 38px;
+    border: 1px solid var(--border);
+    color: var(--text-secondary);
+  }
+  .collections-search span { padding-left: 12px; font-size: 20px; line-height: 1; }
+  .collections-search input { width: 220px; min-height: 36px; padding: 8px 12px 8px 8px; border: 0; background: transparent; color: var(--text-primary); outline: 0; font: inherit; font-size: 12px; }
+  .collections-pagination { display: flex; justify-content: center; gap: 6px; padding: 32px 12px 8px; }
+  .collections-pagination button { min-width: 38px; min-height: 38px; border: 1px solid var(--border); color: var(--text-secondary); }
+  .collections-pagination button.is-active { border-color: var(--green); background: var(--green); color: var(--text-on-accent); }
+  .collections-pagination button:disabled { cursor: not-allowed; opacity: 0.4; }
+  .site-nav-favorites { position: relative; display: inline-flex; align-items: center; justify-content: center; width: 40px; height: 40px; color: var(--nav-text); font-size: 26px; line-height: 1; }
+  .site-nav-favorites b { position: absolute; top: 1px; right: 0; display: inline-flex; align-items: center; justify-content: center; min-width: 16px; height: 16px; border-radius: 999px; background: var(--burgundy); color: white; font-size: 9px; font-weight: 600; }
+  .fabric-detail-favorite { display: inline-flex; align-items: center; gap: 8px; align-self: flex-start; min-height: 40px; margin: 10px 0 22px; color: var(--text-secondary); font-size: 11px; letter-spacing: 0.12em; text-transform: uppercase; }
+  .fabric-detail-favorite svg { width: 20px; height: 20px; }
+  .fabric-detail-favorite.is-favorite { color: var(--burgundy); }
   .collections-product-copy { padding: 12px 12px 16px; }
   .collections-product-copy h2 {
     color: var(--text-primary);
@@ -547,6 +579,8 @@
     .collections-content-card { margin: 16px; border-radius: 12px; }
     .collections-controls { align-items: flex-start; flex-direction: column; }
     .collections-controls select { width: 100%; }
+    .collections-search { width: 100%; }
+    .collections-search input { width: 100%; }
     .collections-products { grid-template-columns: repeat(2, minmax(0, 1fr)); }
     .collections-product-image { aspect-ratio: 1; }
     .collections-intro h1 { font-size: clamp(2.8rem, 15vw, 4rem); }

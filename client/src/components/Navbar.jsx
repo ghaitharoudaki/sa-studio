@@ -4,6 +4,7 @@ import logo from '../assets/logo.png'
 import darkLogo from '../assets/logo-dark.png'
 import { useSite } from '../context/SiteContext'
 import { WHATSAPP_BASE } from '../data/fabrics'
+import { useFavorites } from '../hooks/useFavorites'
 
 function ThemeIcon({ theme }) {
   if (theme === 'light') {
@@ -27,6 +28,7 @@ export default function Navbar() {
   const [mobileOpen, setMobileOpen] = useState(false)
   const location = useLocation()
   const { theme, toggleTheme, toggleLanguage, t } = useSite()
+  const { favoriteIds } = useFavorites()
   const quotationLink = `${WHATSAPP_BASE}?text=${encodeURIComponent('Hello, I would like to request a quotation from SA Studio.')}`
 
   const links = [
@@ -55,6 +57,10 @@ export default function Navbar() {
               <button type="button" onClick={toggleTheme} className="theme-toggle" aria-label={theme === 'light' ? 'Switch to dark mode' : 'Switch to light mode'}>
                 <ThemeIcon theme={theme} />
               </button>
+              <Link to="/favorites" className="site-nav-favorites" aria-label={t('favorites')}>
+                <span>♡</span>
+                {favoriteIds.length > 0 && <b>{favoriteIds.length}</b>}
+              </Link>
               <a href={quotationLink} target="_blank" rel="noreferrer" className="site-nav-quotation">
                 <span className="mobile-quotation-full">{t('requestQuotation')}</span>
                 <span className="mobile-quotation-short">{t('requestQuotationShort')}</span>
@@ -96,6 +102,7 @@ export default function Navbar() {
           ))}
         </div>
         <div className="site-nav-mobile-settings">
+          <Link to="/favorites" onClick={closeMobileMenu} className="site-nav-mobile-favorites">♡ {t('favorites')} {favoriteIds.length > 0 && `(${favoriteIds.length})`}</Link>
           <button type="button" onClick={toggleLanguage}>{t('language')}</button>
           <button type="button" onClick={toggleTheme} aria-label={theme === 'light' ? 'Switch to dark mode' : 'Switch to light mode'}><ThemeIcon theme={theme} /></button>
         </div>

@@ -7,6 +7,7 @@ const initialForm = {
   collection: '',
   category: '',
   description: '',
+  featured: false,
   image: '',
   images: [],
   specs: { Width: '', Height: '' },
@@ -17,6 +18,7 @@ const getForm = (fabric) => fabric ? {
   collection: fabric.collection || '',
   category: fabric.category || '',
   description: fabric.description || '',
+  featured: fabric.featured === true,
   image: fabric.image || '',
   images: fabric.images?.length ? fabric.images : (fabric.image ? [fabric.image] : []),
   specs: {
@@ -185,6 +187,11 @@ export default function FabricForm({ fabric = null, onSubmit, onCancel, isLoadin
         <label className={labelClass}>Description</label>
         <textarea rows={4} value={form.description} onChange={(event) => handleField('description', event.target.value)} className={`${inputClass} resize-none`} />
       </div>
+
+      <label className="md:col-span-2 flex min-h-[44px] items-center gap-3 text-sm text-charcoal">
+        <input type="checkbox" checked={form.featured} onChange={(event) => handleField('featured', event.target.checked)} className="h-4 w-4 accent-forest" />
+        <span>Featured</span>
+      </label>
 
       <div className="md:col-span-2 flex items-center justify-between gap-4 flex-wrap">
         <div className="flex gap-4 flex-wrap">

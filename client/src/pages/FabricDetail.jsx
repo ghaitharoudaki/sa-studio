@@ -3,6 +3,11 @@ import { fetchFabrics, WHATSAPP_BASE, SHOWROOMS } from '../data/fabrics'
 import { useState, useEffect } from 'react'
 import { useSite } from '../context/SiteContext'
 import SEO from '../components/SEO'
+import { useFavorites } from '../hooks/useFavorites'
+
+function HeartIcon({ filled = false }) {
+  return <svg viewBox="0 0 24 24" fill={filled ? 'currentColor' : 'none'} stroke="currentColor" strokeWidth="1.5" aria-hidden="true"><path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78L12 21.23l8.84-8.84a5.5 5.5 0 0 0 0-7.78Z" /></svg>
+}
 
 export default function FabricDetail() {
   const { id } = useParams()
@@ -12,6 +17,7 @@ export default function FabricDetail() {
   const [magnifier, setMagnifier] = useState(null)
   const [activeImage, setActiveImage] = useState('')
   const { t } = useSite()
+  const { isFavorite, toggleFavorite } = useFavorites()
 
   useEffect(() => {
     let ignore = false
@@ -172,6 +178,10 @@ export default function FabricDetail() {
           <h1 className="font-serif text-4xl lg:text-5xl font-light text-charcoal leading-tight mb-1">
             {fabric.name}
           </h1>
+          <button type="button" onClick={() => toggleFavorite(fabric.id)} className={`fabric-detail-favorite ${isFavorite(fabric.id) ? 'is-favorite' : ''}`} aria-label={isFavorite(fabric.id) ? `Remove ${fabric.name} from favorites` : `Add ${fabric.name} to favorites`}>
+            <HeartIcon filled={isFavorite(fabric.id)} />
+            {isFavorite(fabric.id) ? t('removeFavorite') : t('addFavorite')}
+          </button>
           <p className="text-sm text-charcoal-light font-light mb-8 leading-relaxed">
             {fabric.description}
           </p>

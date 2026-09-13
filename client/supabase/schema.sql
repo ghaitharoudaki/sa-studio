@@ -8,6 +8,7 @@ create table if not exists public.fabrics (
   images jsonb not null default '[]'::jsonb,
   texture text not null default '',
   specs jsonb not null default '{}'::jsonb,
+  featured boolean not null default false,
   created_at timestamptz not null default now()
 );
 

@@ -67,6 +67,8 @@ const normalizeFabric = (item) => {
   const texture = String(item?.texture || '').trim()
   const description = String(item?.description || '').trim()
   const image = String(item?.image || '').trim()
+  const createdAt = item?.created_at || item?.createdAt || ''
+  const featured = item?.featured === true
   const images = Array.isArray(item?.images)
     ? item.images.map((url) => String(url || '').trim()).filter(Boolean)
     : image ? [image] : []
@@ -83,6 +85,8 @@ const normalizeFabric = (item) => {
     image,
     images,
     description,
+    created_at: createdAt,
+    featured,
     specs,
   }
 }
@@ -140,6 +144,7 @@ const toWritableFabric = (formData) => {
     description: normalized.description,
     image: normalized.image,
     images: normalized.images,
+    featured: normalized.featured,
     specs: normalized.specs,
   }
   if (formData?.texture != null) row.texture = normalized.texture
