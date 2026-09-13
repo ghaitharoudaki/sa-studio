@@ -9,6 +9,38 @@ function HeartIcon({ filled = false }) {
   return <svg viewBox="0 0 24 24" fill={filled ? 'currentColor' : 'none'} stroke="currentColor" strokeWidth="1.5" aria-hidden="true"><path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78L12 21.23l8.84-8.84a5.5 5.5 0 0 0 0-7.78Z" /></svg>
 }
 
+function UsageIcon({ category }) {
+  if (category === 'Upholstery') {
+    return (
+      <svg viewBox="0 0 48 48" aria-hidden="true" className="h-8 w-8 fill-none stroke-current stroke-[1.5]">
+        <path d="M9 25v-4a5 5 0 0 1 5-5h20a5 5 0 0 1 5 5v4" />
+        <path d="M6 26a4 4 0 0 1 4-4h28a4 4 0 0 1 4 4v9H6v-9Z" />
+        <path d="M10 35v4M38 35v4M12 27h24" />
+      </svg>
+    )
+  }
+
+  if (category === 'Curtains') {
+    return (
+      <svg viewBox="0 0 48 48" aria-hidden="true" className="h-8 w-8 fill-none stroke-current stroke-[1.5]">
+        <path d="M8 9h32M12 9v29M36 9v29M12 15c3 2 3 5 0 8s-3 6 0 9M36 15c-3 2-3 5 0 8s3 6 0 9" />
+        <path d="M8 39h32" />
+      </svg>
+    )
+  }
+
+  if (category === 'Wallpaper') {
+    return (
+      <svg viewBox="0 0 48 48" aria-hidden="true" className="h-8 w-8 fill-none stroke-current stroke-[1.5]">
+        <path d="M8 10h32v28H8zM14 10v28M34 10v28" />
+        <path d="m14 18 5-4 5 4 5-4 5 4M14 28l5-4 5 4 5-4 5 4" />
+      </svg>
+    )
+  }
+
+  return null
+}
+
 export default function FabricDetail() {
   const { id } = useParams()
   const navigate = useNavigate()
@@ -202,6 +234,20 @@ export default function FabricDetail() {
               </div>
             ))}
           </div>
+
+          {['Upholstery', 'Curtains', 'Wallpaper'].includes(fabric.category) && (
+            <div className="mb-8 border-b border-cream-dark">
+              <div className="grid grid-cols-2 items-center py-3">
+                <span className="text-[11px] tracking-[0.2em] uppercase text-charcoal-light font-light">
+                  Usage
+                </span>
+                <span className="flex items-center justify-end gap-3 text-sm text-charcoal font-light">
+                  <UsageIcon category={fabric.category} />
+                  {fabric.category}
+                </span>
+              </div>
+            </div>
+          )}
 
           {/* Actions */}
           <div className="flex flex-wrap gap-3 pt-4">
