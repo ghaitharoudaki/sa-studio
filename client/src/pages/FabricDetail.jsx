@@ -10,6 +10,7 @@ export default function FabricDetail() {
   const [scrollProgress, setScrollProgress] = useState(0)
   const [fabrics, setFabrics] = useState([])
   const [magnifier, setMagnifier] = useState(null)
+  const [activeImage, setActiveImage] = useState('')
   const { t } = useSite()
 
   useEffect(() => {
@@ -37,6 +38,8 @@ export default function FabricDetail() {
   }, [])
 
   const fabric = fabrics.find((f) => f.id === id)
+  const imageUrls = fabric?.images?.length ? fabric.images : (fabric?.image ? [fabric.image] : [])
+  const displayedImage = imageUrls.includes(activeImage) ? activeImage : imageUrls[0]
 
   if (!fabric) {
     return (
@@ -91,7 +94,7 @@ export default function FabricDetail() {
 
         {/* Image - Fixed square aspect ratio */}
         <div className="relative bg-cream-light flex items-center justify-center p-6 sm:p-8 lg:p-12 min-h-0 lg:min-h-screen">
-          {fabric.image ? (
+          {displayedImage ? (
             <div
               className="relative w-full max-w-[550px] aspect-square cursor-default lg:cursor-crosshair"
               style={{ touchAction: 'none' }}
@@ -117,7 +120,7 @@ export default function FabricDetail() {
             >
               <div className="w-full h-full flex items-center justify-center overflow-hidden">
                 <img
-                  src={fabric.image}
+                  src={displayedImage}
                   alt={`${fabric.name} ${fabric.collection || ''} textile detail`}
                   decoding="async"
                   className="w-full h-full object-contain"
@@ -130,7 +133,7 @@ export default function FabricDetail() {
                   style={{
                     left: magnifier.left,
                     top: magnifier.top,
-                    backgroundImage: `url(${fabric.image})`,
+                    backgroundImage: `url(${displayedImage})`,
                     backgroundSize: magnifier.backgroundSize,
                     backgroundPosition: magnifier.backgroundPosition,
                   }}
@@ -139,6 +142,20 @@ export default function FabricDetail() {
             </div>
           ) : (
             <div className={`w-full max-w-[550px] aspect-square ${fabric.texture}`} />
+          )}
+          {imageUrls.length > 1 && (
+            <div className="absolute bottom-6 left-6 right-6 flex gap-2 overflow-x-auto">
+              {imageUrls.map((image, index) => (
+                <button
+                  key={image}
+                  type="button"
+                  onClick={() => { setActiveImage(image); setMagnifier(null) }}
+                  className={`shrink-0 border-2 ${image === displayedImage ? 'border-forest' : 'border-white/70'}`}
+                >
+                  <img src={image} alt={`${fabric.name} photo ${index + 1}`} className="h-16 w-16 object-cover" />
+                </button>
+              ))}
+            </div>
           )}
           <div className="absolute top-6 left-6 bg-charcoal/70 px-4 py-1.5">
             <span className="text-white text-[10px] tracking-[0.2em] uppercase">

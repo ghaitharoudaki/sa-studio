@@ -5,6 +5,7 @@ create table if not exists public.fabrics (
   category text not null default '',
   description text not null default '',
   image text not null default '',
+  images jsonb not null default '[]'::jsonb,
   texture text not null default '',
   specs jsonb not null default '{}'::jsonb,
   created_at timestamptz not null default now()

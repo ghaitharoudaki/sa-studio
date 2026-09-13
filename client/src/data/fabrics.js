@@ -67,6 +67,12 @@ const normalizeFabric = (item) => {
   const texture = String(item?.texture || '').trim()
   const description = String(item?.description || '').trim()
   const image = String(item?.image || '').trim()
+  const images = Array.isArray(item?.images)
+    ? item.images.map((url) => String(url || '').trim()).filter(Boolean)
+    : image ? [image] : []
+  const specs = Object.fromEntries(
+    Object.entries(item?.specs || {}).filter(([key]) => !['Martindale', 'Weight'].includes(key)),
+  )
 
   return {
     id: String(item?.id || makeId(name)),
@@ -75,8 +81,9 @@ const normalizeFabric = (item) => {
     category,
     texture,
     image,
+    images,
     description,
-    specs: item?.specs || {},
+    specs,
   }
 }
 
@@ -132,6 +139,7 @@ const toWritableFabric = (formData) => {
     category: normalized.category,
     description: normalized.description,
     image: normalized.image,
+    images: normalized.images,
     specs: normalized.specs,
   }
   if (formData?.texture != null) row.texture = normalized.texture

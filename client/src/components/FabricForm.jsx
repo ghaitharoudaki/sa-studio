@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import { createFabric, uploadFabricImage, updateFabric, validateFabricImage } from '../data/fabrics'
 import CategoryPicker from './CategoryPicker'
 
@@ -8,7 +8,8 @@ const initialForm = {
   category: '',
   description: '',
   image: '',
-  specs: { Martindale: '', Weight: '', Width: '' },
+  images: [],
+  specs: { Width: '', Height: '' },
 }
 
 const getForm = (fabric) => fabric ? {
@@ -17,26 +18,33 @@ const getForm = (fabric) => fabric ? {
   category: fabric.category || '',
   description: fabric.description || '',
   image: fabric.image || '',
+  images: fabric.images?.length ? fabric.images : (fabric.image ? [fabric.image] : []),
   specs: {
-    Martindale: '',
-    Weight: '',
     Width: '',
+    Height: '',
     ...(fabric.specs || {}),
   },
 } : initialForm
 
 export default function FabricForm({ fabric = null, onSubmit, onCancel, isLoading = false }) {
   const [form, setForm] = useState(() => getForm(fabric))
-  const [imageFile, setImageFile] = useState(null)
-  const [previewUrl, setPreviewUrl] = useState('')
+  const [imageFiles, setImageFiles] = useState([])
+  const [previewUrls, setPreviewUrls] = useState(() => getForm(fabric).images)
+  const previewUrlsRef = useRef(previewUrls)
   const [message, setMessage] = useState('')
   const [saving, setSaving] = useState(false)
 
+  useEffect(() => {
+    previewUrlsRef.current = previewUrls
+  }, [previewUrls])
+
   useEffect(() => () => {
-    if (previewUrl && !fabric?.image?.includes(previewUrl)) URL.revokeObjectURL(previewUrl)
-  }, [previewUrl, fabric])
+    previewUrlsRef.current.filter((url) => url.startsWith('blob:')).forEach((url) => URL.revokeObjectURL(url))
+  }, [])
 
   const handleField = (key, value) => setForm((current) => ({ ...current, [key]: value }))
+
+  const titleCase = (value) => value.replace(/\b\w/g, (character) => character.toUpperCase())
 
   const handleSpec = (key, value) => setForm((current) => ({
     ...current,
@@ -44,17 +52,30 @@ export default function FabricForm({ fabric = null, onSubmit, onCancel, isLoadin
   }))
 
   const handleImage = (event) => {
-    const file = event.target.files?.[0]
-    if (!file) return
-    const validationError = validateFabricImage(file)
+    const files = Array.from(event.target.files || [])
+    if (!files.length) return
+    const validationError = files.map(validateFabricImage).find(Boolean)
     if (validationError) {
       setMessage(validationError)
       event.target.value = ''
       return
     }
+    const newPreviewUrls = files.map((file) => URL.createObjectURL(file))
     setMessage('')
-    setImageFile(file)
-    setPreviewUrl(URL.createObjectURL(file))
+    setImageFiles((current) => [...current, ...files])
+    setPreviewUrls((current) => [...current, ...newPreviewUrls])
+    event.target.value = ''
+  }
+
+  const removeImage = (index) => {
+    const existingCount = previewUrls.length - imageFiles.length
+    const fileIndex = index - existingCount
+    const removed = previewUrls[index]
+    if (removed?.startsWith('blob:')) URL.revokeObjectURL(removed)
+    setPreviewUrls((current) => current.filter((_, imageIndex) => imageIndex !== index))
+    if (fileIndex >= 0) {
+      setImageFiles((current) => current.filter((_, imageIndex) => imageIndex !== fileIndex))
+    }
   }
 
   const handleSubmit = async (event) => {
@@ -63,17 +84,15 @@ export default function FabricForm({ fabric = null, onSubmit, onCancel, isLoadin
       setMessage('Please choose a category.')
       return
     }
-    if (!fabric && !imageFile) {
-      setMessage('Please choose an image.')
+    if (!fabric && !previewUrls.length) {
+      setMessage('Please choose at least one image.')
       return
     }
 
     setSaving(true)
     setMessage('')
-    let imageUrl = form.image
-
-    // Upload new image if provided
-    if (imageFile) {
+    const uploadedUrls = []
+    for (const imageFile of imageFiles) {
       const { data: uploadedUrl, error: uploadError } = await uploadFabricImage(imageFile)
       if (uploadError) {
         setSaving(false)
@@ -81,12 +100,14 @@ export default function FabricForm({ fabric = null, onSubmit, onCancel, isLoadin
         setMessage(`Image upload failed: ${uploadError.message}`)
         return
       }
-      imageUrl = uploadedUrl
+      uploadedUrls.push(uploadedUrl)
     }
+    const imageUrls = [...previewUrls.filter((url) => !url.startsWith('blob:')), ...uploadedUrls]
 
     const payload = {
       ...form,
-      image: imageUrl,
+      image: imageUrls[0] || '',
+      images: imageUrls,
       id: fabric?.id || form.name.trim().toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '') || `fabric-${Date.now()}`,
       specs: Object.fromEntries(
         Object.entries(form.specs || {})
@@ -111,8 +132,8 @@ export default function FabricForm({ fabric = null, onSubmit, onCancel, isLoadin
     }
 
     setForm(initialForm)
-    setImageFile(null)
-    setPreviewUrl('')
+    setImageFiles([])
+    setPreviewUrls([])
     setMessage(fabric ? 'Fabric updated successfully.' : 'Fabric added successfully.')
 
     if (onSubmit) {
@@ -127,24 +148,33 @@ export default function FabricForm({ fabric = null, onSubmit, onCancel, isLoadin
     <form onSubmit={handleSubmit} className="grid grid-cols-1 md:grid-cols-2 gap-6 bg-cream border border-cream-dark p-6 md:p-8">
       <div className="md:col-span-2">
         <label className={labelClass}>Fabric name *</label>
-        <input required value={form.name} onChange={(event) => handleField('name', event.target.value)} className={inputClass} />
+        <input required value={form.name} onChange={(event) => handleField('name', titleCase(event.target.value))} className={inputClass} />
       </div>
 
       <div>
         <label className={labelClass}>Collection</label>
-        <input value={form.collection} onChange={(event) => handleField('collection', event.target.value)} className={inputClass} />
+        <input value={form.collection} onChange={(event) => handleField('collection', titleCase(event.target.value))} className={inputClass} />
       </div>
       <div className="md:col-span-2">
         <CategoryPicker value={form.category} onChange={(value) => handleField('category', value)} required />
       </div>
 
       <div className="md:col-span-2">
-        <label className={labelClass}>Image {!fabric && '*'}</label>
-        <input type="file" accept="image/jpeg,image/png,image/webp,image/avif" onChange={handleImage} className={`${inputClass} file:mr-4 file:border-0 file:bg-forest file:px-4 file:py-2 file:text-white`} />
-        {previewUrl && <img src={previewUrl} alt="Selected fabric preview" className="mt-4 h-40 w-full object-cover" />}
+        <label className={labelClass}>Images {!fabric && '*'}</label>
+        <input type="file" multiple accept="image/jpeg,image/png,image/webp,image/avif" onChange={handleImage} className={`${inputClass} file:mr-4 file:border-0 file:bg-forest file:px-4 file:py-2 file:text-white`} />
+        {previewUrls.length > 0 && (
+          <div className="mt-4 grid grid-cols-2 gap-3 sm:grid-cols-3">
+            {previewUrls.map((url, index) => (
+              <div key={`${url}-${index}`} className="relative">
+                <img src={url} alt={`Selected fabric preview ${index + 1}`} className="h-32 w-full object-cover" />
+                <button type="button" onClick={() => removeImage(index)} className="absolute right-2 top-2 bg-charcoal/80 px-2 py-1 text-xs text-white">Remove</button>
+              </div>
+            ))}
+          </div>
+        )}
       </div>
 
-      {['Martindale', 'Weight', 'Width'].map((key) => (
+      {['Width', 'Height'].map((key) => (
         <div key={key}>
           <label className={labelClass}>{key}</label>
           <input value={form.specs[key] || ''} onChange={(event) => handleSpec(key, event.target.value)} className={inputClass} />
