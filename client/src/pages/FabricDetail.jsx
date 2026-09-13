@@ -210,6 +210,11 @@ export default function FabricDetail() {
           <h1 className="font-serif text-4xl lg:text-5xl font-light text-charcoal leading-tight mb-1">
             {fabric.name}
           </h1>
+          {fabric.reference && (
+            <p className="text-xs text-charcoal-light font-light mb-3">
+              Ref: {fabric.reference}
+            </p>
+          )}
           <button type="button" onClick={() => toggleFavorite(fabric.id)} className={`fabric-detail-favorite ${isFavorite(fabric.id) ? 'is-favorite' : ''}`} aria-label={isFavorite(fabric.id) ? `Remove ${fabric.name} from favorites` : `Add ${fabric.name} to favorites`}>
             <HeartIcon filled={isFavorite(fabric.id)} />
             {isFavorite(fabric.id) ? t('removeFavorite') : t('addFavorite')}

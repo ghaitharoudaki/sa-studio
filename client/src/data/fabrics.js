@@ -62,6 +62,7 @@ const makeId = (value = '') =>
 
 const normalizeFabric = (item) => {
   const name = String(item?.name || 'Untitled fabric').trim()
+  const reference = String(item?.reference || '').trim()
   const collection = String(item?.collection || '').trim()
   const category = String(item?.category || '').trim()
   const texture = String(item?.texture || '').trim()
@@ -79,6 +80,7 @@ const normalizeFabric = (item) => {
   return {
     id: String(item?.id || makeId(name)),
     name,
+    reference: reference || null,
     collection,
     category,
     texture,
@@ -139,6 +141,7 @@ const toWritableFabric = (formData) => {
   const normalized = normalizeFabric(formData)
   const row = {
     name: normalized.name,
+    reference: normalized.reference,
     collection: normalized.collection,
     category: normalized.category,
     description: normalized.description,

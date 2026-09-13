@@ -1,6 +1,7 @@
 create table if not exists public.fabrics (
   id text primary key,
   name text not null,
+  reference text,
   collection text not null default '',
   category text not null default '',
   description text not null default '',

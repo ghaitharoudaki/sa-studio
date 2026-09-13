@@ -4,6 +4,7 @@ import CategoryPicker from './CategoryPicker'
 
 const initialForm = {
   name: '',
+  reference: '',
   collection: '',
   category: '',
   description: '',
@@ -15,6 +16,7 @@ const initialForm = {
 
 const getForm = (fabric) => fabric ? {
   name: fabric.name || '',
+  reference: fabric.reference || '',
   collection: fabric.collection || '',
   category: fabric.category || '',
   description: fabric.description || '',
@@ -156,6 +158,10 @@ export default function FabricForm({ fabric = null, onSubmit, onCancel, isLoadin
       <div>
         <label className={labelClass}>Collection</label>
         <input value={form.collection} onChange={(event) => handleField('collection', titleCase(event.target.value))} className={inputClass} />
+      </div>
+      <div>
+        <label className={labelClass}>Reference / SKU (optional)</label>
+        <input value={form.reference} onChange={(event) => handleField('reference', event.target.value)} className={inputClass} />
       </div>
       <div className="md:col-span-2">
         <CategoryPicker value={form.category} onChange={(value) => handleField('category', value)} required />
