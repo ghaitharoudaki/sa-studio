@@ -44,7 +44,7 @@ export default function FabricForm({ fabric = null, onSubmit, onCancel, isLoadin
 
   const handleField = (key, value) => setForm((current) => ({ ...current, [key]: value }))
 
-  const titleCase = (value) => value.replace(/\b\w/g, (character) => character.toUpperCase())
+  const titleCase = (value) => value.toUpperCase()
 
   const handleSpec = (key, value) => setForm((current) => ({
     ...current,
