@@ -88,7 +88,7 @@ export default function Home() {
 
   return (
     <div>
-      <SEO title="Luxury Textiles & Wallpaper in Damascus | SA Studio" description="Discover SA Studio's curated European fabrics and wallpaper for distinctive interiors in Damascus and the wider region." image="https://sa-studio.sy/hero-texture.webp" />
+      <SEO title="Luxury Textiles & Wallpaper in Damascus | SA Studio" description="Discover SA Studio's curated fabrics and wallpaper for distinctive interiors in Damascus and the wider region." image="https://sa-studio.sy/hero-texture.webp" />
 
       {/* HERO CAROUSEL */}
       <HeroCarousel />
@@ -121,10 +121,10 @@ export default function Home() {
           className="opacity-0 translate-y-6 transition-all duration-700 delay-200 bg-cream-dark grid grid-cols-2"
         >
           {[
-            { num: '20+',   label: t('yearsExcellence') },
-            { num: '4000+', label: t('fabricReferences') },
-            { num: '2',     label: t('damascusShowrooms') },
-            { num: '100%',  label: 'European Authenticity' },
+            { num: '20+', label: t('yearsExcellence') || 'Years of Excellence' },
+            { num: '10,000+', label: t('fabricReferences') || 'Fabric References' },
+            { num: '2', label: 'Damascus Locations (1 Active · 1 Under Construction)' },
+            { num: 'Global', label: 'Curated Globally' },
           ].map(({ num, label }) => (
             <div
               key={label}

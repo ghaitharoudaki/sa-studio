@@ -1,6 +1,6 @@
 import { useEffect } from 'react'
 
-const SITE_URL = 'https://sa-studio.sy'
+const SITE_URL = 'https://sastudio-sy.com'
 const DEFAULT_IMAGE = `${SITE_URL}/SA%20LOGO%201.jpg`
 
 export default function SEO({ title, description, image = DEFAULT_IMAGE }) {

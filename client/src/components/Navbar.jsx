@@ -44,13 +44,17 @@ export default function Navbar() {
   return (
     <>
       <nav className="site-nav">
-        <div className="site-nav-inner mx-auto max-w-screen-xl px-4 sm:px-6 lg:px-16">
-          <div className="site-nav-top">
-            <Link to="/" className="site-nav-logo-link">
-              <img src={theme === 'dark' ? darkLogo : logo} alt="SA Studio" className="site-logo" />
+        <div className="site-nav-inner mx-auto max-w-screen-xl px-2 sm:px-6 lg:px-16">
+          <div className="site-nav-top flex items-center justify-between gap-1 py-1 sm:py-2">
+            <Link to="/" className="site-nav-logo-link flex-shrink-0">
+              <img 
+                src={theme === 'dark' ? darkLogo : logo} 
+                alt="SA Studio" 
+                className="site-logo h-20 sm:h-24 md:h-28 w-auto object-contain max-w-[170px] xs:max-w-[200px] sm:max-w-none" 
+              />
             </Link>
 
-            <div className="site-nav-desktop-tools">
+            <div className="site-nav-desktop-tools hidden md:flex items-center gap-3">
               <button type="button" onClick={toggleLanguage} className="site-nav-language" aria-label="Change language">
                 {t('language')}
               </button>
@@ -61,17 +65,32 @@ export default function Navbar() {
                 <span>♡</span>
                 {favoriteIds.length > 0 && <b>{favoriteIds.length}</b>}
               </Link>
-              <a href={quotationLink} target="_blank" rel="noreferrer" className="site-nav-quotation">
-                <span className="mobile-quotation-full">{t('requestQuotation')}</span>
-                <span className="mobile-quotation-short">{t('requestQuotationShort')}</span>
+              <a 
+                href={quotationLink} 
+                target="_blank" 
+                rel="noreferrer" 
+                className="site-nav-quotation whitespace-nowrap overflow-hidden text-ellipsis max-w-[160px] lg:max-w-none text-xs px-4 py-2 flex items-center justify-center shrink-0"
+              >
+                <span>{t('requestQuotation')}</span>
               </a>
             </div>
 
-            <div className="site-nav-mobile-tools">
-              <a href={quotationLink} target="_blank" rel="noreferrer" className="site-nav-quotation">
-                {t('requestQuotation')}
+            <div className="site-nav-mobile-tools flex md:hidden items-center gap-1 flex-shrink min-w-0">
+              <a 
+                href={quotationLink} 
+                target="_blank" 
+                rel="noreferrer" 
+                className="site-nav-quotation whitespace-nowrap overflow-hidden text-ellipsis min-w-0 max-w-[90px] sm:max-w-[130px] text-[9px] px-1.5 py-1 flex items-center justify-center shrink"
+              >
+                {t('requestQuotationShort') || t('requestQuotation')}
               </a>
-              <button type="button" className={`site-nav-hamburger ${mobileOpen ? 'is-open' : ''}`} onClick={() => setMobileOpen((open) => !open)} aria-label={mobileOpen ? 'Close menu' : 'Open menu'} aria-expanded={mobileOpen}>
+              <button 
+                type="button" 
+                className={`site-nav-hamburger flex-shrink-0 ${mobileOpen ? 'is-open' : ''}`} 
+                onClick={() => setMobileOpen((open) => !open)} 
+                aria-label={mobileOpen ? 'Close menu' : 'Open menu'} 
+                aria-expanded={mobileOpen}
+              >
                 <span />
                 <span />
                 <span />
