@@ -1,32 +1,9 @@
 import { Link } from 'react-router-dom'
 import { useEffect, useRef, useState } from 'react'
-import { fetchFabrics, PARTNER_BRANDS, WHATSAPP_BASE } from '../data/fabrics'
+import { fetchFabrics, WHATSAPP_BASE } from '../data/fabrics'
 import { useSite } from '../context/SiteContext'
 import SEO from '../components/SEO'
-
-function Marquee() {
-  const doubled = [...PARTNER_BRANDS, ...PARTNER_BRANDS]
-  return (
-    <div
-      className="partner-strip overflow-hidden py-5 border-y"
-      style={{
-        background: 'var(--footer-bg)',
-        borderColor: 'rgba(45,74,62,0.3)',
-      }}
-    >
-      <div className="marquee-track marquee-left">
-        {doubled.map((brand, i) => (
-          <span key={i} className="flex items-center gap-16">
-            <span className="partner-mark font-serif text-xl md:text-2xl italic whitespace-nowrap tracking-[0.08em]">
-              {brand}
-            </span>
-            <span className="text-forest text-base md:text-lg">✦</span>
-          </span>
-        ))}
-      </div>
-    </div>
-  )
-}
+import HeroCarousel from '../components/HeroCarousel'
 
 function FabricCard({ fabric }) {
   const { t } = useSite()
@@ -113,34 +90,10 @@ export default function Home() {
     <div>
       <SEO title="Luxury Textiles & Wallpaper in Damascus | SA Studio" description="Discover SA Studio's curated European fabrics and wallpaper for distinctive interiors in Damascus and the wider region." image="https://sa-studio.sy/hero-texture.webp" />
 
-      <section className="home-hero-split">
-        <div className="home-hero-copy">
-          <div className="home-hero-badge"><span dir="ltr" style={{ unicodeBidi: 'isolate' }}>Damascus · Est. 2005</span></div>
-          <h1 className="font-serif text-5xl lg:text-7xl font-normal leading-tight text-charcoal">
-            {t('luxuryTextiles')}
-          </h1>
-          <div className="home-hero-actions">
-              <Link
-                to="/collections"
-                className="primary-cta inline-flex items-center min-h-[50px] px-10 py-4 rounded-full text-[11px] tracking-[0.2em] uppercase transition-all duration-200 shadow-deep"
-              >
-                {t('exploreCollections')}
-              </Link>
-              <Link
-                to="/about"
-                className="inline-flex items-center min-h-[50px] px-10 py-4 rounded-full border border-charcoal/30 text-charcoal text-[11px] tracking-[0.2em] uppercase hover:border-forest hover:text-forest transition-all duration-200"
-              >
-                {t('viewOurStory')}
-              </Link>
-          </div>
-        </div>
-        <div className="home-hero-image" role="img" aria-label="SA Studio textile texture" />
-      </section>
+      {/* HERO CAROUSEL */}
+      <HeroCarousel />
 
-      {/* MARQUEE */}
-      <Marquee />
-
-      {/* ABOUT STRIP */}
+      {/* ATELIER SECTION */}
       <section className="grid grid-cols-1 lg:grid-cols-2 gap-0 border-b border-cream-dark">
         <div
           ref={aboutRef}
@@ -150,7 +103,7 @@ export default function Home() {
             {t('atelier')}
           </p>
           <h2 className="font-serif text-4xl lg:text-5xl font-light leading-tight text-charcoal mb-6">
-            {t('excellence')}
+            Two decades of curatorial excellence
           </h2>
           <p className="text-sm leading-loose text-charcoal-light mb-8 max-w-md">
             {t('homeAtelierDescription')}
@@ -168,9 +121,10 @@ export default function Home() {
           className="opacity-0 translate-y-6 transition-all duration-700 delay-200 bg-cream-dark grid grid-cols-2"
         >
           {[
-            { num: '20+',  label: t('yearsExcellence') },
-            { num: '500+', label: t('fabricReferences') },
-            { num: '2',    label: t('damascusShowrooms') },
+            { num: '20+',   label: t('yearsExcellence') },
+            { num: '4000+', label: t('fabricReferences') },
+            { num: '2',     label: t('damascusShowrooms') },
+            { num: '100%',  label: 'European Authenticity' },
           ].map(({ num, label }) => (
             <div
               key={label}
@@ -188,6 +142,7 @@ export default function Home() {
         </div>
       </section>
 
+      {/* MATERIAL LAB */}
       <section className="px-8 lg:px-16 py-20">
         <div className="max-w-4xl mx-auto text-center mb-12">
           <p className="eyebrow mb-4">{t('materialLab')}</p>
@@ -274,7 +229,6 @@ export default function Home() {
           {t('chatWhatsApp')}
         </a>
       </section>
-
     </div>
   )
 }

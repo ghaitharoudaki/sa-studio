@@ -15,16 +15,6 @@ function HeartIcon({ filled = false }) {
   )
 }
 
-function ArrowBox() {
-  return (
-    <span className="collections-arrow-box" aria-hidden="true">
-      <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="1.5">
-        <path d="M3 8h9M8 4l4 4-4 4" />
-      </svg>
-    </span>
-  )
-}
-
 function FabricCard({ fabric }) {
   const { t } = useSite()
   const { isFavorite, toggleFavorite } = useFavorites()
@@ -39,7 +29,7 @@ function FabricCard({ fabric }) {
           <div className={`h-full w-full ${fabric.texture || 'tex-forest'}`} />
         )}
         <span className="collections-product-tag">
-            {fabric.category || t('newArrival')}
+          {fabric.category || t('newArrival')}
         </span>
         <button type="button" className={`collections-favorite-button ${isFavorite(fabric.id) ? 'is-favorite' : ''}`} onClick={(event) => { event.preventDefault(); toggleFavorite(fabric.id) }} aria-label={isFavorite(fabric.id) ? `Remove ${fabric.name} from favorites` : `Add ${fabric.name} to favorites`}>
           <HeartIcon filled={isFavorite(fabric.id)} />
@@ -104,6 +94,33 @@ export default function Collections() {
     return ['wallpaper', 'upholstery', 'fabric'].includes(key) ? t(key) : category
   }
 
+  const paginationRange = useMemo(() => {
+    const totalNumbers = 5
+    if (pageCount <= totalNumbers) {
+      return Array.from({ length: pageCount }, (_, i) => i + 1)
+    }
+
+    const leftSiblingIndex = Math.max(page - 1, 1)
+    const rightSiblingIndex = Math.min(page + 1, pageCount)
+
+    const shouldShowLeftDots = leftSiblingIndex > 2
+    const shouldShowRightDots = rightSiblingIndex < pageCount - 1
+
+    if (!shouldShowLeftDots && shouldShowRightDots) {
+      return [1, 2, 3, '...', pageCount]
+    }
+
+    if (shouldShowLeftDots && !shouldShowRightDots) {
+      return [1, '...', pageCount - 2, pageCount - 1, pageCount]
+    }
+
+    if (shouldShowLeftDots && shouldShowRightDots) {
+      return [1, '...', page, '...', pageCount]
+    }
+
+    return []
+  }, [pageCount, page])
+
   return (
     <div className="collections-page">
       <SEO title="Collections | SA Studio Luxury Fabrics" description="Explore SA Studio's considered edit of exceptional fabrics, upholstery, wallpaper and materials for interiors with character." image="https://sa-studio.sy/collections-bg.webp" />
@@ -148,19 +165,57 @@ export default function Collections() {
         </section>
 
         {pageCount > 1 && (
-          <nav className="collections-pagination" aria-label="Collections pages">
-            <button type="button" disabled={page === 1} onClick={() => setPage((current) => current - 1)}>{t('previous')}</button>
-            {Array.from({ length: pageCount }, (_, index) => index + 1).map((pageNumber) => <button key={pageNumber} type="button" className={page === pageNumber ? 'is-active' : ''} onClick={() => setPage(pageNumber)}>{pageNumber}</button>)}
-            <button type="button" disabled={page === pageCount} onClick={() => setPage((current) => current + 1)}>{t('next')}</button>
+          <nav 
+            className="collections-pagination flex items-center justify-center gap-1 py-6 px-2 w-full overflow-x-auto no-scrollbar" 
+            aria-label="Collections pages"
+          >
+            {/* Previous Arrow */}
+            <button 
+              type="button" 
+              disabled={page === 1} 
+              onClick={() => setPage((current) => current - 1)}
+              aria-label={t('previous')}
+              className="w-7 h-7 flex items-center justify-center rounded border border-black/10 disabled:opacity-20 disabled:cursor-not-allowed shrink-0 hover:bg-black/5 transition-colors"
+            >
+              <svg className="w-3.5 h-3.5" viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="1.75">
+                <path d="M10 12L4 8l6-4" />
+              </svg>
+            </button>
+            
+            {/* Page Boxes */}
+            {paginationRange.map((pageNumber, idx) =>
+              pageNumber === '...' ? (
+                <span key={`dots-${idx}`} className="px-1 text-[11px] opacity-40 shrink-0 select-none">
+                  ...
+                </span>
+              ) : (
+                <button
+                  key={pageNumber}
+                  type="button"
+                  className={`w-7 h-7 text-[11px] font-medium rounded shrink-0 transition-colors flex items-center justify-center ${
+                    page === pageNumber ? 'is-active bg-black text-white' : 'hover:bg-black/5 border border-transparent'
+                  }`}
+                  onClick={() => setPage(pageNumber)}
+                >
+                  {pageNumber}
+                </button>
+              )
+            )}
+
+            {/* Next Arrow */}
+            <button 
+              type="button" 
+              disabled={page === pageCount} 
+              onClick={() => setPage((current) => current + 1)}
+              aria-label={t('next')}
+              className="w-7 h-7 flex items-center justify-center rounded border border-black/10 disabled:opacity-20 disabled:cursor-not-allowed shrink-0 hover:bg-black/5 transition-colors"
+            >
+              <svg className="w-3.5 h-3.5" viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="1.75">
+                <path d="M6 4l6 4-6 4" />
+              </svg>
+            </button>
           </nav>
         )}
-
-        <div className="collections-see-more">
-          <Link to="/about" className="collections-see-more-link">
-            <span>{t('seeMoreCollections')}</span>
-            <ArrowBox />
-          </Link>
-        </div>
 
         <section className="collections-closing-banner">
           <p className="eyebrow eyebrow-on-accent">{t('studioEdit')}</p>

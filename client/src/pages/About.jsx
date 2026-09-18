@@ -34,8 +34,6 @@ const pillars = [
   { titleKey: 'service', textKey: 'serviceText' },
 ]
 
-const partners = ['Armani Casa', 'Casamance', 'Texam', 'Omexco', 'Fine', 'Arte', 'Marburg', 'Roberto Cavalli']
-
 export default function About() {
   const { t } = useSite()
   const { elementRef: heroRef, isVisible: heroVisible } = useReveal(0.2)
@@ -44,6 +42,10 @@ export default function About() {
   const { elementRef: valuesRef, isVisible: valuesVisible } = useReveal(0.18)
   const { elementRef: contactRef, isVisible: contactVisible } = useReveal(0.18)
   const [pointer, setPointer] = useState({ x: 0, y: 0 })
+
+  useEffect(() => {
+    window.scrollTo(0, 0)
+  }, [])
 
   useEffect(() => {
     const handleMove = (event) => {
@@ -81,17 +83,18 @@ export default function About() {
               {storyLabel} · <span dir="ltr" style={{ unicodeBidi: 'isolate' }}>Damascus · Est. 2005</span>
             </p>
 
+            {/* SA Studio rendered using Google Sans Flex */}
             <h1
               style={{
                 color: 'var(--text-primary)',
-                fontFamily: 'var(--font-display)',
-                fontWeight: 400,
-                letterSpacing: '-0.04em',
-                lineHeight: 0.9,
+                fontFamily: "'Google Sans Flex', 'Google Sans', 'Plus Jakarta Sans', sans-serif",
+                fontWeight: 700,
+                letterSpacing: '-0.07em',
+                lineHeight: 0.95,
               }}
-              className="text-5xl sm:text-6xl md:text-7xl lg:text-[7rem]"
+              className="text-6xl sm:text-7xl md:text-8xl lg:text-[7.5rem]"
             >
-              {t('aboutName')}
+              SA S T U D I O
             </h1>
 
             <div className="mt-4 flex items-center gap-5">
@@ -105,7 +108,7 @@ export default function About() {
                   lineHeight: 1,
                 }}
               >
-                {t('aboutAndStudio')}
+                by Samer Aroudaki
               </span>
             </div>
 
@@ -246,7 +249,7 @@ export default function About() {
           <div className="mt-10 grid gap-6 md:grid-cols-3">
             {pillars.map((item, index) => (
               <div
-                key={item.title}
+                key={item.titleKey}
                 className="group rounded-[26px] border p-8 transition-all duration-300 hover:-translate-y-1"
                 style={{
                   background: 'var(--bg)',
@@ -272,34 +275,6 @@ export default function About() {
                 <p className="mt-5 text-base leading-8" style={{ color: 'var(--text-secondary)' }}>
                   {t(item.textKey)}
                 </p>
-              </div>
-            ))}
-          </div>
-        </div>
-      </section>
-
-      <section className="px-6 py-16 lg:px-10 lg:py-24" style={{ background: 'var(--bg)' }}>
-        <div className="mx-auto max-w-7xl">
-          <p className="text-[11px] uppercase tracking-[0.28em]" style={{ color: 'var(--green)' }}>
-            {t('trustedPartners')}
-          </p>
-
-          <div className="mt-8 grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
-            {partners.map((brand) => (
-              <div
-                key={brand}
-                className="flex min-h-[120px] items-center justify-center border text-center"
-                style={{
-                  borderColor: 'var(--border)',
-                  background: 'rgba(255,255,255,0.2)',
-                  color: 'var(--text-primary)',
-                  fontFamily: 'var(--font-display)',
-                  fontSize: '2rem',
-                  fontStyle: 'italic',
-                  letterSpacing: '-0.03em',
-                }}
-              >
-                {brand}
               </div>
             ))}
           </div>
