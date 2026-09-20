@@ -1,4 +1,5 @@
 import { createContext, useContext, useEffect, useState } from 'react'
+import { fetchFabrics } from '../data/fabrics'
 
 const SiteContext = createContext(null)
 
@@ -287,6 +288,19 @@ export function SiteProvider({ children }) {
   const [theme, setTheme] = useState(() => localStorage.getItem('sa-theme') || 'dark')
   const [language, setLanguage] = useState(() => localStorage.getItem('sa-language') || 'en')
 
+  const [fabrics, setFabrics] = useState([])
+  const [isLoadingFabrics, setIsLoadingFabrics] = useState(true)
+
+  useEffect(() => {
+    fetchFabrics()
+      .then((data) => {
+        setFabrics(data || [])
+      })
+      .finally(() => {
+        setIsLoadingFabrics(false)
+      })
+  }, [])
+
   useEffect(() => {
     document.documentElement.dataset.theme = theme
     document.documentElement.style.colorScheme = theme
@@ -302,6 +316,8 @@ export function SiteProvider({ children }) {
   const value = {
     theme,
     language,
+    fabrics,
+    isLoadingFabrics,
     toggleTheme: () => setTheme((current) => current === 'light' ? 'dark' : 'light'),
     toggleLanguage: () => setLanguage((current) => current === 'en' ? 'ar' : 'en'),
     t: (key) => translations[language][key] || translations.en[key] || key,

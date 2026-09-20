@@ -1,12 +1,16 @@
 import { useParams, Link, useNavigate } from 'react-router-dom'
-import { fetchFabrics, WHATSAPP_BASE, SHOWROOMS, fetchFabricColors } from '../data/fabrics'
+import { WHATSAPP_BASE, SHOWROOMS, fetchFabricColors } from '../data/fabrics'
 import { useState, useEffect } from 'react'
 import { useSite } from '../context/SiteContext'
 import SEO from '../components/SEO'
 import { useFavorites } from '../hooks/useFavorites'
 
 function HeartIcon({ filled = false }) {
-  return <svg viewBox="0 0 24 24" fill={filled ? 'currentColor' : 'none'} stroke="currentColor" strokeWidth="1.5" aria-hidden="true"><path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78L12 21.23l8.84-8.84a5.5 5.5 0 0 0 0-7.78Z" /></svg>
+  return (
+    <svg viewBox="0 0 24 24" fill={filled ? 'currentColor' : 'none'} stroke="currentColor" strokeWidth="1.5" aria-hidden="true">
+      <path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78L12 21.23l8.84-8.84a5.5 5.5 0 0 0 0-7.78Z" />
+    </svg>
+  )
 }
 
 function UsageIcon({ category }) {
@@ -63,25 +67,12 @@ export default function FabricDetail() {
   const { id } = useParams()
   const navigate = useNavigate()
   const [scrollProgress, setScrollProgress] = useState(0)
-  const [fabrics, setFabrics] = useState([])
   const [magnifier, setMagnifier] = useState(null)
   const [activeImage, setActiveImage] = useState('')
   const [colors, setColors] = useState([])
   const [activeColor, setActiveColor] = useState(null)
-  const { t } = useSite()
+  const { t, fabrics, isLoadingFabrics } = useSite()
   const { isFavorite, toggleFavorite } = useFavorites()
-
-  useEffect(() => {
-    let ignore = false
-
-    fetchFabrics().then((items) => {
-      if (!ignore) setFabrics(items)
-    })
-
-    return () => {
-      ignore = true
-    }
-  }, [])
 
   useEffect(() => {
     if (!id) return
@@ -110,18 +101,33 @@ export default function FabricDetail() {
   const imageUrls = fabric?.images?.length ? fabric.images : (fabric?.image ? [fabric.image] : [])
   const displayedImage = activeImage || imageUrls[0]
 
+  const handleBack = () => {
+    // Explicitly reset search params and state back to root collections page 1
+    navigate('/collections', { replace: true, state: { resetPage: true } })
+  }
+
+  if (isLoadingFabrics) {
+    return (
+      <div className="min-h-screen flex items-center justify-center">
+        <p className="font-serif text-xl font-light text-charcoal opacity-60">
+          {t('loadingFabrics')}
+        </p>
+      </div>
+    )
+  }
+
   if (!fabric) {
     return (
       <div className="min-h-screen flex flex-col items-center justify-center gap-6">
         <p className="font-serif text-3xl font-light text-charcoal">
           {t('fabricNotFound')}
         </p>
-        <Link
-          to="/collections"
+        <button
+          onClick={handleBack}
           className="text-[11px] tracking-[0.2em] uppercase text-forest hover:underline"
         >
           {t('backCollections')}
-        </Link>
+        </button>
       </div>
     )
   }
@@ -150,7 +156,7 @@ export default function FabricDetail() {
       {/* Back link */}
       <div className="px-8 lg:px-16 py-4 border-b border-cream-dark">
         <button
-          onClick={() => navigate(-1)}
+          onClick={handleBack}
           className="inline-flex items-center gap-3 text-[11px] tracking-[0.2em] uppercase text-charcoal-light hover:text-forest transition-colors min-h-[44px]"
         >
           <span className="text-base">←</span>
@@ -160,7 +166,6 @@ export default function FabricDetail() {
 
       {/* Main layout */}
       <div className="grid grid-cols-1 lg:grid-cols-2">
-
         {/* Image - Fixed square aspect ratio */}
         <div className="relative bg-cream-light flex items-center justify-center p-6 sm:p-8 lg:p-12 min-h-0 lg:min-h-screen">
           {displayedImage ? (
@@ -274,21 +279,23 @@ export default function FabricDetail() {
           </p>
 
           {/* Specs table */}
-          <div className="mb-8 space-y-0">
-            {Object.entries(fabric.specs).map(([key, value]) => (
-              <div
-                key={key}
-                className="grid grid-cols-2 py-3 border-b border-cream-dark last:border-b-0"
-              >
-                <span className="text-[11px] tracking-[0.2em] uppercase text-charcoal-light font-light">
-                  {key}
-                </span>
-                <span className="text-sm text-charcoal text-right font-light">
-                  {value}
-                </span>
-              </div>
-            ))}
-          </div>
+          {fabric.specs && (
+            <div className="mb-8 space-y-0">
+              {Object.entries(fabric.specs).map(([key, value]) => (
+                <div
+                  key={key}
+                  className="grid grid-cols-2 py-3 border-b border-cream-dark last:border-b-0"
+                >
+                  <span className="text-[11px] tracking-[0.2em] uppercase text-charcoal-light font-light">
+                    {key}
+                  </span>
+                  <span className="text-sm text-charcoal text-right font-light">
+                    {value}
+                  </span>
+                </div>
+              ))}
+            </div>
+          )}
 
           {fabric.categories?.length > 0 && (
             <div className="mb-8 border-b border-cream-dark">
@@ -310,7 +317,6 @@ export default function FabricDetail() {
 
           {/* Actions */}
           <div className="flex flex-wrap gap-3 pt-4">
-            
             <a
               href={`${WHATSAPP_BASE}?text=${waMessage}`}
               target="_blank"
@@ -322,18 +328,20 @@ export default function FabricDetail() {
               </svg>
               {t('requestFabricQuote')}
             </a>
-            
-            <a
-              href={SHOWROOMS[0].mapsLink}
-              target="_blank"
-              rel="noreferrer"
-              className="inline-flex items-center gap-2 min-h-[44px] px-6 py-3 text-[11px] tracking-[0.18em] uppercase transition-colors duration-200 border border-charcoal/20 text-charcoal hover:border-burgundy hover:text-burgundy"
-            >
-              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5">
-                <path d="M12 2C8.13 2 5 5.13 5 9c0 5.25 7 13 7 13s7-7.75 7-13c0-3.87-3.13-7-7-7zm0 9.5c-1.38 0-2.5-1.12-2.5-2.5s1.12-2.5 2.5-2.5 2.5 1.12 2.5 2.5-1.12 2.5-2.5 2.5z" />
-              </svg>
-              {t('showroomLabel')}
-            </a>
+
+            {SHOWROOMS?.[0]?.mapsLink && (
+              <a
+                href={SHOWROOMS[0].mapsLink}
+                target="_blank"
+                rel="noreferrer"
+                className="inline-flex items-center gap-2 min-h-[44px] px-6 py-3 text-[11px] tracking-[0.18em] uppercase transition-colors duration-200 border border-charcoal/20 text-charcoal hover:border-burgundy hover:text-burgundy"
+              >
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5">
+                  <path d="M12 2C8.13 2 5 5.13 5 9c0 5.25 7 13 7 13s7-7.75 7-13c0-3.87-3.13-7-7-7zm0 9.5c-1.38 0-2.5-1.12-2.5-2.5s1.12-2.5 2.5-2.5 2.5 1.12 2.5 2.5-1.12 2.5-2.5-2.5 2.5z" />
+                </svg>
+                {t('showroomLabel')}
+              </a>
+            )}
           </div>
         </div>
       </div>
@@ -379,9 +387,6 @@ export default function FabricDetail() {
           </div>
         </div>
       )}
-
-      {/* Quote modal */}
-
     </div>
   )
 }

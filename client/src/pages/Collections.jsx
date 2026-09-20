@@ -1,6 +1,6 @@
-import { useEffect, useMemo, useState } from 'react'
-import { Link } from 'react-router-dom'
-import { fetchFabrics, getCategoryList } from '../data/fabrics'
+import { useEffect, useMemo, useState, useRef } from 'react'
+import { Link, useSearchParams, useLocation } from 'react-router-dom'
+import { getCategoryList } from '../data/fabrics'
 import { useSite } from '../context/SiteContext'
 import SEO from '../components/SEO'
 import { useFavorites } from '../hooks/useFavorites'
@@ -18,10 +18,17 @@ function HeartIcon({ filled = false }) {
 function FabricCard({ fabric }) {
   const { t } = useSite()
   const { isFavorite, toggleFavorite } = useFavorites()
+  const location = useLocation()
   const detail = fabric.collection || fabric.specs?.Composition || 'SA Studio textile'
 
   return (
-    <Link to={`/collections/${fabric.id}`} className="collections-product-card group">
+    <Link 
+      to={{
+        pathname: `/collections/${fabric.id}`,
+        search: location.search
+      }} 
+      className="collections-product-card group"
+    >
       <div className="collections-product-image">
         {fabric.image ? (
           <img src={fabric.image} alt={`${fabric.name} ${fabric.collection || ''} textile`} loading="lazy" decoding="async" />
@@ -31,7 +38,12 @@ function FabricCard({ fabric }) {
         <span className="collections-product-tag">
           {fabric.categories?.[0] || t('newArrival')}
         </span>
-        <button type="button" className={`collections-favorite-button ${isFavorite(fabric.id) ? 'is-favorite' : ''}`} onClick={(event) => { event.preventDefault(); toggleFavorite(fabric.id) }} aria-label={isFavorite(fabric.id) ? `Remove ${fabric.name} from favorites` : `Add ${fabric.name} to favorites`}>
+        <button 
+          type="button" 
+          className={`collections-favorite-button ${isFavorite(fabric.id) ? 'is-favorite' : ''}`} 
+          onClick={(event) => { event.preventDefault(); toggleFavorite(fabric.id) }} 
+          aria-label={isFavorite(fabric.id) ? `Remove ${fabric.name} from favorites` : `Add ${fabric.name} to favorites`}
+        >
           <HeartIcon filled={isFavorite(fabric.id)} />
         </button>
       </div>
@@ -44,31 +56,43 @@ function FabricCard({ fabric }) {
 }
 
 export default function Collections() {
-  const { t } = useSite()
-  const [fabrics, setFabrics] = useState([])
+  const { t, fabrics, isLoadingFabrics } = useSite()
+  const [searchParams, setSearchParams] = useSearchParams()
+
+  const pageParam = parseInt(searchParams.get('page') || '1', 10)
+  const page = isNaN(pageParam) || pageParam < 1 ? 1 : pageParam
+
   const [activeCategory, setActiveCategory] = useState('All')
   const [sortMode, setSortMode] = useState('featured')
   const [searchInput, setSearchInput] = useState('')
   const [searchQuery, setSearchQuery] = useState('')
-  const [page, setPage] = useState(1)
+
+  const isInitialMount = useRef(true)
+
+  const updatePage = (newPage) => {
+    setSearchParams((prevParams) => {
+      const params = new URLSearchParams(prevParams)
+      if (newPage === 1) {
+        params.delete('page')
+      } else {
+        params.set('page', newPage.toString())
+      }
+      return params
+    }, { replace: true })
+  }
 
   useEffect(() => {
+    if (isInitialMount.current) {
+      isInitialMount.current = false
+      return
+    }
+
     const timeout = window.setTimeout(() => {
       setSearchQuery(searchInput.trim())
-      setPage(1)
+      updatePage(1)
     }, 300)
     return () => window.clearTimeout(timeout)
   }, [searchInput])
-
-  useEffect(() => {
-    let ignore = false
-    fetchFabrics().then((items) => {
-      if (!ignore) setFabrics(items)
-    })
-    return () => {
-      ignore = true
-    }
-  }, [])
 
   const categories = getCategoryList(fabrics)
   const filtered = (activeCategory === 'All'
@@ -76,17 +100,19 @@ export default function Collections() {
     : fabrics.filter((fabric) => fabric.categories?.includes(activeCategory))).filter((fabric) => {
       if (!searchQuery) return true
       const query = searchQuery.toLowerCase()
-      return [fabric.name, fabric.collection, fabric.description].some((value) => value.toLowerCase().includes(query))
+      return [fabric.name, fabric.collection, fabric.description].some((value) => value?.toLowerCase().includes(query))
     })
+
   const sorted = useMemo(() => [...filtered].sort((a, b) => {
     if (sortMode === 'relevant' && searchQuery) {
-      const score = (fabric) => [fabric.name, fabric.collection, fabric.description].reduce((total, value, index) => total + (value.toLowerCase().includes(searchQuery.toLowerCase()) ? 3 - index : 0), 0)
+      const score = (fabric) => [fabric.name, fabric.collection, fabric.description].reduce((total, value, index) => total + (value?.toLowerCase().includes(searchQuery.toLowerCase()) ? 3 - index : 0), 0)
       return score(b) - score(a)
     }
     if (sortMode === 'newest') return new Date(b.created_at || 0) - new Date(a.created_at || 0)
     if (sortMode === 'oldest') return new Date(a.created_at || 0) - new Date(b.created_at || 0)
     return Number(b.featured) - Number(a.featured)
   }), [filtered, searchQuery, sortMode])
+
   const pageCount = Math.max(1, Math.ceil(sorted.length / PAGE_SIZE))
   const paged = sorted.slice((page - 1) * PAGE_SIZE, page * PAGE_SIZE)
   const categoryLabel = (category) => {
@@ -133,7 +159,10 @@ export default function Collections() {
           <div className="collections-controls" aria-label={t('collections')}>
             <select
               value={activeCategory}
-              onChange={(event) => { setActiveCategory(event.target.value); setPage(1) }}
+              onChange={(event) => { 
+                setActiveCategory(event.target.value)
+                updatePage(1) 
+              }}
               aria-label={t('collections')}
             >
               {categories.map((category) => (
@@ -144,7 +173,12 @@ export default function Collections() {
             </select>
             <div className="collections-search">
               <span aria-hidden="true">⌕</span>
-              <input value={searchInput} onChange={(event) => setSearchInput(event.target.value)} placeholder={t('searchCollections')} aria-label={t('searchCollections')} />
+              <input 
+                value={searchInput} 
+                onChange={(event) => setSearchInput(event.target.value)} 
+                placeholder={t('searchCollections')} 
+                aria-label={t('searchCollections')} 
+              />
             </div>
             <select value={searchQuery ? sortMode : 'featured'} onChange={(event) => setSortMode(event.target.value)} aria-label={t('sort')}>
               <option value="featured">{t('sortFeatured')}</option>
@@ -156,7 +190,11 @@ export default function Collections() {
         </section>
 
         <section className="collections-products" aria-label="Fabric collections">
-          {sorted.length > 0 ? (
+          {isLoadingFabrics ? (
+            <div className="py-12 text-center text-sm opacity-60">
+              {t('loadingFabrics')}
+            </div>
+          ) : sorted.length > 0 ? (
             paged.map((fabric) => <FabricCard key={fabric.id} fabric={fabric} />)
           ) : (
             <p className="collections-empty">{t('noCollections')}</p>
@@ -168,11 +206,10 @@ export default function Collections() {
             className="collections-pagination flex items-center justify-center gap-1 py-6 px-2 w-full overflow-x-auto no-scrollbar" 
             aria-label="Collections pages"
           >
-            {/* Previous Arrow */}
             <button 
               type="button" 
               disabled={page === 1} 
-              onClick={() => setPage((current) => current - 1)}
+              onClick={() => updatePage(page - 1)}
               aria-label={t('previous')}
               className="w-7 h-7 flex items-center justify-center rounded border border-black/10 disabled:opacity-20 disabled:cursor-not-allowed shrink-0 hover:bg-black/5 transition-colors"
             >
@@ -181,7 +218,6 @@ export default function Collections() {
               </svg>
             </button>
             
-            {/* Page Boxes */}
             {paginationRange.map((pageNumber, idx) =>
               pageNumber === '...' ? (
                 <span key={`dots-${idx}`} className="px-1 text-[11px] opacity-40 shrink-0 select-none">
@@ -194,18 +230,17 @@ export default function Collections() {
                   className={`w-7 h-7 text-[11px] font-medium rounded shrink-0 transition-colors flex items-center justify-center ${
                     page === pageNumber ? 'is-active bg-black text-white' : 'hover:bg-black/5 border border-transparent'
                   }`}
-                  onClick={() => setPage(pageNumber)}
+                  onClick={() => updatePage(pageNumber)}
                 >
                   {pageNumber}
                 </button>
               )
             )}
 
-            {/* Next Arrow */}
             <button 
               type="button" 
               disabled={page === pageCount} 
-              onClick={() => setPage((current) => current + 1)}
+              onClick={() => updatePage(page + 1)}
               aria-label={t('next')}
               className="w-7 h-7 flex items-center justify-center rounded border border-black/10 disabled:opacity-20 disabled:cursor-not-allowed shrink-0 hover:bg-black/5 transition-colors"
             >
