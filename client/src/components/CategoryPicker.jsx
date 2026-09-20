@@ -2,6 +2,8 @@ const categories = [
   { value: 'Upholstery', label: 'Upholstery', description: 'Chairs and sofas', icon: 'couch' },
   { value: 'Curtains', label: 'Curtains', description: 'Window textiles', icon: 'curtain' },
   { value: 'Wallpaper', label: 'Wallpaper', description: 'Wall coverings', icon: 'wallpaper' },
+  { value: 'Borders', label: 'Borders', description: 'Trims and edging', icon: 'border' },
+  { value: 'Outdoor Upholstery', label: 'Outdoor Upholstery', description: 'Weather-resistant textiles', icon: 'outdoor' },
 ]
 
 function CategoryIcon({ type }) {
@@ -24,6 +26,24 @@ function CategoryIcon({ type }) {
     )
   }
 
+  if (type === 'border') {
+    return (
+      <svg viewBox="0 0 48 48" aria-hidden="true" className="h-10 w-10 fill-none stroke-current stroke-[1.5]">
+        <path d="M6 14h36M6 34h36" />
+        <path d="M10 14v20M16 14v20M22 14v20M28 14v20M34 14v20M38 14v20" strokeDasharray="2 4" />
+      </svg>
+    )
+  }
+
+  if (type === 'outdoor') {
+    return (
+      <svg viewBox="0 0 48 48" aria-hidden="true" className="h-10 w-10 fill-none stroke-current stroke-[1.5]">
+        <path d="M24 6v4M24 8c9 0 16 5 16 12H8c0-7 7-12 16-12Z" />
+        <path d="M24 20v18M18 38h12M20 44h8" />
+      </svg>
+    )
+  }
+
   return (
     <svg viewBox="0 0 48 48" aria-hidden="true" className="h-10 w-10 fill-none stroke-current stroke-[1.5]">
       <path d="M8 10h32v28H8zM14 10v28M34 10v28" />
@@ -32,21 +52,29 @@ function CategoryIcon({ type }) {
   )
 }
 
-export default function CategoryPicker({ value, onChange, required = false }) {
+export default function CategoryPicker({ value = [], onChange, required = false }) {
+  const toggle = (categoryValue) => {
+    if (value.includes(categoryValue)) {
+      onChange(value.filter((v) => v !== categoryValue))
+    } else {
+      onChange([...value, categoryValue])
+    }
+  }
+
   return (
     <fieldset>
       <legend className="block text-[10px] tracking-[0.2em] uppercase text-charcoal-light mb-2">
-        Category {required && '*'}
+        Categories {required && '*'} <span className="normal-case text-charcoal-light/70">(select all that apply)</span>
       </legend>
-      <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+      <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-3">
         {categories.map((category) => {
-          const selected = value === category.value
+          const selected = value.includes(category.value)
           return (
             <button
               key={category.value}
               type="button"
               aria-pressed={selected}
-              onClick={() => onChange(category.value)}
+              onClick={() => toggle(category.value)}
               className={`min-h-[128px] border p-4 text-left transition-colors ${selected ? 'border-forest bg-forest text-white' : 'border-cream-dark bg-white text-charcoal hover:border-forest'}`}
             >
               <CategoryIcon type={category.icon} />
@@ -56,7 +84,7 @@ export default function CategoryPicker({ value, onChange, required = false }) {
           )
         })}
       </div>
-      {required && !value && <p className="mt-2 text-xs text-charcoal-light">Choose a category before saving.</p>}
+      {required && value.length === 0 && <p className="mt-2 text-xs text-charcoal-light">Choose at least one category before saving.</p>}
     </fieldset>
   )
 }

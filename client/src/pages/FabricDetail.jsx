@@ -1,5 +1,5 @@
 import { useParams, Link, useNavigate } from 'react-router-dom'
-import { fetchFabrics, WHATSAPP_BASE, SHOWROOMS } from '../data/fabrics'
+import { fetchFabrics, WHATSAPP_BASE, SHOWROOMS, fetchFabricColors } from '../data/fabrics'
 import { useState, useEffect } from 'react'
 import { useSite } from '../context/SiteContext'
 import SEO from '../components/SEO'
@@ -38,6 +38,24 @@ function UsageIcon({ category }) {
     )
   }
 
+  if (category === 'Borders') {
+    return (
+      <svg viewBox="0 0 48 48" aria-hidden="true" className="h-8 w-8 fill-none stroke-current stroke-[1.5]">
+        <path d="M6 14h36M6 34h36" />
+        <path d="M10 14v20M16 14v20M28 14v20M34 14v20M38 14v20M38 14v20" strokeDasharray="2 4" />
+      </svg>
+    )
+  }
+
+  if (category === 'Outdoor Upholstery') {
+    return (
+      <svg viewBox="0 0 48 48" aria-hidden="true" className="h-8 w-8 fill-none stroke-current stroke-[1.5]">
+        <path d="M24 6v4M24 8c9 0 16 5 16 12H8c0-7 7-12 16-12Z" />
+        <path d="M24 20v18M18 38h12M20 44h8" />
+      </svg>
+    )
+  }
+
   return null
 }
 
@@ -48,6 +66,8 @@ export default function FabricDetail() {
   const [fabrics, setFabrics] = useState([])
   const [magnifier, setMagnifier] = useState(null)
   const [activeImage, setActiveImage] = useState('')
+  const [colors, setColors] = useState([])
+  const [activeColor, setActiveColor] = useState(null)
   const { t } = useSite()
   const { isFavorite, toggleFavorite } = useFavorites()
 
@@ -64,6 +84,17 @@ export default function FabricDetail() {
   }, [])
 
   useEffect(() => {
+    if (!id) return
+    fetchFabricColors(id).then((rows) => {
+      setColors(rows)
+      if (rows.length) {
+        setActiveColor(rows[0])
+        setActiveImage(rows[0].image)
+      }
+    })
+  }, [id])
+
+  useEffect(() => {
     const updateProgress = () => {
       const scrollY = window.scrollY
       const maxScroll = document.body.scrollHeight - window.innerHeight
@@ -77,7 +108,7 @@ export default function FabricDetail() {
 
   const fabric = fabrics.find((f) => f.id === id)
   const imageUrls = fabric?.images?.length ? fabric.images : (fabric?.image ? [fabric.image] : [])
-  const displayedImage = imageUrls.includes(activeImage) ? activeImage : imageUrls[0]
+  const displayedImage = activeImage || imageUrls[0]
 
   if (!fabric) {
     return (
@@ -103,7 +134,7 @@ export default function FabricDetail() {
   )
 
   const related = fabrics
-    .filter((f) => f.id !== fabric.id && f.category === fabric.category)
+    .filter((f) => f.id !== fabric.id && f.categories?.some((c) => fabric.categories?.includes(c)))
     .slice(0, 3)
 
   return (
@@ -195,9 +226,25 @@ export default function FabricDetail() {
               ))}
             </div>
           )}
+          {colors.length > 0 && (
+            <div className="absolute top-6 right-6 flex flex-col gap-2">
+              {colors.map((color) => (
+                <button
+                  key={color.id}
+                  type="button"
+                  onClick={() => { setActiveColor(color); setActiveImage(color.image); setMagnifier(null) }}
+                  title={color.color_name}
+                  aria-label={`View ${color.color_name} colorway`}
+                  className={`h-9 w-9 rounded-full border-2 overflow-hidden ${activeColor?.id === color.id ? 'border-forest' : 'border-white'}`}
+                >
+                  <img src={color.image} alt={color.color_name} className="h-full w-full object-cover" />
+                </button>
+              ))}
+            </div>
+          )}
           <div className="absolute top-6 left-6 bg-charcoal/70 px-4 py-1.5">
             <span className="text-white text-[10px] tracking-[0.2em] uppercase">
-              {fabric.category}
+              {fabric.categories?.join(' / ')}
             </span>
           </div>
         </div>
@@ -214,6 +261,9 @@ export default function FabricDetail() {
             <p className="text-xs text-charcoal-light font-light mb-3">
               Ref: {fabric.reference}
             </p>
+          )}
+          {activeColor && (
+            <p className="text-xs text-charcoal-light font-light mb-3">Color: {activeColor.color_name}</p>
           )}
           <button type="button" onClick={() => toggleFavorite(fabric.id)} className={`fabric-detail-favorite ${isFavorite(fabric.id) ? 'is-favorite' : ''}`} aria-label={isFavorite(fabric.id) ? `Remove ${fabric.name} from favorites` : `Add ${fabric.name} to favorites`}>
             <HeartIcon filled={isFavorite(fabric.id)} />
@@ -240,22 +290,27 @@ export default function FabricDetail() {
             ))}
           </div>
 
-          {['Upholstery', 'Curtains', 'Wallpaper'].includes(fabric.category) && (
+          {fabric.categories?.length > 0 && (
             <div className="mb-8 border-b border-cream-dark">
-              <div className="grid grid-cols-2 items-center py-3">
+              <div className="grid grid-cols-2 items-start py-3">
                 <span className="text-[11px] tracking-[0.2em] uppercase text-charcoal-light font-light">
                   Usage
                 </span>
-                <span className="flex items-center justify-end gap-3 text-sm text-charcoal font-light">
-                  <UsageIcon category={fabric.category} />
-                  {fabric.category}
-                </span>
+                <div className="flex flex-col items-end gap-3">
+                  {fabric.categories.map((cat) => (
+                    <span key={cat} className="flex items-center justify-end gap-3 text-sm text-charcoal font-light">
+                      <UsageIcon category={cat} />
+                      {cat}
+                    </span>
+                  ))}
+                </div>
               </div>
             </div>
           )}
 
           {/* Actions */}
           <div className="flex flex-wrap gap-3 pt-4">
+            
             <a
               href={`${WHATSAPP_BASE}?text=${waMessage}`}
               target="_blank"
@@ -267,6 +322,7 @@ export default function FabricDetail() {
               </svg>
               {t('requestFabricQuote')}
             </a>
+            
             <a
               href={SHOWROOMS[0].mapsLink}
               target="_blank"
@@ -286,7 +342,7 @@ export default function FabricDetail() {
       {related.length > 0 && (
         <div className="px-8 lg:px-16 py-16 border-t border-cream-dark">
           <h2 className="font-serif text-3xl font-light text-charcoal mb-8">
-            {t('moreInCollection')} <em className="text-forest">{fabric.category}</em>
+            {t('moreInCollection')} <em className="text-forest">{fabric.categories?.join(' / ')}</em>
           </h2>
           <div className="grid grid-cols-1 md:grid-cols-3 gap-0.5 bg-cream-dark">
             {related.map((f) => (
@@ -312,7 +368,7 @@ export default function FabricDetail() {
                 </div>
                 <div className="p-4 border-b border-cream-dark">
                   <p className="eyebrow mb-1">
-                    {f.category}
+                    {f.categories?.join(' / ')}
                   </p>
                   <h3 className="font-sans text-lg font-light text-charcoal">
                     {f.name}

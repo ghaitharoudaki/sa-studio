@@ -68,7 +68,7 @@ export default function AdminDashboard() {
     (fabric) =>
       fabric.name.toLowerCase().includes(searchTerm.toLowerCase())
       || fabric.collection.toLowerCase().includes(searchTerm.toLowerCase())
-      || fabric.category.toLowerCase().includes(searchTerm.toLowerCase()),
+      || (fabric.categories || []).some((c) => c.toLowerCase().includes(searchTerm.toLowerCase())),
   )
 
   return (
@@ -142,8 +142,8 @@ export default function AdminDashboard() {
                       <h3 className="font-serif text-2xl font-light text-charcoal mb-1">{fabric.name}</h3>
                       <p className="text-sm text-charcoal-light">
                         {fabric.collection && <span>{fabric.collection}</span>}
-                        {fabric.collection && fabric.category && <span> • </span>}
-                        {fabric.category && <span>{fabric.category}</span>}
+                        {fabric.collection && fabric.categories?.length > 0 && <span> • </span>}
+                        {fabric.categories?.length > 0 && <span>{fabric.categories.join(', ')}</span>}
                       </p>
                       {fabric.description && <p className="text-sm text-charcoal mt-2 line-clamp-2">{fabric.description}</p>}
                     </div>

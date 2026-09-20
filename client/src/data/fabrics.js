@@ -64,17 +64,21 @@ const normalizeFabric = (item) => {
   const name = String(item?.name || 'Untitled fabric').trim()
   const reference = String(item?.reference || '').trim()
   const collection = String(item?.collection || '').trim()
-  const category = String(item?.category || '').trim()
+  const categories = Array.isArray(item?.categories)
+    ? item.categories.map((c) => String(c || '').trim()).filter(Boolean)
+    : item?.category
+      ? [String(item.category).trim()]
+      : []
   const texture = String(item?.texture || '').trim()
   const description = String(item?.description || '').trim()
   const image = String(item?.image || '').trim()
-  const createdAt = item?.created_at || item?.createdAt || ''
+  const createdAt = item?.created_at || item?.createdAt || null
   const featured = item?.featured === true
   const images = Array.isArray(item?.images)
     ? item.images.map((url) => String(url || '').trim()).filter(Boolean)
     : image ? [image] : []
   const specs = Object.fromEntries(
-    Object.entries(item?.specs || {}).filter(([key]) => !['Martindale', 'Weight'].includes(key)),
+    Object.entries(item?.specs || {}).filter(([key]) => !['Martindale'].includes(key)),
   )
 
   return {
@@ -82,7 +86,7 @@ const normalizeFabric = (item) => {
     name,
     reference: reference || null,
     collection,
-    category,
+    categories,
     texture,
     image,
     images,
@@ -134,7 +138,7 @@ const writeFallback = (items) => {
 
 export const fabrics = []
 
-export const getCategoryList = (items = []) => ['All', ...new Set(items.map((item) => item.category).filter(Boolean))]
+export const getCategoryList = (items = []) => ['All', ...new Set(items.flatMap((item) => item.categories || []))]
 export const getCollectionList = (items = []) => [...new Set(items.map((item) => item.collection).filter(Boolean))]
 
 const toWritableFabric = (formData) => {
@@ -143,7 +147,7 @@ const toWritableFabric = (formData) => {
     name: normalized.name,
     reference: normalized.reference,
     collection: normalized.collection,
-    category: normalized.category,
+    categories: normalized.categories,
     description: normalized.description,
     image: normalized.image,
     images: normalized.images,
@@ -189,8 +193,50 @@ export async function fetchFabrics() {
   return items
 }
 
+export async function fetchFabricColors(fabricId) {
+  if (!supabase) return []
+  const { data, error } = await supabase
+    .from('fabric_colors')
+    .select('*')
+    .eq('fabric_id', fabricId)
+    .order('sort_order', { ascending: true })
+
+  if (error) {
+    console.error('Supabase fabric colors fetch error:', error)
+    return []
+  }
+  return data || []
+}
+
+export async function saveFabricColors(fabricId, colors) {
+  if (!supabase) return { error: null }
+  const { error: sessionError } = await ensureAdminSession()
+  if (sessionError) return { error: sessionError }
+
+  const { error: deleteError } = await supabase
+    .from('fabric_colors')
+    .delete()
+    .eq('fabric_id', fabricId)
+  if (deleteError) return { error: deleteError }
+
+  const rows = colors
+    .filter((c) => c.color_name?.trim() && c.image?.trim())
+    .map((c, index) => ({
+      fabric_id: fabricId,
+      color_name: c.color_name.trim(),
+      image: c.image.trim(),
+      sort_order: index,
+    }))
+
+  if (!rows.length) return { error: null }
+
+  const { error: insertError } = await supabase.from('fabric_colors').insert(rows)
+  return { error: insertError }
+}
+
 export async function createFabric(formData) {
   const payload = normalizeFabric(formData)
+  const { created_at, ...insertPayload } = payload
 
   if (!supabase) {
     const current = readFallback()
@@ -204,7 +250,7 @@ export async function createFabric(formData) {
 
   const { data, error } = await supabase
     .from('fabrics')
-    .insert([payload])
+    .insert([insertPayload])
     .select()
     .single()
 

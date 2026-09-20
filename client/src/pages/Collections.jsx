@@ -29,7 +29,7 @@ function FabricCard({ fabric }) {
           <div className={`h-full w-full ${fabric.texture || 'tex-forest'}`} />
         )}
         <span className="collections-product-tag">
-          {fabric.category || t('newArrival')}
+          {fabric.categories?.[0] || t('newArrival')}
         </span>
         <button type="button" className={`collections-favorite-button ${isFavorite(fabric.id) ? 'is-favorite' : ''}`} onClick={(event) => { event.preventDefault(); toggleFavorite(fabric.id) }} aria-label={isFavorite(fabric.id) ? `Remove ${fabric.name} from favorites` : `Add ${fabric.name} to favorites`}>
           <HeartIcon filled={isFavorite(fabric.id)} />
@@ -73,7 +73,7 @@ export default function Collections() {
   const categories = getCategoryList(fabrics)
   const filtered = (activeCategory === 'All'
     ? fabrics
-    : fabrics.filter((fabric) => fabric.category === activeCategory)).filter((fabric) => {
+    : fabrics.filter((fabric) => fabric.categories?.includes(activeCategory))).filter((fabric) => {
       if (!searchQuery) return true
       const query = searchQuery.toLowerCase()
       return [fabric.name, fabric.collection, fabric.description].some((value) => value.toLowerCase().includes(query))
@@ -131,18 +131,17 @@ export default function Collections() {
           <h1>{t('theCollections')}</h1>
           <p className="collections-intro-description">{t('collectionIntro')}</p>
           <div className="collections-controls" aria-label={t('collections')}>
-            <div className="collections-filter-list">
+            <select
+              value={activeCategory}
+              onChange={(event) => { setActiveCategory(event.target.value); setPage(1) }}
+              aria-label={t('collections')}
+            >
               {categories.map((category) => (
-                <button
-                  key={category}
-                  type="button"
-                  onClick={() => { setActiveCategory(category); setPage(1) }}
-                  className={activeCategory === category ? 'is-active' : ''}
-                >
+                <option key={category} value={category}>
                   {categoryLabel(category)}
-                </button>
+                </option>
               ))}
-            </div>
+            </select>
             <div className="collections-search">
               <span aria-hidden="true">⌕</span>
               <input value={searchInput} onChange={(event) => setSearchInput(event.target.value)} placeholder={t('searchCollections')} aria-label={t('searchCollections')} />

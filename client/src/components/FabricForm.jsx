@@ -1,24 +1,24 @@
 import { useEffect, useRef, useState } from 'react'
-import { createFabric, uploadFabricImage, updateFabric, validateFabricImage } from '../data/fabrics'
+import { createFabric, uploadFabricImage, updateFabric, validateFabricImage, saveFabricColors, fetchFabricColors } from '../data/fabrics'
 import CategoryPicker from './CategoryPicker'
 
 const initialForm = {
   name: '',
   reference: '',
   collection: '',
-  category: '',
+  categories: [],
   description: '',
   featured: false,
   image: '',
   images: [],
-  specs: { Width: '', Height: '' },
+  specs: { Width: '', Height: '', Weight: '', Material: '' },
 }
 
 const getForm = (fabric) => fabric ? {
   name: fabric.name || '',
   reference: fabric.reference || '',
   collection: fabric.collection || '',
-  category: fabric.category || '',
+  categories: fabric.categories?.length ? fabric.categories : (fabric.category ? [fabric.category] : []),
   description: fabric.description || '',
   featured: fabric.featured === true,
   image: fabric.image || '',
@@ -26,6 +26,8 @@ const getForm = (fabric) => fabric ? {
   specs: {
     Width: '',
     Height: '',
+    Weight: '',
+    Material: '',
     ...(fabric.specs || {}),
   },
 } : initialForm
@@ -35,6 +37,7 @@ export default function FabricForm({ fabric = null, onSubmit, onCancel, isLoadin
   const [imageFiles, setImageFiles] = useState([])
   const [previewUrls, setPreviewUrls] = useState(() => getForm(fabric).images)
   const previewUrlsRef = useRef(previewUrls)
+  const [colorVariants, setColorVariants] = useState([])
   const [message, setMessage] = useState('')
   const [saving, setSaving] = useState(false)
 
@@ -45,6 +48,14 @@ export default function FabricForm({ fabric = null, onSubmit, onCancel, isLoadin
   useEffect(() => () => {
     previewUrlsRef.current.filter((url) => url.startsWith('blob:')).forEach((url) => URL.revokeObjectURL(url))
   }, [])
+
+  useEffect(() => {
+    if (fabric?.id) {
+      fetchFabricColors(fabric.id).then((rows) => {
+        setColorVariants(rows.map((r) => ({ color_name: r.color_name, image: r.image, file: null })))
+      })
+    }
+  }, [fabric?.id])
 
   const handleField = (key, value) => setForm((current) => ({ ...current, [key]: value }))
 
@@ -82,10 +93,32 @@ export default function FabricForm({ fabric = null, onSubmit, onCancel, isLoadin
     }
   }
 
+  const addColorVariant = () => {
+    setColorVariants((current) => [...current, { color_name: '', image: '', file: null }])
+  }
+
+  const updateColorName = (index, name) => {
+    setColorVariants((current) => current.map((c, i) => (i === index ? { ...c, color_name: name } : c)))
+  }
+
+  const updateColorImage = (index, file) => {
+    const validationError = validateFabricImage(file)
+    if (validationError) {
+      setMessage(validationError)
+      return
+    }
+    const previewUrl = URL.createObjectURL(file)
+    setColorVariants((current) => current.map((c, i) => (i === index ? { ...c, image: previewUrl, file } : c)))
+  }
+
+  const removeColorVariant = (index) => {
+    setColorVariants((current) => current.filter((_, i) => i !== index))
+  }
+
   const handleSubmit = async (event) => {
     event.preventDefault()
-    if (!form.category) {
-      setMessage('Please choose a category.')
+    if (!form.categories.length) {
+      setMessage('Please choose at least one category.')
       return
     }
     if (!fabric && !previewUrls.length) {
@@ -135,9 +168,33 @@ export default function FabricForm({ fabric = null, onSubmit, onCancel, isLoadin
       return
     }
 
+    const savedId = result.data?.id || fabric?.id
+    if (savedId && colorVariants.length) {
+      const uploadedColors = []
+      for (const variant of colorVariants) {
+        let imageUrl = variant.image
+        if (variant.file) {
+          const { data: uploaded, error: uploadError } = await uploadFabricImage(variant.file)
+          if (uploadError) {
+            setMessage(`Color image upload failed: ${uploadError.message}`)
+            return
+          }
+          imageUrl = uploaded
+        }
+        uploadedColors.push({ color_name: variant.color_name, image: imageUrl })
+      }
+      const { error: colorError } = await saveFabricColors(savedId, uploadedColors)
+      if (colorError) {
+        console.error('Color save error:', colorError)
+        setMessage(`Fabric saved, but colors failed to save: ${colorError.message}`)
+        return
+      }
+    }
+
     setForm(initialForm)
     setImageFiles([])
     setPreviewUrls([])
+    setColorVariants([])
     setMessage(fabric ? 'Fabric updated successfully.' : 'Fabric added successfully.')
 
     if (onSubmit) {
@@ -164,7 +221,7 @@ export default function FabricForm({ fabric = null, onSubmit, onCancel, isLoadin
         <input value={form.reference} onChange={(event) => handleField('reference', event.target.value)} className={inputClass} />
       </div>
       <div className="md:col-span-2">
-        <CategoryPicker value={form.category} onChange={(value) => handleField('category', value)} required />
+        <CategoryPicker value={form.categories} onChange={(value) => handleField('categories', value)} required />
       </div>
 
       <div className="md:col-span-2">
@@ -182,7 +239,7 @@ export default function FabricForm({ fabric = null, onSubmit, onCancel, isLoadin
         )}
       </div>
 
-      {['Width', 'Height'].map((key) => (
+      {['Width', 'Height', 'Weight', 'Material'].map((key) => (
         <div key={key}>
           <label className={labelClass}>{key}</label>
           <input value={form.specs[key] || ''} onChange={(event) => handleSpec(key, event.target.value)} className={inputClass} />
@@ -198,6 +255,33 @@ export default function FabricForm({ fabric = null, onSubmit, onCancel, isLoadin
         <input type="checkbox" checked={form.featured} onChange={(event) => handleField('featured', event.target.checked)} className="h-4 w-4 accent-forest" />
         <span>Featured</span>
       </label>
+
+      <div className="md:col-span-2">
+        <label className={labelClass}>Color Variants (optional)</label>
+        <div className="space-y-3">
+          {colorVariants.map((variant, index) => (
+            <div key={index} className="flex items-center gap-3 border border-cream-dark p-3">
+              {variant.image && <img src={variant.image} alt={variant.color_name || 'color variant'} className="h-14 w-14 object-cover shrink-0" />}
+              <input
+                placeholder="Color name (e.g. Sage Green)"
+                value={variant.color_name}
+                onChange={(event) => updateColorName(index, event.target.value)}
+                className={inputClass}
+              />
+              <input
+                type="file"
+                accept="image/jpeg,image/png,image/webp,image/avif"
+                onChange={(event) => event.target.files[0] && updateColorImage(index, event.target.files[0])}
+                className="text-xs"
+              />
+              <button type="button" onClick={() => removeColorVariant(index)} className="shrink-0 bg-charcoal/80 px-3 py-2 text-xs text-white">Remove</button>
+            </div>
+          ))}
+        </div>
+        <button type="button" onClick={addColorVariant} className="mt-3 border border-forest text-forest px-4 py-2 text-xs uppercase tracking-[0.15em] hover:bg-forest hover:text-white transition-colors">
+          + Add Color
+        </button>
+      </div>
 
       <div className="md:col-span-2 flex items-center justify-between gap-4 flex-wrap">
         <div className="flex gap-4 flex-wrap">
