@@ -101,9 +101,10 @@ export default function FabricDetail() {
   const imageUrls = fabric?.images?.length ? fabric.images : (fabric?.image ? [fabric.image] : [])
   const displayedImage = activeImage || imageUrls[0]
 
-  const handleBack = () => {
-    // Explicitly reset search params and state back to root collections page 1
-    navigate('/collections', { replace: true, state: { resetPage: true } })
+     const handleBack = () => {
+    const savedUrl = sessionStorage.getItem('sa-studio-collections-url')
+    console.log('[BACK BUTTON] savedUrl read:', savedUrl)
+    navigate(savedUrl || '/collections')
   }
 
   if (isLoadingFabrics) {

@@ -12,7 +12,7 @@ export default function Footer() {
       style={{ background: 'var(--footer-bg)' }}
     >
       <img
-        src={theme === 'dark' ? darkLogo : logo}
+        src={darkLogo}
         alt="SA Studio"
         className="h-8 w-auto object-contain"
       />

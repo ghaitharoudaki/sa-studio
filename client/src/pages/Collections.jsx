@@ -58,6 +58,7 @@ function FabricCard({ fabric }) {
 export default function Collections() {
   const { t, fabrics, isLoadingFabrics } = useSite()
   const [searchParams, setSearchParams] = useSearchParams()
+  const location = useLocation()
 
   const pageParam = parseInt(searchParams.get('page') || '1', 10)
   const page = isNaN(pageParam) || pageParam < 1 ? 1 : pageParam
@@ -93,6 +94,11 @@ export default function Collections() {
     }, 300)
     return () => window.clearTimeout(timeout)
   }, [searchInput])
+
+    useEffect(() => {
+    console.log('[COLLECTIONS SAVE] location.search:', location.search, '| searchParams:', searchParams.toString())
+    sessionStorage.setItem('sa-studio-collections-url', `/collections${location.search}`)
+  }, [searchParams])
 
   const categories = getCategoryList(fabrics)
   const filtered = (activeCategory === 'All'
