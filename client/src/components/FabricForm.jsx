@@ -171,7 +171,7 @@ export default function FabricForm({ fabric = null, onSubmit, onCancel, isLoadin
     const savedId = result.data?.id || fabric?.id
     if (savedId && colorVariants.length) {
       const uploadedColors = []
-      for (const variant of colorVariants) {
+      for (const [index, variant] of colorVariants.entries()) {
         let imageUrl = variant.image
         if (variant.file) {
           const { data: uploaded, error: uploadError } = await uploadFabricImage(variant.file)
@@ -181,7 +181,9 @@ export default function FabricForm({ fabric = null, onSubmit, onCancel, isLoadin
           }
           imageUrl = uploaded
         }
-        uploadedColors.push({ color_name: variant.color_name, image: imageUrl })
+        // Fallback name if left blank so it saves successfully without errors
+        const resolvedColorName = variant.color_name?.trim() || `Color ${index + 1}`
+        uploadedColors.push({ color_name: resolvedColorName, image: imageUrl })
       }
       const { error: colorError } = await saveFabricColors(savedId, uploadedColors)
       if (colorError) {
@@ -263,7 +265,7 @@ export default function FabricForm({ fabric = null, onSubmit, onCancel, isLoadin
             <div key={index} className="flex items-center gap-3 border border-cream-dark p-3">
               {variant.image && <img src={variant.image} alt={variant.color_name || 'color variant'} className="h-14 w-14 object-cover shrink-0" />}
               <input
-                placeholder="Color name (e.g. Sage Green)"
+                placeholder="Color name (optional, e.g. Sage Green)"
                 value={variant.color_name}
                 onChange={(event) => updateColorName(index, event.target.value)}
                 className={inputClass}
