@@ -31,6 +31,13 @@ const SLIDES = [
     headline: 'Borders for your curtains and cushions.',
     objectPosition: 'center 50%',
   },
+  {
+    id: 'outdoor',
+    jpg: '/images/hero/hero-outdoor.jpg',
+    webp: '/images/hero/hero-outdoor.webp',
+    headline: 'Outdoor Fabrics Built for Sun, Wind & Effortless Style',
+    objectPosition: 'center 45%',
+  },
 ];
 
 const AUTOPLAY_MS = 6000;
@@ -125,10 +132,6 @@ export default function HeroCarousel() {
 
       {/* Hero Content */}
       <div className="relative z-10 h-full flex flex-col items-start justify-center text-left px-6 sm:px-12 md:px-20 max-w-3xl">
-        <div className="mb-4 sm:mb-6 px-4 py-1.5 rounded-full border border-white/40 text-white/90 text-[10px] sm:text-xs tracking-widest uppercase">
-          Damascus &middot; Est. 2005
-        </div>
-
         <AnimatePresence mode="wait">
           <motion.h1
             key={slide.id + '-headline'}

@@ -122,19 +122,35 @@ export default function Home() {
         >
           {[
             { num: '20+', label: t('yearsExcellence') || 'Years of Excellence' },
-            { num: '10,000+', label: t('fabricReferences') || 'Fabric References' },
+            { num: '10,000+', label: t('fabricReferences') || 'Fabric References', accent: 'burgundy' },
             { num: '2', label: 'Damascus Locations (1 Active · 1 Under Construction)' },
-            { num: 'Global', label: 'Curated Globally' },
-          ].map(({ num, label }) => (
+            { num: 'Global', label: 'Curated Globally', accent: 'forest' },
+          ].map(({ num, label, accent }) => (
             <div
               key={label}
               className="p-10 border-b border-r flex flex-col justify-center"
-              style={{ borderColor: '#E3E1DE' }}
+              style={{
+                borderColor: '#E3E1DE',
+                background:
+                  accent === 'burgundy'
+                    ? 'var(--burgundy, #6E1423)'
+                    : accent === 'forest'
+                    ? 'var(--green, #1F3D2E)'
+                    : undefined,
+              }}
             >
-              <p className="font-serif text-5xl font-light text-charcoal leading-none mb-2">
+              <p
+                className={`font-serif text-5xl font-light leading-none mb-2 ${
+                  accent ? 'text-white' : 'text-charcoal'
+                }`}
+              >
                 {num}
               </p>
-              <p className="text-[10px] tracking-[0.2em] uppercase text-charcoal-light">
+              <p
+                className={`text-[10px] tracking-[0.2em] uppercase ${
+                  accent ? 'text-white/80' : 'text-charcoal-light'
+                }`}
+              >
                 {label}
               </p>
             </div>

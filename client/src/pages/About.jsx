@@ -283,54 +283,68 @@ export default function About() {
 
       <section
         ref={contactRef}
-        className={`grid gap-0 lg:grid-cols-2 transition-all duration-700 ${contactVisible ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-8'}`}
+        className={`relative overflow-hidden transition-all duration-700 ${contactVisible ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-8'}`}
       >
-        <div className="relative min-h-[420px] overflow-hidden lg:min-h-[620px]" style={{ background: 'linear-gradient(135deg, rgba(31, 61, 46, 0.2), rgba(107, 42, 42, 0.2))' }}>
-          <div className="absolute inset-0" style={{ transform: `translate(${pointer.x * 0.02}px, ${pointer.y * 0.02}px)`, transition: 'transform 220ms ease-out' }}>
-            <div className="absolute inset-6 rounded-[30px] border border-white/30 bg-[linear-gradient(150deg,_rgba(255,255,255,0.16),_rgba(31,61,46,0.38)_45%,_rgba(107,42,42,0.30))]" />
-            <div className="absolute left-10 top-10 h-28 w-28 rounded-full border border-white/25 bg-white/10 backdrop-blur-sm" />
-            <div className="absolute bottom-12 right-12 h-52 w-52 rounded-full border border-white/25 bg-white/10" />
-          </div>
-        </div>
+        <div className="relative min-h-[560px] w-full lg:min-h-[680px]">
+          <picture className="absolute inset-0 block h-full w-full">
+            <source srcSet="/images/about/about-showroom.webp" type="image/webp" />
+            <img
+              src="/images/about/about-showroom.jpg"
+              alt=""
+              className="h-full w-full object-cover"
+            />
+          </picture>
 
-        <div className="flex items-center px-6 py-12 md:px-10 lg:px-14" style={{ background: 'var(--burgundy)' }}>
-          <div className="max-w-xl text-white">
-            <p className="text-[11px] uppercase tracking-[0.28em] text-white/75">{t('visitOurShowroom')}</p>
+          {/* Overlay for legibility, tinted with the brand burgundy */}
+          <div
+            className="absolute inset-0"
+            style={{ background: 'var(--burgundy)', opacity: 0.72 }}
+          />
+          <div
+            className="absolute inset-0"
+            style={{ background: 'radial-gradient(circle at center, rgba(0,0,0,0.15) 0%, rgba(0,0,0,0.5) 100%)' }}
+          />
 
-            <h2
-              className="mt-6 text-4xl md:text-5xl"
-              style={{
-                fontFamily: 'var(--font-display)',
-                fontWeight: 400,
-                letterSpacing: '-0.04em',
-                lineHeight: 0.95,
-              }}
-            >
-              {t('damascusShowroomHeading')}
-            </h2>
+          <div className="relative z-10 flex min-h-[560px] items-center justify-center px-6 py-16 text-center sm:px-10 lg:min-h-[680px] lg:px-14">
+            <div className="mx-auto flex max-w-xl flex-col items-center text-white">
+              <p className="text-[11px] font-semibold uppercase tracking-[0.28em] text-white">{t('visitOurShowroom')}</p>
 
-            <div className="mt-10 space-y-8 text-base text-white/80">
-              {SHOWROOMS.map((showroom) => (
-                <div key={showroom.id}>
-                  <h3 className="text-lg text-white" dir="ltr" style={{ unicodeBidi: 'isolate' }}>{showroom.name}</h3>
-                  <p className="mt-2" dir="ltr" style={{ unicodeBidi: 'isolate' }}>{showroom.address}</p>
-                  <p className="mt-2 text-sm text-white/70">{t('showroomHours')} · <span dir="ltr" style={{ unicodeBidi: 'isolate' }}>{showroom.whatsapp}</span></p>
-                  <a href={showroom.mapsLink} target="_blank" rel="noreferrer" className="mt-3 inline-flex min-h-[44px] items-center rounded-full border border-white/40 px-5 text-[11px] uppercase tracking-[0.18em] text-white transition-all duration-200 hover:border-white hover:bg-white/8">
-                    {t('viewGoogleMaps')}
-                  </a>
-                </div>
-              ))}
+              <h2
+                className="mt-6 text-4xl sm:text-5xl md:text-6xl"
+                style={{
+                  fontFamily: 'var(--font-display)',
+                  fontWeight: 700,
+                  letterSpacing: '-0.03em',
+                  lineHeight: 1,
+                  textShadow: '0 2px 18px rgba(0,0,0,0.35)',
+                }}
+              >
+                {t('damascusShowroomHeading')}
+              </h2>
+
+              <div className="mt-10 flex w-full flex-col items-center gap-8 text-base font-medium text-white/95">
+                {SHOWROOMS.map((showroom) => (
+                  <div key={showroom.id} className="flex flex-col items-center">
+                    <h3 className="text-lg font-bold text-white" dir="ltr" style={{ unicodeBidi: 'isolate' }}>{showroom.name}</h3>
+                    <p className="mt-2" dir="ltr" style={{ unicodeBidi: 'isolate' }}>{showroom.address}</p>
+                    <p className="mt-2 text-sm text-white/85">{t('showroomHours')} · <span dir="ltr" style={{ unicodeBidi: 'isolate' }}>{showroom.whatsapp}</span></p>
+                    <a href={showroom.mapsLink} target="_blank" rel="noreferrer" className="mt-3 inline-flex min-h-[44px] items-center rounded-full border-2 border-white/70 px-5 text-[11px] font-semibold uppercase tracking-[0.18em] text-white transition-all duration-200 hover:border-white hover:bg-white/10">
+                      {t('viewGoogleMaps')}
+                    </a>
+                  </div>
+                ))}
+              </div>
+
+              <a
+                href={WHATSAPP_BASE}
+                target="_blank"
+                rel="noreferrer"
+                className="mt-10 inline-flex min-h-[48px] w-full max-w-xs items-center justify-center rounded-full bg-white px-6 text-[11px] font-bold uppercase tracking-[0.18em] transition-all duration-200 hover:-translate-y-0.5 sm:w-auto"
+                style={{ color: 'var(--burgundy)' }}
+              >
+                {t('messageUs')}
+              </a>
             </div>
-
-            <a
-              href={WHATSAPP_BASE}
-              target="_blank"
-              rel="noreferrer"
-              className="mt-10 inline-flex min-h-[48px] items-center justify-center rounded-full bg-white px-6 text-[11px] uppercase tracking-[0.18em] transition-all duration-200 hover:-translate-y-0.5"
-              style={{ color: 'var(--burgundy)' }}
-            >
-              {t('messageUs')}
-            </a>
           </div>
         </div>
       </section>
