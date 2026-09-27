@@ -13,14 +13,48 @@ export default function Contact() {
     const form = event.currentTarget
     const values = Object.fromEntries(new FormData(form).entries())
     const nextErrors = {}
+    
     if (values.website) return
     if (!values.firstName?.trim()) nextErrors.firstName = 'Please enter your first name.'
     if (!values.lastName?.trim()) nextErrors.lastName = 'Please enter your last name.'
-    if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(values.email || '')) nextErrors.email = 'Please enter a valid email address.'
+
+    // Stricter email validation
+    const emailValue = values.email?.trim() || ''
+    const emailRegex = /^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/
+    
+    if (!emailValue) {
+      nextErrors.email = 'Please enter your email address.'
+    } else if (!emailRegex.test(emailValue)) {
+      nextErrors.email = 'Please enter a valid email address (e.g. name@example.com).'
+    } else {
+      const [, domain] = emailValue.split('@')
+      if (domain && (domain.startsWith('.') || domain.endsWith('.') || domain.includes('..'))) {
+        nextErrors.email = 'Please enter a valid email address.'
+      }
+    }
+
     if (!values.subject?.trim()) nextErrors.subject = 'Please enter a subject.'
     if (!values.message?.trim()) nextErrors.message = 'Please tell us a little about your project.'
+    
     setErrors(nextErrors)
-    if (Object.keys(nextErrors).length === 0) setSubmitted(true)
+
+    if (Object.keys(nextErrors).length === 0) {
+      // Construct mailto link
+      const recipient = 'sameraroudaki@gmail.com'
+      const subjectLine = encodeURIComponent(`[SA Studio Inquiry] ${values.subject}`)
+      const bodyContent = encodeURIComponent(
+        `Name: ${values.firstName} ${values.lastName}\n` +
+        `Email: ${values.email}\n\n` +
+        `Message:\n${values.message}`
+      )
+
+      // Open a new tab with the email client / mailto intent
+      const mailtoUrl = `mailto:${recipient}?subject=${subjectLine}&body=${bodyContent}`
+      window.open(mailtoUrl, '_blank', 'noopener,noreferrer')
+
+      // Mark as submitted to show the thank you view on your site
+      setSubmitted(true)
+    }
   }
 
   return (

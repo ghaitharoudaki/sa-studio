@@ -149,20 +149,21 @@ export default function About() {
             </div>
           </div>
 
-          <div className="relative h-[440px] w-full overflow-hidden rounded-[28px] border" style={{ borderColor: 'var(--border)', background: 'linear-gradient(135deg, rgba(31, 61, 46, 0.08), rgba(107, 42, 42, 0.12))' }}>
+          <div className="relative h-[440px] w-full overflow-hidden rounded-[28px] border" style={{ borderColor: 'var(--border)' }}>
+            <picture className="absolute inset-0 block h-full w-full">
+              <source srcSet="/images/about/about-showroom-1.webp" type="image/webp" />
+              <img
+                src="/images/about/about-showroom-1.jpg"
+                alt="SA Studio's Damascus atelier, shelves of fabric and wallpaper sample books"
+                className="h-full w-full object-cover"
+              />
+            </picture>
             <div
               className="absolute inset-0"
               style={{
-                background: 'linear-gradient(135deg, rgba(28, 24, 21, 0.08), rgba(28, 24, 21, 0.34)), radial-gradient(circle at top left, rgba(255,255,255,0.5), transparent 32%)',
+                background: 'linear-gradient(135deg, rgba(28, 24, 21, 0.1), rgba(28, 24, 21, 0.4))',
               }}
             />
-            <div className="absolute inset-x-10 bottom-10 top-10 rounded-[22px] border border-white/40 bg-[radial-gradient(circle_at_top_left,_rgba(255,255,255,0.4),_transparent_28%),linear-gradient(160deg,_rgba(31,61,46,0.9)_0%,_rgba(31,61,46,0.35)_42%,_rgba(107,42,42,0.3)_100%)] shadow-[0_35px_70px_rgba(28,24,21,0.12)]" />
-            <div className="absolute bottom-10 left-10 h-32 w-32 rounded-full border border-white/30 bg-white/8 backdrop-blur-[2px]" />
-            <div className="absolute right-10 top-10 h-44 w-44 rounded-full border border-white/20 bg-white/8 backdrop-blur-[2px]" />
-            <div className="absolute bottom-20 right-16 h-48 w-48 rounded-full border border-white/25 bg-[rgba(250,248,243,0.14)]" />
-            <div className="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 rounded-full border border-white/30 bg-white/5 px-6 py-4 text-[10px] uppercase tracking-[0.26em] text-white backdrop-blur-sm" dir="ltr" style={{ unicodeBidi: 'isolate' }}>
-              Atelier Damascus
-            </div>
           </div>
         </div>
       </section>
@@ -197,11 +198,19 @@ export default function About() {
         ref={storyRef}
         className={`mx-auto grid max-w-7xl gap-8 px-6 py-16 lg:grid-cols-[0.95fr_1.05fr] lg:items-center lg:py-24 transition-all duration-700 ${storyVisible ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-8'}`}
       >
-        <div className="relative h-[520px] overflow-hidden rounded-[30px] border" style={{ borderColor: 'var(--border)', background: 'linear-gradient(150deg, rgba(31, 61, 46, 0.14), rgba(107, 42, 42, 0.12))' }}>
-          <div className="absolute inset-6 rounded-[24px] border border-white/40 bg-[linear-gradient(140deg,_rgba(255,255,255,0.22),_rgba(31,61,46,0.28)_38%,_rgba(107,42,42,0.22))]" />
-          <div className="absolute bottom-10 left-10 h-36 w-36 rounded-full border border-white/25 bg-white/10 backdrop-blur-sm" />
-          <div className="absolute right-10 top-10 h-20 w-20 rounded-full border border-white/25 bg-white/10" />
-          <div className="absolute bottom-10 right-10 h-52 w-52 rounded-full border border-white/20 bg-[rgba(250,248,243,0.12)]" />
+        <div className="relative h-[520px] overflow-hidden rounded-[30px] border" style={{ borderColor: 'var(--border)' }}>
+          <picture className="absolute inset-0 block h-full w-full">
+            <source srcSet="/images/about/about-showroom-2.webp" type="image/webp" />
+            <img
+              src="/images/about/about-showroom-2.jpg"
+              alt="Fabric swatches, wallpaper books and design references on display at SA Studio"
+              className="h-full w-full object-cover"
+            />
+          </picture>
+          <div
+            className="absolute inset-0"
+            style={{ background: 'linear-gradient(150deg, rgba(28,24,21,0.05), rgba(28,24,21,0.25))' }}
+          />
         </div>
 
         <div>

@@ -8,20 +8,39 @@ export default function Footer() {
   const { theme, t } = useSite()
   return (
     <footer
-      className="site-footer px-6 lg:px-16 py-10 flex flex-col md:flex-row items-center justify-between gap-6 text-center md:text-left"
+      className="site-footer px-8 lg:px-20 py-16 flex flex-col md:flex-row items-center justify-between gap-10 text-center md:text-left"
       style={{ background: 'var(--footer-bg)' }}
     >
-      <img
-        src={darkLogo}
-        alt="SA Studio"
-        className="h-8 w-auto object-contain"
-      />
+      <div className="flex flex-col items-center md:items-start gap-4">
+        <img
+          src={darkLogo}
+          alt="SA Studio"
+          className="h-12 w-auto object-contain"
+        />
+        <div className="flex flex-col items-center md:items-start gap-1">
+          <p className="text-sm tracking-[0.12em] text-white/70">
+            © {new Date().getFullYear()} SA Studio. {t('footerRights')}
+          </p>
+          <div className="flex items-center gap-2 text-sm tracking-[0.12em] text-white/70">
+            <span>Powered by</span>
+            <a 
+              href="https://crewlytech.com" 
+              target="_blank" 
+              rel="noreferrer"
+              aria-label="Crewly"
+              className="inline-flex items-center hover:opacity-80 transition-opacity"
+            >
+              <img 
+                src="/images/footer/crewly-icon.png" 
+                alt="Crewly" 
+                className="h-5 w-auto object-contain"
+              />
+            </a>
+          </div>
+        </div>
+      </div>
 
-      <p className="text-xs tracking-[0.12em] text-white/70">
-        © {new Date().getFullYear()} SA Studio. {t('footerRights')}
-      </p>
-
-      <div className="flex flex-wrap items-center justify-center gap-x-6 gap-y-3 md:justify-end">
+      <div className="flex flex-wrap items-center justify-center gap-x-8 gap-y-4 md:justify-end">
         {[
           { to: '/',            label: t('home') },
           { to: '/collections', label: t('collections') },
@@ -32,7 +51,7 @@ export default function Footer() {
           <Link
             key={to}
             to={to}
-            className="font-sans text-xs tracking-[0.12em] uppercase text-white/75 hover:text-white transition-colors"
+            className="font-sans text-sm tracking-[0.14em] uppercase text-white/80 hover:text-white transition-colors"
           >
             {label}
           </Link>
@@ -43,9 +62,9 @@ export default function Footer() {
           rel="noreferrer"
           aria-label="SA Studio on Instagram"
           title="Instagram"
-          className="text-white/75 hover:text-white transition-colors"
+          className="text-white/80 hover:text-white transition-colors"
         >
-          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.6" aria-hidden="true">
+          <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.6" aria-hidden="true">
             <rect x="3" y="3" width="18" height="18" rx="5" />
             <circle cx="12" cy="12" r="4" />
             <circle cx="17.5" cy="6.5" r="1" fill="currentColor" stroke="none" />
