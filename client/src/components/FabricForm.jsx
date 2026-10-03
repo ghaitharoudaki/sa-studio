@@ -1,6 +1,7 @@
 import { useEffect, useRef, useState } from 'react'
 import { createFabric, uploadFabricImage, updateFabric, validateFabricImage, saveFabricColors, fetchFabricColors } from '../data/fabrics'
 import CategoryPicker from './CategoryPicker'
+import { useSite } from '../context/SiteContext'
 
 const initialForm = {
   name: '',
@@ -33,6 +34,7 @@ const getForm = (fabric) => fabric ? {
 } : initialForm
 
 export default function FabricForm({ fabric = null, onSubmit, onCancel, isLoading = false }) {
+  const { t } = useSite()
   const [form, setForm] = useState(() => getForm(fabric))
   const [imageFiles, setImageFiles] = useState([])
   const [previewUrls, setPreviewUrls] = useState(() => getForm(fabric).images)
@@ -118,7 +120,7 @@ export default function FabricForm({ fabric = null, onSubmit, onCancel, isLoadin
   const handleSubmit = async (event) => {
     event.preventDefault()
     if (!form.categories.length) {
-      setMessage('Please choose at least one category.')
+      setMessage(t('chooseCategory'))
       return
     }
     if (!fabric && !previewUrls.length) {
@@ -205,16 +207,16 @@ export default function FabricForm({ fabric = null, onSubmit, onCancel, isLoadin
   return (
     <form onSubmit={handleSubmit} className="grid grid-cols-1 md:grid-cols-2 gap-6 bg-cream border border-cream-dark p-6 md:p-8">
       <div className="md:col-span-2">
-        <label className={labelClass}>Fabric name *</label>
+        <label className={labelClass}>{t('fabricName')} *</label>
         <input required value={form.name} onChange={(event) => handleField('name', titleCase(event.target.value))} className={inputClass} />
       </div>
 
       <div>
-        <label className={labelClass}>Collection</label>
+        <label className={labelClass}>{t('collection')}</label>
         <input value={form.collection} onChange={(event) => handleField('collection', titleCase(event.target.value))} className={inputClass} />
       </div>
       <div>
-        <label className={labelClass}>Reference / SKU (optional)</label>
+        <label className={labelClass}>{t('reference')} / SKU (optional)</label>
         <input value={form.reference} onChange={(event) => handleField('reference', event.target.value)} className={inputClass} />
       </div>
       <div className="md:col-span-2">
@@ -222,7 +224,7 @@ export default function FabricForm({ fabric = null, onSubmit, onCancel, isLoadin
       </div>
 
       <div className="md:col-span-2">
-        <label className={labelClass}>Images {!fabric && '*'}</label>
+        <label className={labelClass}>{t('image')}s {!fabric && '*'}</label>
         <input type="file" multiple accept="image/jpeg,image/png,image/webp,image/avif" onChange={handleImage} className={`${inputClass} file:mr-4 file:border-0 file:bg-forest file:px-4 file:py-2 file:text-white`} />
         {previewUrls.length > 0 && (
           <div className="mt-4 grid grid-cols-2 gap-3 sm:grid-cols-3">
@@ -244,13 +246,13 @@ export default function FabricForm({ fabric = null, onSubmit, onCancel, isLoadin
       ))}
 
       <div className="md:col-span-2">
-        <label className={labelClass}>Description</label>
+        <label className={labelClass}>{t('description')}</label>
         <textarea rows={4} value={form.description} onChange={(event) => handleField('description', event.target.value)} className={`${inputClass} resize-none`} />
       </div>
 
       <label className="md:col-span-2 flex min-h-[44px] items-center gap-3 text-sm text-charcoal">
         <input type="checkbox" checked={form.featured} onChange={(event) => handleField('featured', event.target.checked)} className="h-4 w-4 accent-forest" />
-        <span>Featured</span>
+        <span>{t('featured')}</span>
       </label>
 
       <div className="md:col-span-2">
