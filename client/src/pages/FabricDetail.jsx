@@ -2,6 +2,7 @@ import { useParams, Link, useNavigate } from 'react-router-dom'
 import { WHATSAPP_BASE, SHOWROOMS, fetchFabricColors } from '../data/fabrics'
 import { useState, useEffect } from 'react'
 import { useSite } from '../context/SiteContext'
+import { getCategoryTranslationKey, getSpecTranslationKey } from '../lib/i18nHelpers'
 import SEO from '../components/SEO'
 import { useFavorites } from '../hooks/useFavorites'
 
@@ -235,7 +236,7 @@ export default function FabricDetail() {
           )}
           <div className="absolute top-6 left-6 bg-charcoal/70 px-4 py-1.5">
             <span className="text-white text-[10px] tracking-[0.2em] uppercase">
-              {fabric.categories?.join(' / ')}
+              {fabric.categories?.map((category) => getCategoryTranslationKey(category) ? t(getCategoryTranslationKey(category)) : category).join(' / ')}
             </span>
           </div>
         </div>
@@ -271,7 +272,7 @@ export default function FabricDetail() {
             </p>
           )}
           {activeColor && (
-            <p className="text-xs text-charcoal-light font-medium mb-3">Color: {activeColor.color_name}</p>
+            <p className="text-xs text-charcoal-light font-medium mb-3">{t('color')}: {activeColor.color_name}</p>
           )}
           <button type="button" onClick={() => toggleFavorite(fabric.id)} className={`fabric-detail-favorite ${isFavorite(fabric.id) ? 'is-favorite' : ''}`} aria-label={isFavorite(fabric.id) ? `Remove ${fabric.name} from favorites` : `Add ${fabric.name} to favorites`}>
             <HeartIcon filled={isFavorite(fabric.id)} />
@@ -290,7 +291,7 @@ export default function FabricDetail() {
                   className="grid grid-cols-2 py-3 border-b border-cream-dark last:border-b-0"
                 >
                   <span className="text-[11px] tracking-[0.2em] uppercase text-charcoal-light font-semibold">
-                    {key}
+                    {getSpecTranslationKey(key) ? t(getSpecTranslationKey(key)) : key}
                   </span>
                   <span className="text-sm text-charcoal text-right font-semibold">
                     {value}
@@ -304,13 +305,13 @@ export default function FabricDetail() {
             <div className="mb-8 border-b border-cream-dark">
               <div className="grid grid-cols-2 items-start py-3">
                 <span className="text-[11px] tracking-[0.2em] uppercase text-charcoal-light font-semibold">
-                  Usage
+                  {t('usage')}
                 </span>
                 <div className="flex flex-col items-end gap-3">
                   {fabric.categories.map((cat) => (
                     <span key={cat} className="flex items-center justify-end gap-3 text-sm text-charcoal font-semibold">
                       <UsageIcon category={cat} />
-                      {cat}
+                      {getCategoryTranslationKey(cat) ? t(getCategoryTranslationKey(cat)) : cat}
                     </span>
                   ))}
                 </div>
@@ -353,7 +354,7 @@ export default function FabricDetail() {
       {related.length > 0 && (
         <div className="px-8 lg:px-16 py-16 border-t border-cream-dark">
           <h2 className="font-serif text-3xl font-light text-charcoal mb-8">
-            {t('moreInCollection')} <em className="text-forest">{fabric.categories?.join(' / ')}</em>
+            {t('moreInCollection')} <em className="text-forest">{fabric.categories?.map((category) => getCategoryTranslationKey(category) ? t(getCategoryTranslationKey(category)) : category).join(' / ')}</em>
           </h2>
           <div className="grid grid-cols-1 md:grid-cols-3 gap-0.5 bg-cream-dark">
             {related.map((f) => (
@@ -379,7 +380,7 @@ export default function FabricDetail() {
                 </div>
                 <div className="p-4 border-b border-cream-dark">
                   <p className="eyebrow mb-1">
-                    {f.categories?.join(' / ')}
+                    {f.categories?.map((category) => getCategoryTranslationKey(category) ? t(getCategoryTranslationKey(category)) : category).join(' / ')}
                   </p>
                   <h3 className="font-sans text-lg font-light text-charcoal">
                     {f.name}

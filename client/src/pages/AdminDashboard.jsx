@@ -2,6 +2,7 @@ import { useCallback, useEffect, useState } from 'react'
 import { fetchFabrics, deleteFabric } from '../data/fabrics'
 import FabricForm from '../components/FabricForm'
 import { useSite } from '../context/SiteContext'
+import { getCategoryTranslationKey, getSpecTranslationKey } from '../lib/i18nHelpers'
 
 export default function AdminDashboard() {
   const { t } = useSite()
@@ -143,7 +144,7 @@ export default function AdminDashboard() {
                       <p className="text-sm text-charcoal-light">
                         {fabric.collection && <span>{fabric.collection}</span>}
                         {fabric.collection && fabric.categories?.length > 0 && <span> • </span>}
-                        {fabric.categories?.length > 0 && <span>{fabric.categories.join(', ')}</span>}
+                        {fabric.categories?.length > 0 && <span>{fabric.categories.map((category) => getCategoryTranslationKey(category) ? t(getCategoryTranslationKey(category)) : category).join(', ')}</span>}
                       </p>
                       {fabric.description && <p className="text-sm text-charcoal mt-2 line-clamp-2">{fabric.description}</p>}
                     </div>
@@ -152,7 +153,7 @@ export default function AdminDashboard() {
                       <div className="mb-4 flex flex-wrap gap-4 text-xs">
                         {Object.entries(fabric.specs).map(([key, value]) => (
                           <div key={key}>
-                            <span className="text-charcoal-light uppercase tracking-[0.05em]">{key}:</span> {value}
+                            <span className="text-charcoal-light uppercase tracking-[0.05em]">{getSpecTranslationKey(key) ? t(getSpecTranslationKey(key)) : key}:</span> {value}
                           </div>
                         ))}
                       </div>

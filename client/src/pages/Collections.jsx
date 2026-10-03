@@ -2,6 +2,7 @@ import { useCallback, useEffect, useMemo, useState, useRef } from 'react'
 import { Link, useSearchParams, useLocation } from 'react-router-dom'
 import { getCategoryList } from '../data/fabrics'
 import { useSite } from '../context/SiteContext'
+import { getCategoryTranslationKey } from '../lib/i18nHelpers'
 import SEO from '../components/SEO'
 import { useFavorites } from '../hooks/useFavorites'
 
@@ -36,7 +37,7 @@ function FabricCard({ fabric }) {
           <div className={`h-full w-full ${fabric.texture || 'tex-forest'}`} />
         )}
         <span className="collections-product-tag">
-          {fabric.categories?.[0] || t('newArrival')}
+          {getCategoryTranslationKey(fabric.categories?.[0]) ? t(getCategoryTranslationKey(fabric.categories[0])) : fabric.categories?.[0] || t('newArrival')}
         </span>
         <button 
           type="button" 
@@ -122,8 +123,8 @@ export default function Collections() {
   const pageCount = Math.max(1, Math.ceil(sorted.length / PAGE_SIZE))
   const paged = sorted.slice((page - 1) * PAGE_SIZE, page * PAGE_SIZE)
   const categoryLabel = (category) => {
-    const key = category.toLowerCase() === 'all' ? 'allCategories' : category.toLowerCase()
-    return ['wallpaper', 'upholstery', 'fabric'].includes(key) ? t(key) : category
+    const key = getCategoryTranslationKey(category)
+    return key ? t(key) : category
   }
 
   const paginationRange = useMemo(() => {

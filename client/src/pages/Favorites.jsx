@@ -3,6 +3,7 @@ import { Link } from 'react-router-dom'
 import { fetchFabrics } from '../data/fabrics'
 import { useFavorites } from '../hooks/useFavorites'
 import { useSite } from '../context/SiteContext'
+import { getCategoryTranslationKey } from '../lib/i18nHelpers'
 import SEO from '../components/SEO'
 
 export default function Favorites() {
@@ -32,7 +33,7 @@ export default function Favorites() {
               <article key={fabric.id} className="relative bg-cream">
                 <Link to={`/collections/${fabric.id}`} className="block">
                   {fabric.image ? <img src={fabric.image} alt={`${fabric.name} textile`} className="aspect-[0.82] w-full object-cover" /> : <div className={`aspect-[0.82] w-full ${fabric.texture || 'tex-forest'}`} />}
-                  <div className="p-4"><p className="eyebrow mb-1">{fabric.category}</p><h2 className="font-serif text-2xl font-light text-charcoal">{fabric.name}</h2></div>
+                  <div className="p-4"><p className="eyebrow mb-1">{getCategoryTranslationKey(fabric.categories?.[0]) ? t(getCategoryTranslationKey(fabric.categories[0])) : fabric.categories?.[0]}</p><h2 className="font-serif text-2xl font-light text-charcoal">{fabric.name}</h2></div>
                 </Link>
                 <button type="button" onClick={() => toggleFavorite(fabric.id)} className="absolute right-3 top-3 bg-charcoal/70 p-2 text-white" aria-label={`Remove ${fabric.name} from favorites`}>♡</button>
               </article>

@@ -2,6 +2,7 @@ import { Link } from 'react-router-dom'
 import { useEffect, useRef, useState } from 'react'
 import { fetchFabrics, WHATSAPP_BASE } from '../data/fabrics'
 import { useSite } from '../context/SiteContext'
+import { getCategoryTranslationKey, getSpecTranslationKey } from '../lib/i18nHelpers'
 import SEO from '../components/SEO'
 import HeroCarousel from '../components/HeroCarousel'
 
@@ -34,7 +35,7 @@ function FabricCard({ fabric }) {
       </div>
       <div className="p-5">
         <p className="eyebrow mb-1">
-          {fabric.category}
+          {getCategoryTranslationKey(fabric.categories?.[0]) ? t(getCategoryTranslationKey(fabric.categories[0])) : fabric.categories?.[0]}
         </p>
         <h3 className="font-sans text-xl font-light text-charcoal">
           {fabric.name}
@@ -103,7 +104,7 @@ export default function Home() {
             {t('atelier')}
           </p>
           <h2 className="font-serif text-4xl lg:text-5xl font-light leading-tight text-charcoal mb-6">
-            Two decades of curatorial excellence
+            {t('atelierHeading')}
           </h2>
           <p className="text-sm leading-loose text-charcoal-light mb-8 max-w-md">
             {t('homeAtelierDescription')}
@@ -123,8 +124,8 @@ export default function Home() {
           {[
             { num: '20+', label: t('yearsExcellence') || 'Years of Excellence' },
             { num: '10,000+', label: t('fabricReferences') || 'Fabric References', accent: 'burgundy' },
-            { num: '2', label: 'Damascus Locations (1 Active · 1 Under Construction)' },
-            { num: 'Global', label: 'Curated Globally', accent: 'forest' },
+            { num: '2', label: t('damascusLocations') },
+            { num: t('curatedGlobally'), label: t('curatedGlobally'), accent: 'forest' },
           ].map(({ num, label, accent }) => (
             <div
               key={label}
@@ -201,7 +202,7 @@ export default function Home() {
                         key={key}
                         className="rounded-full border border-cream-dark px-3 py-1 text-[10px] uppercase tracking-[0.18em] text-charcoal-light"
                       >
-                        {key}
+                        {getSpecTranslationKey(key) ? t(getSpecTranslationKey(key)) : key}
                       </span>
                     ))}
                 </div>
