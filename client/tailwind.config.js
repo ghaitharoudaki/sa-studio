@@ -26,7 +26,7 @@ export default {
       },
       fontFamily: {
         serif: ['"Fraunces"', 'Georgia', 'serif'],
-        sans: ['Inter', 'Jost', 'system-ui', 'sans-serif'],
+        sans: ['Tajawal', 'Jost', 'system-ui', 'sans-serif'],
       },
     },
   },

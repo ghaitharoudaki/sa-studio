@@ -1,11 +1,10 @@
 import { Link } from 'react-router-dom'
-import logo from '../assets/logo.png'
 import darkLogo from '../assets/logo-dark.png'
 import { useSite } from '../context/SiteContext'
 import { INSTAGRAM_LINK } from '../data/fabrics'
 
 export default function Footer() {
-  const { theme, t } = useSite()
+  const { t } = useSite()
   return (
     <footer
       className="site-footer px-8 lg:px-20 py-16 flex flex-col md:flex-row items-center justify-between gap-10 text-center md:text-left"

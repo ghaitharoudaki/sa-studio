@@ -2,6 +2,7 @@ import { useState } from 'react'
 import { SHOWROOMS, WHATSAPP_BASE } from '../data/fabrics'
 import { useSite } from '../context/SiteContext'
 import SEO from '../components/SEO'
+import { CONTACT_RATE_LIMIT_KEY, CONTACT_RATE_LIMIT_MS, isDisposableEmail, isValidEmail } from '../lib/contactValidation'
 
 export default function Contact() {
   const { t } = useSite()
@@ -15,26 +16,25 @@ export default function Contact() {
     const nextErrors = {}
     
     if (values.website) return
-    if (!values.firstName?.trim()) nextErrors.firstName = 'Please enter your first name.'
-    if (!values.lastName?.trim()) nextErrors.lastName = 'Please enter your last name.'
+    if (!values.firstName?.trim()) nextErrors.firstName = t('firstNameRequired')
+    if (!values.lastName?.trim()) nextErrors.lastName = t('lastNameRequired')
 
     // Stricter email validation
     const emailValue = values.email?.trim() || ''
-    const emailRegex = /^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/
-    
     if (!emailValue) {
-      nextErrors.email = 'Please enter your email address.'
-    } else if (!emailRegex.test(emailValue)) {
-      nextErrors.email = 'Please enter a valid email address (e.g. name@example.com).'
-    } else {
-      const [, domain] = emailValue.split('@')
-      if (domain && (domain.startsWith('.') || domain.endsWith('.') || domain.includes('..'))) {
-        nextErrors.email = 'Please enter a valid email address.'
-      }
+      nextErrors.email = t('invalidEmail')
+    } else if (isDisposableEmail(emailValue)) {
+      nextErrors.email = t('disposableEmail')
+    } else if (!isValidEmail(emailValue)) {
+      nextErrors.email = t('invalidEmail')
     }
 
-    if (!values.subject?.trim()) nextErrors.subject = 'Please enter a subject.'
-    if (!values.message?.trim()) nextErrors.message = 'Please tell us a little about your project.'
+    if (!values.subject?.trim()) nextErrors.subject = t('subjectRequired')
+    if (!values.message?.trim()) nextErrors.message = t('messageRequired')
+    const lastSubmission = Number(window.localStorage.getItem(CONTACT_RATE_LIMIT_KEY) || 0)
+    if (Date.now() - lastSubmission < CONTACT_RATE_LIMIT_MS) {
+      nextErrors.form = t('contactRateLimited')
+    }
     
     setErrors(nextErrors)
 
@@ -51,6 +51,7 @@ export default function Contact() {
       // Open a new tab with the email client / mailto intent
       const mailtoUrl = `mailto:${recipient}?subject=${subjectLine}&body=${bodyContent}`
       window.open(mailtoUrl, '_blank', 'noopener,noreferrer')
+      window.localStorage.setItem(CONTACT_RATE_LIMIT_KEY, String(Date.now()))
 
       // Mark as submitted to show the thank you view on your site
       setSubmitted(true)
@@ -91,6 +92,7 @@ export default function Contact() {
               </div>
             ) : (
               <form onSubmit={handleSubmit} className="contact-form" noValidate>
+                {errors.form && <p className="form-error" role="alert">{errors.form}</p>}
                 <div className="grid gap-8 sm:grid-cols-2">
                   <label>
                     <span>{t('firstName')}</span>
@@ -122,6 +124,7 @@ export default function Contact() {
                   <span>Website</span>
                   <input name="website" tabIndex="-1" autoComplete="off" />
                 </label>
+                <p className="contact-microcopy">{t('contactMicrocopy')}</p>
                 <button type="submit" className="contact-submit primary-cta">
                   {t('sendRequest')}
                 </button>

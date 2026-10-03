@@ -128,17 +128,15 @@ export default function FabricForm({ fabric = null, onSubmit, onCancel, isLoadin
 
     setSaving(true)
     setMessage('')
-    const uploadedUrls = []
-    for (const imageFile of imageFiles) {
-      const { data: uploadedUrl, error: uploadError } = await uploadFabricImage(imageFile)
-      if (uploadError) {
-        setSaving(false)
-        console.error('Fabric image upload error:', uploadError)
-        setMessage(`Image upload failed: ${uploadError.message}`)
-        return
-      }
-      uploadedUrls.push(uploadedUrl)
+    const imageUploads = await Promise.all(imageFiles.map((imageFile) => uploadFabricImage(imageFile)))
+    const failedUpload = imageUploads.find(({ error }) => error)
+    if (failedUpload) {
+      setSaving(false)
+      console.error('Fabric image upload error:', failedUpload.error)
+      setMessage(`Image upload failed: ${failedUpload.error.message}`)
+      return
     }
+    const uploadedUrls = imageUploads.map(({ data }) => data)
     const imageUrls = [...previewUrls.filter((url) => !url.startsWith('blob:')), ...uploadedUrls]
 
     const payload = {
@@ -170,21 +168,18 @@ export default function FabricForm({ fabric = null, onSubmit, onCancel, isLoadin
 
     const savedId = result.data?.id || fabric?.id
     if (savedId && colorVariants.length) {
-      const uploadedColors = []
-      for (const [index, variant] of colorVariants.entries()) {
-        let imageUrl = variant.image
-        if (variant.file) {
-          const { data: uploaded, error: uploadError } = await uploadFabricImage(variant.file)
-          if (uploadError) {
-            setMessage(`Color image upload failed: ${uploadError.message}`)
-            return
-          }
-          imageUrl = uploaded
-        }
-        // Fallback name if left blank so it saves successfully without errors
-        const resolvedColorName = variant.color_name?.trim() || `Color ${index + 1}`
-        uploadedColors.push({ color_name: resolvedColorName, image: imageUrl })
+      const colorUploads = await Promise.all(colorVariants.map((variant) => (
+        variant.file ? uploadFabricImage(variant.file) : Promise.resolve({ data: variant.image, error: null })
+      )))
+      const failedColorUpload = colorUploads.find(({ error }) => error)
+      if (failedColorUpload) {
+        setMessage(`Color image upload failed: ${failedColorUpload.error.message}`)
+        return
       }
+      const uploadedColors = colorVariants.map((variant, index) => ({
+        color_name: variant.color_name?.trim() || `Color ${index + 1}`,
+        image: colorUploads[index].data,
+      }))
       const { error: colorError } = await saveFabricColors(savedId, uploadedColors)
       if (colorError) {
         console.error('Color save error:', colorError)
