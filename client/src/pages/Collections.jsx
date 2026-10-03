@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState, useRef } from 'react'
+import { useCallback, useEffect, useMemo, useState, useRef } from 'react'
 import { Link, useSearchParams, useLocation } from 'react-router-dom'
 import { getCategoryList } from '../data/fabrics'
 import { useSite } from '../context/SiteContext'
@@ -70,7 +70,7 @@ export default function Collections() {
 
   const isInitialMount = useRef(true)
 
-  const updatePage = (newPage) => {
+  const updatePage = useCallback((newPage) => {
     setSearchParams((prevParams) => {
       const params = new URLSearchParams(prevParams)
       if (newPage === 1) {
@@ -80,7 +80,7 @@ export default function Collections() {
       }
       return params
     }, { replace: true })
-  }
+  }, [setSearchParams])
 
   useEffect(() => {
     if (isInitialMount.current) {
@@ -93,21 +93,21 @@ export default function Collections() {
       updatePage(1)
     }, 300)
     return () => window.clearTimeout(timeout)
-  }, [searchInput])
+  }, [searchInput, updatePage])
 
     useEffect(() => {
     console.log('[COLLECTIONS SAVE] location.search:', location.search, '| searchParams:', searchParams.toString())
     sessionStorage.setItem('sa-studio-collections-url', `/collections${location.search}`)
-  }, [searchParams])
+  }, [location.search, searchParams])
 
   const categories = getCategoryList(fabrics)
-  const filtered = (activeCategory === 'All'
+  const filtered = useMemo(() => (activeCategory === 'All'
     ? fabrics
     : fabrics.filter((fabric) => fabric.categories?.includes(activeCategory))).filter((fabric) => {
       if (!searchQuery) return true
       const query = searchQuery.toLowerCase()
       return [fabric.name, fabric.collection, fabric.description].some((value) => value?.toLowerCase().includes(query))
-    })
+    }), [activeCategory, fabrics, searchQuery])
 
   const sorted = useMemo(() => [...filtered].sort((a, b) => {
     if (sortMode === 'relevant' && searchQuery) {
@@ -186,7 +186,7 @@ export default function Collections() {
                 aria-label={t('searchCollections')} 
               />
             </div>
-            <select value={searchQuery ? sortMode : 'featured'} onChange={(event) => setSortMode(event.target.value)} aria-label={t('sort')}>
+            <select value={sortMode} onChange={(event) => { setSortMode(event.target.value); updatePage(1) }} aria-label={t('sort')}>
               <option value="featured">{t('sortFeatured')}</option>
               <option value="newest">{t('sortNewest')}</option>
               <option value="oldest">{t('sortOldest')}</option>

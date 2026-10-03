@@ -54,17 +54,15 @@ export default function Admin() {
 
     setSaving(true)
     setMessage('')
-    const imageUrls = []
-    for (const imageFile of imageFiles) {
-      const { data: imageUrl, error: uploadError } = await uploadFabricImage(imageFile)
-      if (uploadError) {
-        setSaving(false)
-        console.error('Fabric image upload error:', uploadError)
-        setMessage(`Image upload failed: ${uploadError.message}`)
-        return
-      }
-      imageUrls.push(imageUrl)
+    const imageUploads = await Promise.all(imageFiles.map((imageFile) => uploadFabricImage(imageFile)))
+    const failedUpload = imageUploads.find(({ error }) => error)
+    if (failedUpload) {
+      setSaving(false)
+      console.error('Fabric image upload error:', failedUpload.error)
+      setMessage(`Image upload failed: ${failedUpload.error.message}`)
+      return
     }
+    const imageUrls = imageUploads.map(({ data }) => data)
 
     const payload = {
       ...form,

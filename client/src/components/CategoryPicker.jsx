@@ -1,9 +1,11 @@
+import { useSite } from '../context/SiteContext'
+
 const categories = [
-  { value: 'Upholstery', label: 'Upholstery', description: 'Chairs and sofas', icon: 'couch' },
-  { value: 'Curtains', label: 'Curtains', description: 'Window textiles', icon: 'curtain' },
-  { value: 'Wallpaper', label: 'Wallpaper', description: 'Wall coverings', icon: 'wallpaper' },
-  { value: 'Borders', label: 'Borders', description: 'Trims and edging', icon: 'border' },
-  { value: 'Outdoor Upholstery', label: 'Outdoor Upholstery', description: 'Weather-resistant textiles', icon: 'outdoor' },
+  { value: 'Upholstery', labelKey: 'upholstery', descriptionKey: 'chairsAndSofas', icon: 'couch' },
+  { value: 'Curtains', labelKey: 'curtains', descriptionKey: 'windowTextiles', icon: 'curtain' },
+  { value: 'Wallpaper', labelKey: 'wallpaper', descriptionKey: 'wallCoverings', icon: 'wallpaper' },
+  { value: 'Borders', labelKey: 'borders', descriptionKey: 'trimsAndEdging', icon: 'border' },
+  { value: 'Outdoor Upholstery', labelKey: 'outdoorUpholstery', descriptionKey: 'weatherResistant', icon: 'outdoor' },
 ]
 
 function CategoryIcon({ type }) {
@@ -53,6 +55,7 @@ function CategoryIcon({ type }) {
 }
 
 export default function CategoryPicker({ value = [], onChange, required = false }) {
+  const { t } = useSite()
   const toggle = (categoryValue) => {
     if (value.includes(categoryValue)) {
       onChange(value.filter((v) => v !== categoryValue))
@@ -64,7 +67,7 @@ export default function CategoryPicker({ value = [], onChange, required = false 
   return (
     <fieldset>
       <legend className="block text-[10px] tracking-[0.2em] uppercase text-charcoal-light mb-2">
-        Categories {required && '*'} <span className="normal-case text-charcoal-light/70">(select all that apply)</span>
+        {t('categoryLabel')} {required && '*'} <span className="normal-case text-charcoal-light/70">({t('selectCategories')})</span>
       </legend>
       <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-3">
         {categories.map((category) => {
@@ -78,13 +81,13 @@ export default function CategoryPicker({ value = [], onChange, required = false 
               className={`min-h-[128px] border p-4 text-left transition-colors ${selected ? 'border-forest bg-forest text-white' : 'border-cream-dark bg-white text-charcoal hover:border-forest'}`}
             >
               <CategoryIcon type={category.icon} />
-              <span className="mt-2 block text-xs tracking-[0.12em] uppercase">{category.label}</span>
-              <span className={`mt-1 block text-xs ${selected ? 'text-white/75' : 'text-charcoal-light'}`}>{category.description}</span>
+              <span className="mt-2 block text-xs tracking-[0.12em] uppercase">{t(category.labelKey)}</span>
+              <span className={`mt-1 block text-xs ${selected ? 'text-white/75' : 'text-charcoal-light'}`}>{t(category.descriptionKey)}</span>
             </button>
           )
         })}
       </div>
-      {required && value.length === 0 && <p className="mt-2 text-xs text-charcoal-light">Choose at least one category before saving.</p>}
+      {required && value.length === 0 && <p className="mt-2 text-xs text-charcoal-light">{t('chooseCategory')}</p>}
     </fieldset>
   )
 }

@@ -5,6 +5,7 @@
 @layer base {
   :root {
     --font-display: 'Fraunces', Georgia, serif;
+    --font-sans: 'Tajawal', Jost, system-ui, sans-serif;
     --bg: #FAF8F3;
     --bg-elevated: #FFFFFF;
     --bg-accent-block: #6B2A2A;
@@ -67,7 +68,7 @@
   body {
     background-color: var(--bg);
     color: var(--text);
-    font-family: Inter, Jost, system-ui, sans-serif;
+    font-family: var(--font-sans);
     font-weight: 300;
     overflow-x: hidden;
     transition: background-color 220ms ease, color 220ms ease;
@@ -233,6 +234,11 @@
     letter-spacing: 0.2em;
     text-transform: uppercase;
   }
+  .contact-microcopy {
+    color: var(--text-secondary);
+    font-size: 12px;
+    line-height: 1.6;
+  }
   .contact-details { display: flex; flex-direction: column; gap: 12px; }
   .contact-details a { color: var(--text-secondary); font-size: 14px; }
   .contact-details a:hover { color: var(--green); }
@@ -292,6 +298,7 @@
     padding-top: 18px;
     border-top: 1px solid var(--border);
   }
+  .collections-controls > * { min-width: 0; }
   .collections-filter-list {
     display: flex;
     flex-wrap: wrap;
@@ -304,7 +311,7 @@
     border: 1px solid var(--border);
     background: transparent;
     color: var(--text-secondary);
-    font-family: Inter, Jost, system-ui, sans-serif;
+    font-family: var(--font-sans);
     font-size: 12px;
     letter-spacing: 0.08em;
     text-transform: uppercase;
@@ -349,7 +356,7 @@
     padding: 4px 7px;
     background: var(--bg-accent-block);
     color: var(--text-on-accent);
-    font-family: Inter, Jost, system-ui, sans-serif;
+    font-family: var(--font-sans);
     font-size: 10px;
     letter-spacing: 0.12em;
     text-transform: uppercase;
@@ -419,7 +426,7 @@
     align-items: center;
     gap: 12px;
     color: var(--text-primary);
-    font-family: Inter, Jost, system-ui, sans-serif;
+    font-family: var(--font-sans);
     font-size: 13px;
     letter-spacing: 0.12em;
     text-transform: uppercase;
@@ -456,7 +463,7 @@
     padding: 12px 24px;
     border: 1px solid var(--text-on-accent);
     color: var(--text-on-accent);
-    font-family: Inter, Jost, system-ui, sans-serif;
+    font-family: var(--font-sans);
     font-size: 12px;
     letter-spacing: 0.14em;
     text-transform: uppercase;
@@ -587,12 +594,30 @@
     .contact-page { padding-top: 82px; }
     .contact-image-wrap,
     .contact-image { min-height: 360px; }
+    .contact-page > section { padding-inline: 16px; }
+    .contact-form { gap: 22px; }
+  }
+
+  @media (max-width: 480px) {
+    .collections-content-card { margin-inline: 8px; }
+    .collections-intro { padding-inline: 16px; }
+    .collections-product-copy { padding-inline: 9px; }
+    .collections-product-copy h2 { font-size: 1rem; }
+    .collections-product-copy p { font-size: 12px; }
   }
 
   @media (max-width: 390px) {
     .mobile-quotation-full { display: none; }
     .mobile-quotation-short { display: inline; }
     .site-nav-mobile-tools .site-nav-quotation { max-width: 70px; padding-left: 12px; padding-right: 12px; }
+  }
+
+  [dir='rtl'] .collections-product-tag { left: auto; right: 10px; }
+  [dir='rtl'] .collections-favorite-button { right: auto; left: 8px; }
+  @media (max-width: 767px) {
+    [dir='rtl'] .site-nav-logo-link { transform: none; }
+    [dir='rtl'] .site-nav-mobile-panel { right: auto; left: 0; transform: translateX(-100%); }
+    [dir='rtl'] .site-nav-mobile-panel.is-open { transform: translateX(0); }
   }
 
   @media (max-width: 420px) {
@@ -616,7 +641,7 @@
   .text-forest-light { color: var(--green) !important; }
   .eyebrow {
     color: var(--text-secondary) !important;
-    font-family: Inter, Jost, system-ui, sans-serif;
+    font-family: var(--font-sans);
     font-size: 13px !important;
     letter-spacing: 0.15em !important;
     line-height: 1.4;

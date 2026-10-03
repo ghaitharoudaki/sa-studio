@@ -182,7 +182,10 @@ export async function fetchFabrics() {
     return readFallback()
   }
 
-  const { data, error } = await supabase.from('fabrics').select('*').order('created_at', { ascending: false })
+  const { data, error } = await supabase
+    .from('fabrics')
+    .select('id,name,reference,collection,categories,category,description,image,images,texture,specs,featured,created_at')
+    .order('created_at', { ascending: false })
 
   if (error) {
     console.error('Supabase fabrics fetch error:', error)
@@ -197,7 +200,7 @@ export async function fetchFabricColors(fabricId) {
   if (!supabase) return []
   const { data, error } = await supabase
     .from('fabric_colors')
-    .select('*')
+    .select('id,fabric_id,color_name,image,sort_order')
     .eq('fabric_id', fabricId)
     .order('sort_order', { ascending: true })
 
@@ -236,7 +239,7 @@ export async function saveFabricColors(fabricId, colors) {
 
 export async function createFabric(formData) {
   const payload = normalizeFabric(formData)
-  const { created_at, ...insertPayload } = payload
+  const { created_at: _createdAt, ...insertPayload } = payload
 
   if (!supabase) {
     const current = readFallback()
