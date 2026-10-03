@@ -3,6 +3,22 @@ import { fetchFabrics } from '../data/fabrics'
 
 const SiteContext = createContext(null)
 
+const readPreference = (key, fallback) => {
+  try {
+    return localStorage.getItem(key) || fallback
+  } catch {
+    return fallback
+  }
+}
+
+const writePreference = (key, value) => {
+  try {
+    localStorage.setItem(key, value)
+  } catch {
+    // Preferences are optional and must not prevent the app from rendering.
+  }
+}
+
 const translations = {
   en: {
     home: 'Home',
@@ -323,8 +339,8 @@ const translations = {
 }
 
 export function SiteProvider({ children }) {
-  const [theme, setTheme] = useState(() => localStorage.getItem('sa-theme') || 'dark')
-  const [language, setLanguage] = useState(() => localStorage.getItem('sa-language') || 'en')
+  const [theme, setTheme] = useState(() => readPreference('sa-theme', 'dark'))
+  const [language, setLanguage] = useState(() => readPreference('sa-language', 'en'))
 
   const [fabrics, setFabrics] = useState([])
   const [isLoadingFabrics, setIsLoadingFabrics] = useState(true)
@@ -334,6 +350,10 @@ export function SiteProvider({ children }) {
       .then((data) => {
         setFabrics(data || [])
       })
+      .catch((error) => {
+        console.error('Unable to load fabrics:', error)
+        setFabrics([])
+      })
       .finally(() => {
         setIsLoadingFabrics(false)
       })
@@ -342,13 +362,13 @@ export function SiteProvider({ children }) {
   useEffect(() => {
     document.documentElement.dataset.theme = theme
     document.documentElement.style.colorScheme = theme
-    localStorage.setItem('sa-theme', theme)
+    writePreference('sa-theme', theme)
   }, [theme])
 
   useEffect(() => {
     document.documentElement.lang = language
     document.documentElement.dir = language === 'ar' ? 'rtl' : 'ltr'
-    localStorage.setItem('sa-language', language)
+    writePreference('sa-language', language)
   }, [language])
 
   const value = {
