@@ -1,5 +1,5 @@
 import { useState, useEffect, useRef, useCallback } from 'react';
-import { AnimatePresence } from 'framer-motion';
+import { AnimatePresence, motion as Motion } from 'framer-motion';
 import { Link } from 'react-router-dom';
 
 const SLIDES = [
@@ -102,7 +102,7 @@ export default function HeroCarousel() {
       onTouchEnd={handleTouchEnd}
     >
       <AnimatePresence mode="sync">
-        <motion.div
+        <Motion.div
           key={slide.id}
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
@@ -127,13 +127,13 @@ export default function HeroCarousel() {
                 'linear-gradient(135deg, rgba(13,12,10,0.65) 0%, rgba(13,12,10,0.3) 50%, rgba(13,12,10,0.5) 100%)',
             }}
           />
-        </motion.div>
+        </Motion.div>
       </AnimatePresence>
 
       {/* Hero Content */}
       <div className="relative z-10 h-full flex flex-col items-start justify-center text-left px-6 sm:px-12 md:px-20 max-w-3xl">
         <AnimatePresence mode="wait">
-          <motion.h1
+          <Motion.h1
             key={slide.id + '-headline'}
             initial={{ opacity: 0, y: 12 }}
             animate={{ opacity: 1, y: 0 }}
@@ -142,7 +142,7 @@ export default function HeroCarousel() {
             className="font-serif text-white text-2xl sm:text-3xl md:text-4xl lg:text-5xl leading-tight"
           >
             {slide.headline}
-          </motion.h1>
+          </Motion.h1>
         </AnimatePresence>
 
         <div className="mt-6 sm:mt-8 flex flex-wrap gap-3 sm:gap-4 justify-start">
