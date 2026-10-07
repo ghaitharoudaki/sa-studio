@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useMemo, useState, useRef } from 'react'
+import { useCallback, useEffect, useMemo } from 'react'
 import { Link, useSearchParams, useLocation } from 'react-router-dom'
 import { getCategoryList } from '../data/fabrics'
 import { useSite } from '../context/SiteContext'
@@ -7,6 +7,22 @@ import SEO from '../components/SEO'
 import { useFavorites } from '../hooks/useFavorites'
 
 const PAGE_SIZE = 12
+
+const normalizeSearchText = (value = '') => String(value)
+  .normalize('NFD')
+  .replace(/[\u0300-\u036f]/g, '')
+  .toLowerCase()
+  .trim()
+  .replace(/\s+/g, ' ')
+
+const getSearchFields = (fabric) => [
+  fabric.name,
+  fabric.collection,
+  fabric.reference,
+  fabric.description,
+  ...(fabric.categories || []),
+  ...Object.entries(fabric.specs || {}).flat(),
+].map(normalizeSearchText).filter(Boolean)
 
 function HeartIcon({ filled = false }) {
   return (
@@ -64,13 +80,11 @@ export default function Collections() {
   const pageParam = parseInt(searchParams.get('page') || '1', 10)
   const page = isNaN(pageParam) || pageParam < 1 ? 1 : pageParam
 
-  const [activeCategory, setActiveCategory] = useState('All')
-  const [sortMode, setSortMode] = useState('featured')
-  const [searchInput, setSearchInput] = useState('')
-  const [searchQuery, setSearchQuery] = useState('')
-
-  const isInitialMount = useRef(true)
-
+  const activeCategory = searchParams.get('category') || 'All'
+  const sortMode = ['featured', 'newest', 'oldest', 'relevant'].includes(searchParams.get('sort'))
+    ? searchParams.get('sort')
+    : 'featured'
+  const searchQuery = searchParams.get('q') || ''
   const updatePage = useCallback((newPage) => {
     setSearchParams((prevParams) => {
       const params = new URLSearchParams(prevParams)
@@ -84,35 +98,35 @@ export default function Collections() {
   }, [setSearchParams])
 
   useEffect(() => {
-    if (isInitialMount.current) {
-      isInitialMount.current = false
-      return
-    }
-
-    const timeout = window.setTimeout(() => {
-      setSearchQuery(searchInput.trim())
-      updatePage(1)
-    }, 300)
-    return () => window.clearTimeout(timeout)
-  }, [searchInput, updatePage])
-
-    useEffect(() => {
-    console.log('[COLLECTIONS SAVE] location.search:', location.search, '| searchParams:', searchParams.toString())
     sessionStorage.setItem('sa-studio-collections-url', `/collections${location.search}`)
-  }, [location.search, searchParams])
+  }, [location.search])
 
   const categories = getCategoryList(fabrics)
   const filtered = useMemo(() => (activeCategory === 'All'
     ? fabrics
     : fabrics.filter((fabric) => fabric.categories?.includes(activeCategory))).filter((fabric) => {
       if (!searchQuery) return true
-      const query = searchQuery.toLowerCase()
-      return [fabric.name, fabric.collection, fabric.description].some((value) => value?.toLowerCase().includes(query))
+      const query = normalizeSearchText(searchQuery)
+      const tokens = query.split(' ').filter(Boolean)
+      const fields = getSearchFields(fabric)
+      const searchableText = fields.join(' ')
+      return tokens.every((token) => searchableText.includes(token))
     }), [activeCategory, fabrics, searchQuery])
 
   const sorted = useMemo(() => [...filtered].sort((a, b) => {
     if (sortMode === 'relevant' && searchQuery) {
-      const score = (fabric) => [fabric.name, fabric.collection, fabric.description].reduce((total, value, index) => total + (value?.toLowerCase().includes(searchQuery.toLowerCase()) ? 3 - index : 0), 0)
+      const query = normalizeSearchText(searchQuery)
+      const tokens = query.split(' ').filter(Boolean)
+      const score = (fabric) => {
+        const fields = getSearchFields(fabric)
+        const name = normalizeSearchText(fabric.name)
+        return tokens.reduce((total, token) => {
+          const fieldScore = fields.reduce((fieldTotal, field, index) => (
+            fieldTotal + (field.includes(token) ? Math.max(1, 8 - index) : 0)
+          ), 0)
+          return total + fieldScore + (name === token ? 30 : name.includes(token) ? 12 : 0)
+        }, 0)
+      }
       return score(b) - score(a)
     }
     if (sortMode === 'newest') return new Date(b.created_at || 0) - new Date(a.created_at || 0)
@@ -122,6 +136,10 @@ export default function Collections() {
 
   const pageCount = Math.max(1, Math.ceil(sorted.length / PAGE_SIZE))
   const paged = sorted.slice((page - 1) * PAGE_SIZE, page * PAGE_SIZE)
+
+  useEffect(() => {
+    if (page > pageCount) updatePage(pageCount)
+  }, [page, pageCount, updatePage])
   const categoryLabel = (category) => {
     const key = getCategoryTranslationKey(category)
     return key ? t(key) : category
@@ -166,9 +184,14 @@ export default function Collections() {
           <div className="collections-controls" aria-label={t('collections')}>
             <select
               value={activeCategory}
-              onChange={(event) => { 
-                setActiveCategory(event.target.value)
-                updatePage(1) 
+              onChange={(event) => {
+                setSearchParams((previous) => {
+                  const params = new URLSearchParams(previous)
+                  if (event.target.value === 'All') params.delete('category')
+                  else params.set('category', event.target.value)
+                  params.delete('page')
+                  return params
+                }, { replace: true })
               }}
               aria-label={t('collections')}
             >
@@ -180,14 +203,31 @@ export default function Collections() {
             </select>
             <div className="collections-search">
               <span aria-hidden="true">⌕</span>
-              <input 
-                value={searchInput} 
-                onChange={(event) => setSearchInput(event.target.value)} 
+              <input
+                value={searchQuery}
+                onChange={(event) => {
+                  const nextQuery = event.target.value
+                  setSearchParams((previous) => {
+                    const params = new URLSearchParams(previous)
+                    if (nextQuery.trim()) params.set('q', nextQuery)
+                    else params.delete('q')
+                    params.delete('page')
+                    return params
+                  }, { replace: true })
+                }}
                 placeholder={t('searchCollections')} 
                 aria-label={t('searchCollections')} 
               />
             </div>
-            <select value={sortMode} onChange={(event) => { setSortMode(event.target.value); updatePage(1) }} aria-label={t('sort')}>
+            <select value={sortMode} onChange={(event) => {
+              setSearchParams((previous) => {
+                const params = new URLSearchParams(previous)
+                if (event.target.value === 'featured') params.delete('sort')
+                else params.set('sort', event.target.value)
+                params.delete('page')
+                return params
+              }, { replace: true })
+            }} aria-label={t('sort')}>
               <option value="featured">{t('sortFeatured')}</option>
               <option value="newest">{t('sortNewest')}</option>
               <option value="oldest">{t('sortOldest')}</option>
