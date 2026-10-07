@@ -254,11 +254,22 @@ export async function createFabric(formData) {
   const { error: sessionError } = await ensureAdminSession()
   if (sessionError) return { data: null, error: sessionError }
 
-  const { data, error } = await supabase
+  let { data, error } = await supabase
     .from('fabrics')
     .insert([insertPayload])
     .select()
     .single()
+
+  if (error?.code === '23505' && error.message?.includes('fabrics_pkey')) {
+    const retryPayload = { ...insertPayload, id: makeId(payload.name) }
+    const retryResult = await supabase
+      .from('fabrics')
+      .insert([retryPayload])
+      .select()
+      .single()
+    data = retryResult.data
+    error = retryResult.error
+  }
 
   if (error) {
     console.error('Supabase insert error:', error)
