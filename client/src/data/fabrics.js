@@ -57,8 +57,11 @@ export function validateFabricImage(file) {
   return ''
 }
 
-const makeId = (value = '') =>
-  `${value.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '') || 'fabric'}-${Date.now()}`
+const makeId = (value = '') => {
+  const slug = value.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '') || 'fabric'
+  const suffix = globalThis.crypto?.randomUUID?.() || `${Date.now()}-${Math.random().toString(36).slice(2, 10)}`
+  return `${slug}-${suffix}`
+}
 
 const normalizeFabric = (item) => {
   const name = String(item?.name || 'Untitled fabric').trim()
@@ -238,7 +241,7 @@ export async function saveFabricColors(fabricId, colors) {
 }
 
 export async function createFabric(formData) {
-  const payload = normalizeFabric(formData)
+  const payload = normalizeFabric({ ...formData, id: makeId(formData?.name) })
   const { created_at: _createdAt, ...insertPayload } = payload
 
   if (!supabase) {

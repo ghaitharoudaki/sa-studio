@@ -145,7 +145,7 @@ export default function FabricForm({ fabric = null, onSubmit, onCancel, isLoadin
       ...form,
       image: imageUrls[0] || '',
       images: imageUrls,
-      id: fabric?.id || form.name.trim().toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '') || `fabric-${Date.now()}`,
+      ...(fabric?.id ? { id: fabric.id } : {}),
       specs: Object.fromEntries(
         Object.entries(form.specs || {})
           .filter(([, value]) => String(value ?? '').trim())
