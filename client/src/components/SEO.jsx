@@ -1,11 +1,11 @@
 import { useEffect } from 'react'
 
-const SITE_URL = 'https://sastudio-sy.com'
+export const SITE_URL = 'https://sa-studio.sy'
 const DEFAULT_IMAGE = `${SITE_URL}/SA%20LOGO%201.jpg`
 
-export default function SEO({ title, description, image = DEFAULT_IMAGE }) {
+export default function SEO({ title, description, image = DEFAULT_IMAGE, structuredData, noindex = false }) {
   useEffect(() => {
-    const absoluteUrl = new URL(window.location.pathname + window.location.search, SITE_URL).toString()
+    const absoluteUrl = new URL(window.location.pathname, SITE_URL).toString()
     const tags = {
       description,
       'og:title': title,
@@ -17,6 +17,7 @@ export default function SEO({ title, description, image = DEFAULT_IMAGE }) {
       'twitter:title': title,
       'twitter:description': description,
       'twitter:image': image,
+      'robots': noindex ? 'noindex,nofollow' : 'index,follow',
     }
 
     document.title = title
@@ -38,6 +39,19 @@ export default function SEO({ title, description, image = DEFAULT_IMAGE }) {
       document.head.appendChild(canonical)
     }
     canonical.href = absoluteUrl
+    const schemaId = 'sa-studio-page-schema'
+    let schema = document.head.querySelector(`#${schemaId}`)
+    if (structuredData) {
+      if (!schema) {
+        schema = document.createElement('script')
+        schema.id = schemaId
+        schema.type = 'application/ld+json'
+        document.head.appendChild(schema)
+      }
+      schema.textContent = JSON.stringify(structuredData)
+    } else {
+      schema?.remove()
+    }
 
     return () => {
       Object.keys(tags).forEach((key) => {
@@ -45,8 +59,9 @@ export default function SEO({ title, description, image = DEFAULT_IMAGE }) {
         document.head.querySelector(`meta[${attribute}="${key}"]`)?.remove()
       })
       document.head.querySelector('link[rel="canonical"]')?.remove()
+      document.head.querySelector(`#${schemaId}`)?.remove()
     }
-  }, [description, image, title])
+  }, [description, image, noindex, structuredData, title])
 
   return null
 }

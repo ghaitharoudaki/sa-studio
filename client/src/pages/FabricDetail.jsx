@@ -147,7 +147,21 @@ export default function FabricDetail() {
 
   return (
     <div>
-      <SEO title={detailTitle} description={detailDescription} image={fabric.image || undefined} />
+      <SEO
+        title={detailTitle}
+        description={detailDescription}
+        image={fabric.image || undefined}
+        structuredData={{
+          '@context': 'https://schema.org',
+          '@type': 'Product',
+          name: fabric.name,
+          description: detailDescription,
+          image: fabric.images?.length ? fabric.images : fabric.image ? [fabric.image] : undefined,
+          category: fabric.categories?.join(', '),
+          brand: { '@type': 'Brand', name: 'SA Studio' },
+          url: `https://sa-studio.sy/collections/${encodeURIComponent(fabric.id)}`,
+        }}
+      />
       <div className="fixed top-[72px] left-0 right-0 h-1 bg-cream-dark z-40">
         <div
           className="h-full bg-forest transition-all duration-200"
