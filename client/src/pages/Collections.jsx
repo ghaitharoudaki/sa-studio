@@ -107,10 +107,9 @@ export default function Collections() {
     : fabrics.filter((fabric) => fabric.categories?.includes(activeCategory))).filter((fabric) => {
       if (!searchQuery) return true
       const query = normalizeSearchText(searchQuery)
-      const tokens = query.split(' ').filter(Boolean)
       const fields = getSearchFields(fabric)
       const searchableText = fields.join(' ')
-      return tokens.every((token) => searchableText.includes(token))
+      return searchableText.includes(query)
     }), [activeCategory, fabrics, searchQuery])
 
   const sorted = useMemo(() => [...filtered].sort((a, b) => {
@@ -138,8 +137,10 @@ export default function Collections() {
   const paged = sorted.slice((page - 1) * PAGE_SIZE, page * PAGE_SIZE)
 
   useEffect(() => {
-    if (page > pageCount) updatePage(pageCount)
-  }, [page, pageCount, updatePage])
+    if (!isLoadingFabrics && fabrics.length > 0 && page > pageCount) {
+      updatePage(pageCount)
+    }
+  }, [fabrics.length, isLoadingFabrics, page, pageCount, updatePage])
   const categoryLabel = (category) => {
     const key = getCategoryTranslationKey(category)
     return key ? t(key) : category
