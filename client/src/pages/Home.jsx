@@ -79,7 +79,7 @@ export default function Home() {
     let ignore = false
 
     fetchFabrics().then((items) => {
-      if (!ignore) setFeatured(items.slice(0, 3))
+      if (!ignore) setFeatured(items.filter((item) => item.featured).slice(0, 3))
     })
 
     return () => {

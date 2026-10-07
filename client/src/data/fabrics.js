@@ -330,6 +330,64 @@ export async function updateFabric(id, formData) {
   return { data: updated, error: null }
 }
 
+export async function bulkUpdateFeatured(ids, featured) {
+  const fabricIds = [...new Set(ids.map((id) => String(id).trim()).filter(Boolean))]
+  if (!fabricIds.length) return { data: [], error: null }
+
+  if (!supabase) {
+    const current = readFallback()
+    const updated = current.map((item) => (fabricIds.includes(item.id) ? { ...item, featured } : item))
+    writeFallback(updated)
+    return { data: updated.filter((item) => fabricIds.includes(item.id)), error: null }
+  }
+
+  const { error: sessionError } = await ensureAdminSession()
+  if (sessionError) return { data: null, error: sessionError }
+
+  const { data, error } = await supabase
+    .from('fabrics')
+    .update({ featured })
+    .in('id', fabricIds)
+    .select()
+
+  if (error) {
+    console.error('Supabase bulk featured update error:', error)
+    return { data: null, error }
+  }
+
+  const updated = (data || []).map(normalizeFabric)
+  const current = readFallback()
+  const updatedById = new Map(updated.map((item) => [item.id, item]))
+  writeFallback(current.map((item) => updatedById.get(item.id) || item))
+  return { data: updated, error: null }
+}
+
+export async function bulkDeleteFabrics(ids) {
+  const fabricIds = [...new Set(ids.map((id) => String(id).trim()).filter(Boolean))]
+  if (!fabricIds.length) return { error: null }
+
+  if (!supabase) {
+    writeFallback(readFallback().filter((item) => !fabricIds.includes(item.id)))
+    return { error: null }
+  }
+
+  const { error: sessionError } = await ensureAdminSession()
+  if (sessionError) return { error: sessionError }
+
+  const { error } = await supabase
+    .from('fabrics')
+    .delete()
+    .in('id', fabricIds)
+
+  if (error) {
+    console.error('Supabase bulk delete error:', error)
+    return { error }
+  }
+
+  writeFallback(readFallback().filter((item) => !fabricIds.includes(item.id)))
+  return { error: null }
+}
+
 export async function deleteFabric(id) {
   if (!supabase) {
     const current = readFallback()

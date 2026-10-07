@@ -114,7 +114,11 @@ export default function FabricForm({ fabric = null, onSubmit, onCancel, isLoadin
   }
 
   const removeColorVariant = (index) => {
-    setColorVariants((current) => current.filter((_, i) => i !== index))
+    setColorVariants((current) => {
+      const removed = current[index]
+      if (removed?.image?.startsWith('blob:')) URL.revokeObjectURL(removed.image)
+      return current.filter((_, i) => i !== index)
+    })
   }
 
   const handleSubmit = async (event) => {
@@ -259,7 +263,7 @@ export default function FabricForm({ fabric = null, onSubmit, onCancel, isLoadin
         <label className={labelClass}>Color Variants (optional)</label>
         <div className="space-y-3">
           {colorVariants.map((variant, index) => (
-            <div key={index} className="flex items-center gap-3 border border-cream-dark p-3">
+            <div key={`${variant.color_name}-${index}`} className="flex items-center gap-3 border border-cream-dark p-3">
               {variant.image && <img src={variant.image} alt={variant.color_name || 'color variant'} className="h-14 w-14 object-cover shrink-0" />}
               <input
                 placeholder="Color name (optional, e.g. Sage Green)"
@@ -273,7 +277,7 @@ export default function FabricForm({ fabric = null, onSubmit, onCancel, isLoadin
                 onChange={(event) => event.target.files[0] && updateColorImage(index, event.target.files[0])}
                 className="text-xs"
               />
-              <button type="button" onClick={() => removeColorVariant(index)} className="shrink-0 bg-charcoal/80 px-3 py-2 text-xs text-white">Remove</button>
+              <button type="button" onClick={() => removeColorVariant(index)} aria-label={`Remove ${variant.color_name || 'color variant'}`} className="shrink-0 bg-charcoal/80 px-3 py-2 text-xs text-white">Remove</button>
             </div>
           ))}
         </div>

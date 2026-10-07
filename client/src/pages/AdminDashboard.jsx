@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useState } from 'react'
-import { fetchFabrics, deleteFabric } from '../data/fabrics'
+import { fetchFabrics, deleteFabric, updateFabric, bulkUpdateFeatured, bulkDeleteFabrics } from '../data/fabrics'
 import FabricForm from '../components/FabricForm'
 import { useSite } from '../context/SiteContext'
 import { getCategoryTranslationKey, getSpecTranslationKey } from '../lib/i18nHelpers'
@@ -12,6 +12,8 @@ export default function AdminDashboard() {
   const [selectedFabric, setSelectedFabric] = useState(null)
   const [searchTerm, setSearchTerm] = useState('')
   const [deleteConfirm, setDeleteConfirm] = useState(null)
+  const [selectedIds, setSelectedIds] = useState([])
+  const [toast, setToast] = useState(null)
 
   const loadFabrics = useCallback(async () => {
     setLoading(true)
@@ -38,16 +40,66 @@ export default function AdminDashboard() {
     const { error } = await deleteFabric(id)
     if (error) {
       console.error('Delete error:', error)
+      setToast({ type: 'error', message: t('actionFailed') })
       return
     }
     setFabrics((current) => current.filter((f) => f.id !== id))
     setDeleteConfirm(null)
+    setSelectedIds((current) => current.filter((selectedId) => selectedId !== id))
+    setToast({ type: 'success', message: t('deleteSuccess') })
   }
 
   const handleFormSubmit = async () => {
     await loadFabrics()
     setView('list')
     setSelectedFabric(null)
+    setToast({ type: 'success', message: t('saveSuccess') })
+  }
+
+  const handleToggleFeatured = async (fabric) => {
+    const nextFeatured = !fabric.featured
+    const { data, error } = await updateFabric(fabric.id, { ...fabric, featured: nextFeatured })
+    if (error) {
+      console.error('Featured toggle error:', error)
+      setToast({ type: 'error', message: t('actionFailed') })
+      return
+    }
+    setFabrics((current) => current.map((item) => (item.id === fabric.id ? data : item)))
+    setToast({ type: 'success', message: nextFeatured ? t('feature') : t('unfeature') })
+  }
+
+  const handleBulkFeatured = async (featured) => {
+    if (!selectedIds.length) return
+    const { data, error } = await bulkUpdateFeatured(selectedIds, featured)
+    if (error) {
+      console.error('Bulk featured update error:', error)
+      setToast({ type: 'error', message: t('actionFailed') })
+      return
+    }
+    const updatedById = new Map(data.map((item) => [item.id, item]))
+    setFabrics((current) => current.map((item) => updatedById.get(item.id) || item))
+    setSelectedIds([])
+    setToast({ type: 'success', message: t('bulkSaveSuccess') })
+  }
+
+  const handleBulkDelete = async () => {
+    if (!selectedIds.length) return
+    const { error } = await bulkDeleteFabrics(selectedIds)
+    if (error) {
+      console.error('Bulk delete error:', error)
+      setToast({ type: 'error', message: t('actionFailed') })
+      return
+    }
+    const selectedSet = new Set(selectedIds)
+    setFabrics((current) => current.filter((item) => !selectedSet.has(item.id)))
+    setSelectedIds([])
+    setToast({ type: 'success', message: t('bulkDeleteSuccess') })
+  }
+
+  const toggleSelected = (id) => {
+    setSelectedIds((current) => current.includes(id)
+      ? current.filter((selectedId) => selectedId !== id)
+      : [...current, id])
   }
 
   const handleEditClick = (fabric) => {
@@ -71,6 +123,14 @@ export default function AdminDashboard() {
       || fabric.collection.toLowerCase().includes(searchTerm.toLowerCase())
       || (fabric.categories || []).some((c) => c.toLowerCase().includes(searchTerm.toLowerCase())),
   )
+  const featuredFabrics = filteredFabrics.filter((fabric) => fabric.featured)
+  const allVisibleSelected = filteredFabrics.length > 0 && filteredFabrics.every((fabric) => selectedIds.includes(fabric.id))
+
+  useEffect(() => {
+    if (!toast) return undefined
+    const timeout = window.setTimeout(() => setToast(null), 3200)
+    return () => window.clearTimeout(timeout)
+  }, [toast])
 
   return (
     <div className="px-8 lg:px-16 py-16 max-w-7xl mx-auto">
@@ -89,6 +149,14 @@ export default function AdminDashboard() {
           {t('fabricsList')} ({fabrics.length})
         </button>
         <button
+          onClick={() => setView('featured')}
+          className={`px-6 py-3 text-sm tracking-[0.1em] uppercase transition-colors ${
+            view === 'featured' ? 'text-forest border-b-2 border-forest' : 'text-charcoal-light hover:text-charcoal'
+          }`}
+        >
+          {t('featuredFabrics')} ({fabrics.filter((fabric) => fabric.featured).length})
+        </button>
+        <button
           onClick={() => handleAddClick()}
           className={`px-6 py-3 text-sm tracking-[0.1em] uppercase transition-colors ${
             view === 'form' && !selectedFabric ? 'text-forest border-b-2 border-forest' : 'text-charcoal-light hover:text-charcoal'
@@ -103,7 +171,13 @@ export default function AdminDashboard() {
         )}
       </div>
 
-      {view === 'list' ? (
+      {toast && (
+        <div role="status" className={`fixed right-5 top-5 z-50 max-w-sm border px-5 py-4 text-sm shadow-lg ${toast.type === 'error' ? 'border-red-200 bg-red-50 text-red-700' : 'border-forest/20 bg-forest text-white'}`}>
+          {toast.message}
+        </div>
+      )}
+
+      {view === 'list' || view === 'featured' ? (
         <div className="space-y-6">
           {fabrics.length > 0 && (
             <div className="mb-6">
@@ -119,9 +193,9 @@ export default function AdminDashboard() {
 
           {loading ? (
             <div className="text-center py-12 text-charcoal-light">{t('loadingFabrics')}</div>
-          ) : filteredFabrics.length === 0 ? (
+          ) : (view === 'featured' ? featuredFabrics : filteredFabrics).length === 0 ? (
             <div className="text-center py-12 bg-cream border border-cream-dark p-8">
-              <p className="text-charcoal-light mb-4">{t('noFabricsFound')}</p>
+              <p className="text-charcoal-light mb-4">{view === 'featured' ? t('noFeaturedFabrics') : t('noFabricsFound')}</p>
               <button
                 onClick={handleAddClick}
                 className="min-h-[44px] px-8 py-3 bg-forest text-white text-[11px] tracking-[0.2em] uppercase hover:bg-forest-light transition-colors"
@@ -130,9 +204,31 @@ export default function AdminDashboard() {
               </button>
             </div>
           ) : (
-            <div className="grid gap-4">
-              {filteredFabrics.map((fabric) => (
+            <>
+              {view === 'list' && (
+                <div className="flex flex-wrap items-center gap-3 border border-cream-dark bg-cream p-4">
+                  <label className="flex items-center gap-2 text-sm">
+                    <input type="checkbox" checked={allVisibleSelected} onChange={() => setSelectedIds(allVisibleSelected ? [] : filteredFabrics.map((fabric) => fabric.id))} />
+                    {t('selectAll')}
+                  </label>
+                  {selectedIds.length > 0 && (
+                    <>
+                      <span className="text-sm text-charcoal-light">{selectedIds.length} {t('selected')}</span>
+                      <button onClick={() => handleBulkFeatured(true)} className="px-3 py-2 bg-forest text-white text-xs uppercase tracking-[0.1em]">{t('featureSelected')}</button>
+                      <button onClick={() => handleBulkFeatured(false)} className="px-3 py-2 bg-charcoal-light/20 text-charcoal text-xs uppercase tracking-[0.1em]">{t('unfeatureSelected')}</button>
+                      <button onClick={handleBulkDelete} className="px-3 py-2 bg-red-600 text-white text-xs uppercase tracking-[0.1em]">{t('deleteSelected')}</button>
+                    </>
+                  )}
+                </div>
+              )}
+              <div className={view === 'featured' ? 'overflow-x-auto border border-cream-dark' : 'grid gap-4'}>
+              {(view === 'featured' ? featuredFabrics : filteredFabrics).map((fabric, index) => (
                 <div key={fabric.id} className="bg-cream border border-cream-dark p-6 grid grid-cols-1 md:grid-cols-4 gap-6 items-start hover:border-charcoal-light transition-colors">
+                  {view === 'list' && (
+                    <label className="absolute ml-2 mt-2 z-10">
+                      <input type="checkbox" checked={selectedIds.includes(fabric.id)} onChange={() => toggleSelected(fabric.id)} aria-label={`${t('selectAll')} ${fabric.name}`} />
+                    </label>
+                  )}
                   {fabric.image && (
                     <div className="md:col-span-1">
                       <img src={fabric.image} alt={`${fabric.name} ${fabric.collection || ''} textile`} loading="lazy" decoding="async" className="w-full h-48 object-cover" />
@@ -167,6 +263,12 @@ export default function AdminDashboard() {
                         {t('edit')}
                       </button>
                       <button
+                        onClick={() => handleToggleFeatured(fabric)}
+                        className="px-4 py-2 border border-forest text-forest text-xs tracking-[0.1em] uppercase hover:bg-forest hover:text-white transition-colors"
+                      >
+                        {fabric.featured ? t('unfeature') : t('feature')}
+                      </button>
+                      <button
                         onClick={() => setDeleteConfirm(fabric.id)}
                         className="px-4 py-2 bg-charcoal-light/20 text-charcoal text-xs tracking-[0.1em] uppercase hover:bg-red-200 transition-colors"
                       >
@@ -193,10 +295,16 @@ export default function AdminDashboard() {
                         </div>
                       </div>
                     )}
+                    {view === 'featured' && (
+                      <p className="mt-3 text-xs text-charcoal-light">
+                        {t('rank')}: {index + 1} · {t('homepagePreview')}: <span className="text-forest">{t('visibleOnHomepage')}</span>
+                      </p>
+                    )}
                   </div>
                 </div>
               ))}
-            </div>
+              </div>
+            </>
           )}
         </div>
       ) : (
