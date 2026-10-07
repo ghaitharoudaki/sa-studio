@@ -1,4 +1,4 @@
 User-agent: *
 Allow: /
 Disallow: /admin
-Sitemap: https://sa-studio.sy/sitemap.xml
+Sitemap: https://sastudio-sy.com/sitemap.xml

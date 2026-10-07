@@ -1,6 +1,6 @@
 import { Link } from 'react-router-dom'
 import { useEffect, useRef, useState } from 'react'
-import { fetchFabrics, SHOWROOMS, WHATSAPP_BASE } from '../data/fabrics'
+import { fetchFabrics, WHATSAPP_BASE } from '../data/fabrics'
 import { useSite } from '../context/SiteContext'
 import { getCategoryTranslationKey, getSpecTranslationKey } from '../lib/i18nHelpers'
 import SEO from '../components/SEO'
@@ -89,39 +89,7 @@ export default function Home() {
 
   return (
     <div>
-      <SEO
-        title="Luxury Textiles & Wallpaper in Damascus | SA Studio"
-        description="Discover SA Studio's curated fabrics and wallpaper for distinctive interiors in Damascus and the wider region."
-        image="https://sa-studio.sy/hero-texture.webp"
-        structuredData={{
-          '@context': 'https://schema.org',
-          '@graph': [
-            {
-              '@type': 'Organization',
-              '@id': 'https://sa-studio.sy/#organization',
-              name: 'SA Studio',
-              url: 'https://sa-studio.sy/',
-              logo: 'https://sa-studio.sy/SA%20LOGO%201.jpg',
-              sameAs: ['https://www.instagram.com/sa.studio.sy/'],
-            },
-            ...SHOWROOMS.map((showroom) => ({
-              '@type': 'LocalBusiness',
-              '@id': `https://sa-studio.sy/#${showroom.id}`,
-              name: `SA Studio ${showroom.name}`,
-              url: 'https://sa-studio.sy/contact',
-              telephone: showroom.whatsapp,
-              address: {
-                '@type': 'PostalAddress',
-                streetAddress: showroom.address,
-                addressLocality: 'Damascus',
-                addressCountry: 'SY',
-              },
-              openingHours: 'Sa-Th 11:00-19:00',
-              parentOrganization: { '@id': 'https://sa-studio.sy/#organization' },
-            })),
-          ],
-        }}
-      />
+      <SEO title="Luxury Textiles & Wallpaper in Damascus | SA Studio" description="Discover SA Studio's curated fabrics and wallpaper for distinctive interiors in Damascus and the wider region." image="https://sa-studio.sy/hero-texture.webp" />
 
       {/* HERO CAROUSEL */}
       <HeroCarousel />

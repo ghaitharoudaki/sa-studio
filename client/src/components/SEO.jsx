@@ -1,11 +1,11 @@
 import { useEffect } from 'react'
 
-export const SITE_URL = 'https://sa-studio.sy'
+const SITE_URL = 'https://sastudio-sy.com'
 const DEFAULT_IMAGE = `${SITE_URL}/SA%20LOGO%201.jpg`
 
-export default function SEO({ title, description, image = DEFAULT_IMAGE, structuredData, noindex = false }) {
+export default function SEO({ title, description, image = DEFAULT_IMAGE }) {
   useEffect(() => {
-    const absoluteUrl = new URL(window.location.pathname, SITE_URL).toString()
+    const absoluteUrl = new URL(window.location.pathname + window.location.search, SITE_URL).toString()
     const tags = {
       description,
       'og:title': title,
@@ -17,7 +17,6 @@ export default function SEO({ title, description, image = DEFAULT_IMAGE, structu
       'twitter:title': title,
       'twitter:description': description,
       'twitter:image': image,
-      'robots': noindex ? 'noindex,nofollow' : 'index,follow',
     }
 
     document.title = title
@@ -39,19 +38,6 @@ export default function SEO({ title, description, image = DEFAULT_IMAGE, structu
       document.head.appendChild(canonical)
     }
     canonical.href = absoluteUrl
-    const schemaId = 'sa-studio-page-schema'
-    let schema = document.head.querySelector(`#${schemaId}`)
-    if (structuredData) {
-      if (!schema) {
-        schema = document.createElement('script')
-        schema.id = schemaId
-        schema.type = 'application/ld+json'
-        document.head.appendChild(schema)
-      }
-      schema.textContent = JSON.stringify(structuredData)
-    } else {
-      schema?.remove()
-    }
 
     return () => {
       Object.keys(tags).forEach((key) => {
@@ -59,9 +45,8 @@ export default function SEO({ title, description, image = DEFAULT_IMAGE, structu
         document.head.querySelector(`meta[${attribute}="${key}"]`)?.remove()
       })
       document.head.querySelector('link[rel="canonical"]')?.remove()
-      document.head.querySelector(`#${schemaId}`)?.remove()
     }
-  }, [description, image, noindex, structuredData, title])
+  }, [description, image, title])
 
   return null
 }

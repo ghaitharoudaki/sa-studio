@@ -23,7 +23,7 @@ export default function Favorites() {
 
   return (
     <div className="favorites-page px-6 py-16 lg:px-16">
-      <SEO title="Favorites | SA Studio Luxury Fabrics" description="Your saved SA Studio fabrics." noindex />
+      <SEO title="Favorites | SA Studio Luxury Fabrics" description="Your saved SA Studio fabrics." />
       <div className="mx-auto max-w-7xl">
         <p className="eyebrow mb-4">SA Studio / {t('favorites')}</p>
         <h1 className="font-serif text-5xl font-light text-charcoal">{t('favorites')}</h1>
