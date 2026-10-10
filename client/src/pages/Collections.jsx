@@ -18,10 +18,6 @@ const normalizeSearchText = (value = '') => String(value)
 const getSearchFields = (fabric) => [
   fabric.name,
   fabric.collection,
-  fabric.reference,
-  fabric.description,
-  ...(fabric.categories || []),
-  ...Object.entries(fabric.specs || {}).flat(),
 ].map(normalizeSearchText).filter(Boolean)
 
 function HeartIcon({ filled = false }) {
