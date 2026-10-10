@@ -214,6 +214,8 @@ const translations = {
     trimsAndEdging: 'Trims and edging',
     weatherResistant: 'Weather-resistant textiles',
     clearFilters: 'Clear filters',
+    page: 'Page',
+    goToPage: 'Go to',
   },
   ar: {
     home: 'الرئيسية',
@@ -409,6 +411,8 @@ const translations = {
     trimsAndEdging: 'حواف وزخارف',
     weatherResistant: 'منسوجات مقاومة للعوامل الجوية',
     clearFilters: 'مسح الفلاتر',
+    page: 'صفحة',
+    goToPage: 'انتقل إلى',
   },
 }
 

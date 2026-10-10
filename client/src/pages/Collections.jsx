@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useMemo } from 'react'
+import { useCallback, useEffect, useMemo, useState } from 'react'
 import { Link, useSearchParams, useLocation } from 'react-router-dom'
 import { getCategoryList } from '../data/fabrics'
 import { useSite } from '../context/SiteContext'
@@ -157,6 +157,14 @@ export default function Collections() {
   const pageCount = Math.max(1, Math.ceil(sorted.length / PAGE_SIZE))
   const paged = sorted.slice((page - 1) * PAGE_SIZE, page * PAGE_SIZE)
 
+  const [jumpValue, setJumpValue] = useState('')
+  const goToPage = useCallback((target) => {
+    const next = Math.min(Math.max(1, target), pageCount)
+    if (next === page) return
+    updatePage(next)
+    window.scrollTo({ top: 0, behavior: 'smooth' })
+  }, [page, pageCount, updatePage])
+
   useEffect(() => {
     if (!isLoadingFabrics && fabrics.length > 0 && page > pageCount) {
       updatePage(pageCount)
@@ -167,31 +175,24 @@ export default function Collections() {
     return key ? t(key) : category
   }
 
+  // Compact page list: first page, a small window around the current page, and
+  // the last page, with single-step gaps collapsed and larger gaps shown as "…".
   const paginationRange = useMemo(() => {
-    const totalNumbers = 5
-    if (pageCount <= totalNumbers) {
-      return Array.from({ length: pageCount }, (_, i) => i + 1)
+    const siblings = 1
+    const pages = new Set([1, pageCount])
+    for (let p = page - siblings; p <= page + siblings; p += 1) {
+      if (p >= 1 && p <= pageCount) pages.add(p)
     }
-
-    const leftSiblingIndex = Math.max(page - 1, 1)
-    const rightSiblingIndex = Math.min(page + 1, pageCount)
-
-    const shouldShowLeftDots = leftSiblingIndex > 2
-    const shouldShowRightDots = rightSiblingIndex < pageCount - 1
-
-    if (!shouldShowLeftDots && shouldShowRightDots) {
-      return [1, 2, 3, '...', pageCount]
+    const ordered = [...pages].sort((a, b) => a - b)
+    const range = []
+    let prev = 0
+    for (const p of ordered) {
+      if (p - prev === 2) range.push(prev + 1)
+      else if (p - prev > 2) range.push('...')
+      range.push(p)
+      prev = p
     }
-
-    if (shouldShowLeftDots && !shouldShowRightDots) {
-      return [1, '...', pageCount - 2, pageCount - 1, pageCount]
-    }
-
-    if (shouldShowLeftDots && shouldShowRightDots) {
-      return [1, '...', page, '...', pageCount]
-    }
-
-    return []
+    return range
   }, [pageCount, page])
 
   return (
@@ -288,50 +289,77 @@ export default function Collections() {
         </section>
 
         {pageCount > 1 && (
-          <nav 
-            className="collections-pagination w-full overflow-x-auto no-scrollbar"
-            aria-label="Collections pages"
-          >
-            <button 
-              type="button" 
-              disabled={page === 1} 
-              onClick={() => updatePage(page - 1)}
+          <nav className="collections-pagination" aria-label="Collections pages">
+            <button
+              type="button"
+              className="collections-pagination-arrow"
+              disabled={page === 1}
+              onClick={() => goToPage(page - 1)}
               aria-label={t('previous')}
             >
               <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="1.75" aria-hidden="true">
                 <path d="M10 12L4 8l6-4" />
               </svg>
             </button>
-            
-            {paginationRange.map((pageNumber, idx) =>
-              pageNumber === '...' ? (
-                <span key={`dots-${idx}`} className="collections-pagination-dots" aria-hidden="true">
-                  …
-                </span>
-              ) : (
-                <button
-                  key={pageNumber}
-                  type="button"
-                  className={page === pageNumber ? 'is-active' : ''}
-                  aria-current={page === pageNumber ? 'page' : undefined}
-                  aria-label={`Page ${pageNumber}`}
-                  onClick={() => { updatePage(pageNumber); window.scrollTo({ top: 0, behavior: 'smooth' }) }}
-                >
-                  {pageNumber}
-                </button>
-              )
-            )}
 
-            <button 
-              type="button" 
-              disabled={page === pageCount} 
-              onClick={() => updatePage(page + 1)}
+            <div className="collections-pagination-pages">
+              {paginationRange.map((pageNumber, idx) =>
+                pageNumber === '...' ? (
+                  <span key={`dots-${idx}`} className="collections-pagination-dots" aria-hidden="true">
+                    …
+                  </span>
+                ) : (
+                  <button
+                    key={pageNumber}
+                    type="button"
+                    className={page === pageNumber ? 'is-active' : ''}
+                    aria-current={page === pageNumber ? 'page' : undefined}
+                    aria-label={`${t('page') || 'Page'} ${pageNumber}`}
+                    onClick={() => goToPage(pageNumber)}
+                  >
+                    {pageNumber}
+                  </button>
+                )
+              )}
+            </div>
+
+            <button
+              type="button"
+              className="collections-pagination-arrow"
+              disabled={page === pageCount}
+              onClick={() => goToPage(page + 1)}
               aria-label={t('next')}
             >
               <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="1.75" aria-hidden="true">
                 <path d="M6 4l6 4-6 4" />
               </svg>
             </button>
+
+            {pageCount > 7 && (
+              <form
+                className="collections-pagination-jump"
+                onSubmit={(event) => {
+                  event.preventDefault()
+                  const value = parseInt(jumpValue, 10)
+                  if (!Number.isNaN(value)) goToPage(value)
+                  setJumpValue('')
+                }}
+              >
+                <label htmlFor="page-jump">{t('goToPage') || 'Go to'}</label>
+                <input
+                  id="page-jump"
+                  type="number"
+                  min="1"
+                  max={pageCount}
+                  inputMode="numeric"
+                  value={jumpValue}
+                  onChange={(event) => setJumpValue(event.target.value)}
+                  placeholder={String(page)}
+                  aria-label={`${t('goToPage') || 'Go to page'} (1–${pageCount})`}
+                />
+                <span className="collections-pagination-total">/ {pageCount}</span>
+              </form>
+            )}
           </nav>
         )}
 

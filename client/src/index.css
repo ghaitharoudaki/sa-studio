@@ -409,10 +409,10 @@
   }
   .collections-search span { padding-left: 12px; font-size: 20px; line-height: 1; }
   .collections-search input { width: 220px; min-height: 36px; padding: 8px 12px 8px 8px; border: 0; background: transparent; color: var(--text-primary); outline: 0; font: inherit; font-size: 12px; }
-  .collections-pagination { display: flex; justify-content: center; gap: 6px; padding: 32px 12px 8px; }
-  .collections-pagination button { min-width: 38px; min-height: 38px; border: 1px solid var(--border); color: var(--text-secondary); }
+  .collections-pagination { display: flex; flex-wrap: wrap; align-items: center; justify-content: center; gap: 8px; padding: 36px 16px 12px; }
+  .collections-pagination button { min-width: 40px; min-height: 40px; border: 1px solid var(--border); color: var(--text-secondary); }
   .collections-pagination button.is-active { border-color: var(--green); background: var(--green); color: var(--text-on-accent); }
-  .collections-pagination button:disabled { cursor: not-allowed; opacity: 0.4; }
+  .collections-pagination button:disabled { cursor: not-allowed; opacity: 0.35; }
   .site-nav-favorites { position: relative; display: inline-flex; align-items: center; justify-content: center; width: 40px; height: 40px; color: var(--nav-text); font-size: 26px; line-height: 1; }
   .site-nav-favorites b { position: absolute; top: 1px; right: 0; display: inline-flex; align-items: center; justify-content: center; min-width: 16px; height: 16px; border-radius: 999px; background: var(--burgundy); color: white; font-size: 9px; font-weight: 600; }
   .fabric-detail-favorite { display: inline-flex; align-items: center; gap: 8px; align-self: flex-start; min-height: 40px; margin: 10px 0 22px; color: var(--text-secondary); font-size: 11px; letter-spacing: 0.12em; text-transform: uppercase; }
@@ -1101,13 +1101,60 @@
     flex: 0 0 auto;
     align-items: center;
     justify-content: center;
+    border-radius: 999px;
     background: transparent;
-    font-size: 12px;
+    font-size: 13px;
+    font-weight: 500;
     transition: border-color 150ms ease, color 150ms ease, background-color 150ms ease;
   }
-  .collections-pagination button svg { width: 14px; height: 14px; }
+  .collections-pagination button svg { width: 15px; height: 15px; }
   .collections-pagination button:not(:disabled):not(.is-active):hover { border-color: var(--green); color: var(--green); }
-  .collections-pagination-dots { display: inline-flex; align-items: center; padding: 0 4px; color: var(--text-secondary); }
+  .collections-pagination-arrow { border-color: var(--border); }
+  .collections-pagination-pages { display: inline-flex; align-items: center; gap: 6px; }
+  .collections-pagination-dots {
+    display: inline-flex;
+    align-items: flex-end;
+    justify-content: center;
+    min-width: 24px;
+    padding: 0 2px 6px;
+    color: var(--text-secondary);
+    letter-spacing: 0.1em;
+    user-select: none;
+  }
+  .collections-pagination-jump {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    margin-left: 6px;
+    padding-left: 14px;
+    border-left: 1px solid var(--border);
+    color: var(--text-secondary);
+    font-size: 12px;
+    letter-spacing: 0.04em;
+  }
+  .collections-pagination-jump label { white-space: nowrap; text-transform: uppercase; letter-spacing: 0.1em; font-size: 11px; }
+  .collections-pagination-jump input {
+    width: 56px;
+    min-height: 40px;
+    padding: 0 10px;
+    border: 1px solid var(--border);
+    border-radius: 999px;
+    background: transparent;
+    color: var(--text-primary);
+    font: inherit;
+    font-size: 13px;
+    text-align: center;
+    outline: none;
+    transition: border-color 150ms ease;
+    -moz-appearance: textfield;
+  }
+  .collections-pagination-jump input::-webkit-outer-spin-button,
+  .collections-pagination-jump input::-webkit-inner-spin-button { -webkit-appearance: none; margin: 0; }
+  .collections-pagination-jump input:focus-visible { border-color: var(--green); }
+  .collections-pagination-total { white-space: nowrap; }
+  @media (max-width: 480px) {
+    .collections-pagination-jump { margin-left: 0; padding-left: 0; border-left: 0; flex-basis: 100%; justify-content: center; }
+  }
 
   /* Shared card for Home + Favorites */
   .fabric-tile { display: flex; flex-direction: column; background: var(--bg-elevated); color: var(--text-primary); }
