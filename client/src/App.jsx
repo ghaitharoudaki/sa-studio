@@ -17,10 +17,17 @@ const AdminRoute = lazy(() => import('./components/AdminRoute'))
 export default function App() {
   return (
     <div className="min-h-screen flex flex-col bg-page text-charcoal">
+      <a href="#main-content" className="skip-link">Skip to content</a>
       <ScrollToTop />
       <Navbar />
-      <main className="flex-1">
-        <Suspense fallback={<div className="px-6 py-24 text-center text-sm text-charcoal-light">Loading...</div>}>
+      <main id="main-content" tabIndex={-1} className="flex-1 focus:outline-none">
+        <Suspense
+          fallback={
+            <div className="page-loading" role="status" aria-label="Loading page">
+              <span />
+            </div>
+          }
+        >
           <Routes>
             <Route path="/"                element={<Home />} />
             <Route path="/collections"     element={<Collections />} />

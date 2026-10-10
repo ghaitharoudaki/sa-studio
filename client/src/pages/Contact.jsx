@@ -38,6 +38,10 @@ export default function Contact() {
     
     setErrors(nextErrors)
 
+    // Move keyboard/screen-reader focus to the first field that needs fixing
+    const firstInvalid = Object.keys(nextErrors)[0]
+    if (firstInvalid) form.elements[firstInvalid]?.focus()
+
     if (Object.keys(nextErrors).length === 0) {
       // Construct mailto link
       const recipient = 'sameraroudaki@gmail.com'
@@ -96,29 +100,29 @@ export default function Contact() {
                 <div className="grid gap-8 sm:grid-cols-2">
                   <label>
                     <span>{t('firstName')}</span>
-                    <input name="firstName" required aria-invalid={Boolean(errors.firstName)} />
-                    {errors.firstName && <small className="form-error" role="alert">{errors.firstName}</small>}
+                    <input name="firstName" autoComplete="given-name" aria-describedby={errors.firstName ? 'firstName-error' : undefined} required aria-invalid={Boolean(errors.firstName)} />
+                    {errors.firstName && <small id="firstName-error" className="form-error" role="alert">{errors.firstName}</small>}
                   </label>
                   <label>
                     <span>{t('lastName')}</span>
-                    <input name="lastName" required aria-invalid={Boolean(errors.lastName)} />
-                    {errors.lastName && <small className="form-error" role="alert">{errors.lastName}</small>}
+                    <input name="lastName" autoComplete="family-name" aria-describedby={errors.lastName ? 'lastName-error' : undefined} required aria-invalid={Boolean(errors.lastName)} />
+                    {errors.lastName && <small id="lastName-error" className="form-error" role="alert">{errors.lastName}</small>}
                   </label>
                 </div>
                 <label>
                   <span>{t('email')}</span>
-                  <input name="email" type="email" required aria-invalid={Boolean(errors.email)} />
-                  {errors.email && <small className="form-error" role="alert">{errors.email}</small>}
+                  <input name="email" autoComplete="email" aria-describedby={errors.email ? 'email-error' : undefined} type="email" required aria-invalid={Boolean(errors.email)} />
+                  {errors.email && <small id="email-error" className="form-error" role="alert">{errors.email}</small>}
                 </label>
                 <label>
                   <span>{t('subject')}</span>
-                  <input name="subject" required aria-invalid={Boolean(errors.subject)} />
-                  {errors.subject && <small className="form-error" role="alert">{errors.subject}</small>}
+                  <input name="subject" autoComplete="off" aria-describedby={errors.subject ? 'subject-error' : undefined} required aria-invalid={Boolean(errors.subject)} />
+                  {errors.subject && <small id="subject-error" className="form-error" role="alert">{errors.subject}</small>}
                 </label>
                 <label>
                   <span>{t('yourMessage')}</span>
-                  <textarea name="message" required rows="4" aria-invalid={Boolean(errors.message)} />
-                  {errors.message && <small className="form-error" role="alert">{errors.message}</small>}
+                  <textarea name="message" autoComplete="off" aria-describedby={errors.message ? 'message-error' : undefined} required rows="4" aria-invalid={Boolean(errors.message)} />
+                  {errors.message && <small id="message-error" className="form-error" role="alert">{errors.message}</small>}
                 </label>
                 <label className="contact-honeypot" aria-hidden="true">
                   <span>Website</span>

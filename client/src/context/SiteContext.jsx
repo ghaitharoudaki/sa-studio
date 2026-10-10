@@ -213,6 +213,7 @@ const translations = {
     wallCoverings: 'Wall coverings',
     trimsAndEdging: 'Trims and edging',
     weatherResistant: 'Weather-resistant textiles',
+    clearFilters: 'Clear filters',
   },
   ar: {
     home: 'الرئيسية',
@@ -407,6 +408,7 @@ const translations = {
     wallCoverings: 'أغطية الجدران',
     trimsAndEdging: 'حواف وزخارف',
     weatherResistant: 'منسوجات مقاومة للعوامل الجوية',
+    clearFilters: 'مسح الفلاتر',
   },
 }
 

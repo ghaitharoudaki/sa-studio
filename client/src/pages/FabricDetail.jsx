@@ -104,7 +104,6 @@ export default function FabricDetail() {
 
      const handleBack = () => {
     const savedUrl = sessionStorage.getItem('sa-studio-collections-url')
-    console.log('[BACK BUTTON] savedUrl read:', savedUrl)
     navigate(savedUrl || '/collections')
   }
 
@@ -148,10 +147,10 @@ export default function FabricDetail() {
   return (
     <div>
       <SEO title={detailTitle} description={detailDescription} image={fabric.image || undefined} />
-      <div className="fixed top-[72px] left-0 right-0 h-1 bg-cream-dark z-40">
+      <div className="fixed top-0 left-0 right-0 h-[3px] z-[70] pointer-events-none" aria-hidden="true">
         <div
-          className="h-full bg-forest transition-all duration-200"
-          style={{ width: `${scrollProgress}%` }}
+          className="h-full bg-forest origin-left transition-transform duration-150"
+          style={{ transform: `scaleX(${scrollProgress / 100})` }}
         />
       </div>
 
@@ -174,8 +173,9 @@ export default function FabricDetail() {
         <div className="relative bg-cream-light flex items-center justify-center p-6 sm:p-8 lg:p-12">          {displayedImage ? (
             <div
               className="relative w-full max-w-[550px] aspect-square cursor-default lg:cursor-crosshair"
-              style={{ touchAction: 'none' }}
               onPointerMove={(event) => {
+                // Magnifier is for mouse/pen only so touch users can still scroll past the image
+                if (event.pointerType === 'touch') return
                 const bounds = event.currentTarget.getBoundingClientRect()
                 const lensSize = 221
                 const zoom = 2.5
@@ -192,7 +192,6 @@ export default function FabricDetail() {
                   backgroundPosition: `${lensSize / 2 - x * zoom}px ${lensSize / 2 - y * zoom}px`,
                 })
               }}
-              onPointerDown={(event) => event.currentTarget.setPointerCapture?.(event.pointerId)}
               onPointerLeave={() => setMagnifier(null)}
             >
               <div className="w-full h-full flex items-center justify-center overflow-hidden">
@@ -227,7 +226,9 @@ export default function FabricDetail() {
                   key={image}
                   type="button"
                   onClick={() => { setActiveImage(image); setMagnifier(null) }}
-                  className={`shrink-0 border-2 ${image === displayedImage ? 'border-forest' : 'border-white/70'}`}
+                  aria-label={`Show photo ${index + 1}`}
+                  aria-pressed={image === displayedImage}
+                  className={`shrink-0 border-2 transition-colors ${image === displayedImage ? 'border-forest' : 'border-white/70 hover:border-white'}`}
                 >
                   <img src={image} alt={`${fabric.name} photo ${index + 1}`} className="h-16 w-16 object-cover" />
                 </button>
@@ -249,9 +250,10 @@ export default function FabricDetail() {
                 onClick={() => { setActiveColor(color); setActiveImage(color.image); setMagnifier(null) }}
                 title={color.color_name}
                 aria-label={`View ${color.color_name} colorway`}
-                className={`h-10 w-10 rounded-full border-2 overflow-hidden shrink-0 ${activeColor?.id === color.id ? 'border-forest' : 'border-charcoal/20'}`}
+                aria-pressed={activeColor?.id === color.id}
+                className={`h-11 w-11 rounded-full border-2 overflow-hidden shrink-0 transition-transform hover:scale-105 ${activeColor?.id === color.id ? 'border-forest ring-2 ring-offset-2 ring-[var(--green)] ring-offset-[var(--bg)]' : 'border-charcoal/20'}`}
               >
-                <img src={color.image} alt={color.color_name} className="h-full w-full object-cover" />
+                <img src={color.image} alt="" className="h-full w-full object-cover" />
               </button>
             ))}
           </div>
@@ -263,7 +265,7 @@ export default function FabricDetail() {
           <p className="eyebrow mb-2">
             {fabric.collection} {t('collection')}
           </p>
-          <h1 className="font-serif text-4xl lg:text-5xl font-semibold text-charcoal leading-tight mb-1">
+          <h1 className="font-serif text-4xl lg:text-5xl font-normal text-charcoal leading-tight mb-1">
             {fabric.name}
           </h1>
           {fabric.reference && (

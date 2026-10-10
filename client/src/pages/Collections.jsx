@@ -133,6 +133,27 @@ export default function Collections() {
     return Number(b.featured) - Number(a.featured)
   }), [filtered, searchQuery, sortMode])
 
+  const hasFilters = activeCategory !== 'All' || Boolean(searchQuery)
+  const setSearchQueryParam = (nextQuery) => {
+    setSearchParams((previous) => {
+      const params = new URLSearchParams(previous)
+      if (nextQuery.trim()) params.set('q', nextQuery)
+      else params.delete('q')
+      params.delete('page')
+      return params
+    }, { replace: true })
+  }
+  const clearFilters = () => {
+    setSearchParams((previous) => {
+      const params = new URLSearchParams(previous)
+      params.delete('category')
+      params.delete('q')
+      params.delete('sort')
+      params.delete('page')
+      return params
+    }, { replace: true })
+  }
+
   const pageCount = Math.max(1, Math.ceil(sorted.length / PAGE_SIZE))
   const paged = sorted.slice((page - 1) * PAGE_SIZE, page * PAGE_SIZE)
 
@@ -177,7 +198,7 @@ export default function Collections() {
     <div className="collections-page">
       <SEO title="Collections | SA Studio Luxury Fabrics" description="Explore SA Studio's considered edit of exceptional fabrics, upholstery, wallpaper and materials for interiors with character." image="https://sa-studio.sy/collections-bg.webp" />
       <div className="collections-page-background" aria-hidden="true" />
-      <main className="collections-content-card">
+      <div className="collections-content-card">
         <section className="collections-intro">
           <p className="eyebrow">SA Studio / {t('collections')}</p>
           <h1>{t('theCollections')}</h1>
@@ -203,22 +224,24 @@ export default function Collections() {
               ))}
             </select>
             <div className="collections-search">
-              <span aria-hidden="true">⌕</span>
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" aria-hidden="true">
+                <circle cx="11" cy="11" r="7" />
+                <path d="m20 20-3.5-3.5" />
+              </svg>
               <input
+                type="search"
                 value={searchQuery}
-                onChange={(event) => {
-                  const nextQuery = event.target.value
-                  setSearchParams((previous) => {
-                    const params = new URLSearchParams(previous)
-                    if (nextQuery.trim()) params.set('q', nextQuery)
-                    else params.delete('q')
-                    params.delete('page')
-                    return params
-                  }, { replace: true })
-                }}
-                placeholder={t('searchCollections')} 
-                aria-label={t('searchCollections')} 
+                onChange={(event) => setSearchQueryParam(event.target.value)}
+                placeholder={t('searchCollections')}
+                aria-label={t('searchCollections')}
               />
+              {searchQuery && (
+                <button type="button" className="collections-search-clear" onClick={() => setSearchQueryParam('')} aria-label="Clear search">
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" aria-hidden="true" style={{ width: 14, height: 14, margin: 0 }}>
+                    <path d="M6 6l12 12M18 6 6 18" />
+                  </svg>
+                </button>
+              )}
             </div>
             <select value={sortMode} onChange={(event) => {
               setSearchParams((previous) => {
@@ -235,23 +258,38 @@ export default function Collections() {
               {searchQuery && <option value="relevant">{t('sortRelevant')}</option>}
             </select>
           </div>
+          {!isLoadingFabrics && (
+            <p className="collections-result-count" role="status">
+              {sorted.length} {sorted.length === 1 ? t('result') : t('results')}
+              {hasFilters && <button type="button" onClick={clearFilters}>{t('clearFilters')}</button>}
+            </p>
+          )}
         </section>
 
-        <section className="collections-products" aria-label="Fabric collections">
+        <section className="collections-products" aria-label="Fabric collections" aria-busy={isLoadingFabrics}>
           {isLoadingFabrics ? (
-            <div className="py-12 text-center text-sm opacity-60">
-              {t('loadingFabrics')}
-            </div>
+            Array.from({ length: 12 }, (_, i) => (
+              <div key={i} className="collections-product-card" aria-hidden="true">
+                <div className="collections-product-image skeleton" />
+                <div className="collections-product-copy">
+                  <div className="skeleton skeleton-line h-4 w-2/3" />
+                  <div className="skeleton skeleton-line w-1/2" />
+                </div>
+              </div>
+            ))
           ) : sorted.length > 0 ? (
             paged.map((fabric) => <FabricCard key={fabric.id} fabric={fabric} />)
           ) : (
-            <p className="collections-empty">{t('noCollections')}</p>
+            <div className="collections-empty">
+              <p>{hasFilters ? `${t('noFabricsFound')}.` : t('noCollections')}</p>
+              {hasFilters && <button type="button" onClick={clearFilters}>{t('clearFilters')}</button>}
+            </div>
           )}
         </section>
 
         {pageCount > 1 && (
           <nav 
-            className="collections-pagination flex items-center justify-center gap-1 py-6 px-2 w-full overflow-x-auto no-scrollbar" 
+            className="collections-pagination w-full overflow-x-auto no-scrollbar"
             aria-label="Collections pages"
           >
             <button 
@@ -259,26 +297,25 @@ export default function Collections() {
               disabled={page === 1} 
               onClick={() => updatePage(page - 1)}
               aria-label={t('previous')}
-              className="w-7 h-7 flex items-center justify-center rounded border border-black/10 disabled:opacity-20 disabled:cursor-not-allowed shrink-0 hover:bg-black/5 transition-colors"
             >
-              <svg className="w-3.5 h-3.5" viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="1.75">
+              <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="1.75" aria-hidden="true">
                 <path d="M10 12L4 8l6-4" />
               </svg>
             </button>
             
             {paginationRange.map((pageNumber, idx) =>
               pageNumber === '...' ? (
-                <span key={`dots-${idx}`} className="px-1 text-[11px] opacity-40 shrink-0 select-none">
-                  ...
+                <span key={`dots-${idx}`} className="collections-pagination-dots" aria-hidden="true">
+                  …
                 </span>
               ) : (
                 <button
                   key={pageNumber}
                   type="button"
-                  className={`w-7 h-7 text-[11px] font-medium rounded shrink-0 transition-colors flex items-center justify-center ${
-                    page === pageNumber ? 'is-active bg-black text-white' : 'hover:bg-black/5 border border-transparent'
-                  }`}
-                  onClick={() => updatePage(pageNumber)}
+                  className={page === pageNumber ? 'is-active' : ''}
+                  aria-current={page === pageNumber ? 'page' : undefined}
+                  aria-label={`Page ${pageNumber}`}
+                  onClick={() => { updatePage(pageNumber); window.scrollTo({ top: 0, behavior: 'smooth' }) }}
                 >
                   {pageNumber}
                 </button>
@@ -290,9 +327,8 @@ export default function Collections() {
               disabled={page === pageCount} 
               onClick={() => updatePage(page + 1)}
               aria-label={t('next')}
-              className="w-7 h-7 flex items-center justify-center rounded border border-black/10 disabled:opacity-20 disabled:cursor-not-allowed shrink-0 hover:bg-black/5 transition-colors"
             >
-              <svg className="w-3.5 h-3.5" viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="1.75">
+              <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="1.75" aria-hidden="true">
                 <path d="M6 4l6 4-6 4" />
               </svg>
             </button>
@@ -306,7 +342,7 @@ export default function Collections() {
             {t('contactUs')}
           </Link>
         </section>
-      </main>
+      </div>
     </div>
   )
 }

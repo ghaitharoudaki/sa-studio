@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 import { Link, useLocation } from 'react-router-dom'
 import logo from '../assets/logo.png'
 import darkLogo from '../assets/logo-dark.png'
@@ -23,6 +23,14 @@ function ThemeIcon({ theme }) {
   )
 }
 
+function HeartIcon() {
+  return (
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.6" aria-hidden="true">
+      <path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78L12 21.23l8.84-8.84a5.5 5.5 0 0 0 0-7.78Z" />
+    </svg>
+  )
+}
+
 export default function Navbar() {
   const [navExpanded, setNavExpanded] = useState(true)
   const [mobileOpen, setMobileOpen] = useState(false)
@@ -38,19 +46,35 @@ export default function Navbar() {
     { to: '/contact', label: t('contactUs') },
   ]
 
-  const isActive = (path) => location.pathname === path
+  // Treat detail pages (/collections/:id) as part of Collections
+  const isActive = (path) => (path === '/' ? location.pathname === '/' : location.pathname.startsWith(path))
   const closeMobileMenu = () => setMobileOpen(false)
+  const favoritesLabel = favoriteIds.length > 0 ? `${t('favorites')} (${favoriteIds.length})` : t('favorites')
+
+  // Lock page scroll and support Escape while the drawer is open
+  useEffect(() => {
+    if (!mobileOpen) return undefined
+    document.body.classList.add('is-scroll-locked')
+    const onKeyDown = (event) => {
+      if (event.key === 'Escape') setMobileOpen(false)
+    }
+    window.addEventListener('keydown', onKeyDown)
+    return () => {
+      document.body.classList.remove('is-scroll-locked')
+      window.removeEventListener('keydown', onKeyDown)
+    }
+  }, [mobileOpen])
 
   return (
     <>
-      <nav className="site-nav">
+      <nav className="site-nav" aria-label="Main">
         <div className="site-nav-inner mx-auto max-w-screen-xl px-2 sm:px-6 lg:px-16">
           <div className="site-nav-top flex items-center justify-between gap-1 py-1 sm:py-2">
-            <Link to="/" className="site-nav-logo-link flex-shrink-0">
-              <img 
-                src={theme === 'dark' ? darkLogo : logo} 
-                alt="SA Studio" 
-                className="site-logo h-20 sm:h-24 md:h-28 w-auto object-contain max-w-[170px] xs:max-w-[200px] sm:max-w-none" 
+            <Link to="/" className="site-nav-logo-link flex-shrink-0" aria-label="SA Studio home">
+              <img
+                src={theme === 'dark' ? darkLogo : logo}
+                alt="SA Studio"
+                className="site-logo h-20 sm:h-24 md:h-28 w-auto object-contain max-w-[170px] xs:max-w-[200px] sm:max-w-none"
               />
             </Link>
 
@@ -61,14 +85,14 @@ export default function Navbar() {
               <button type="button" onClick={toggleTheme} className="theme-toggle" aria-label={theme === 'light' ? 'Switch to dark mode' : 'Switch to light mode'}>
                 <ThemeIcon theme={theme} />
               </button>
-              <Link to="/favorites" className="site-nav-favorites" aria-label={t('favorites')}>
-                <span>♡</span>
-                {favoriteIds.length > 0 && <b>{favoriteIds.length}</b>}
+              <Link to="/favorites" className="site-nav-favorites" aria-label={favoritesLabel} title={t('favorites')}>
+                <HeartIcon />
+                {favoriteIds.length > 0 && <b aria-hidden="true">{favoriteIds.length}</b>}
               </Link>
-              <a 
-                href={quotationLink} 
-                target="_blank" 
-                rel="noreferrer" 
+              <a
+                href={quotationLink}
+                target="_blank"
+                rel="noreferrer"
                 className="site-nav-quotation whitespace-nowrap overflow-hidden text-ellipsis max-w-[160px] lg:max-w-none text-xs px-4 py-2 flex items-center justify-center shrink-0"
               >
                 <span>{t('requestQuotation')}</span>
@@ -76,20 +100,22 @@ export default function Navbar() {
             </div>
 
             <div className="site-nav-mobile-tools flex md:hidden items-center gap-1 flex-shrink min-w-0">
-              <a 
-                href={quotationLink} 
-                target="_blank" 
-                rel="noreferrer" 
+              <a
+                href={quotationLink}
+                target="_blank"
+                rel="noreferrer"
+                aria-label={t('requestQuotation')}
                 className="site-nav-quotation whitespace-nowrap overflow-hidden text-ellipsis min-w-0 max-w-[90px] sm:max-w-[130px] text-[9px] px-1.5 py-1 flex items-center justify-center shrink"
               >
                 {t('requestQuotationShort') || t('requestQuotation')}
               </a>
-              <button 
-                type="button" 
-                className={`site-nav-hamburger flex-shrink-0 ${mobileOpen ? 'is-open' : ''}`} 
-                onClick={() => setMobileOpen((open) => !open)} 
-                aria-label={mobileOpen ? 'Close menu' : 'Open menu'} 
+              <button
+                type="button"
+                className={`site-nav-hamburger flex-shrink-0 ${mobileOpen ? 'is-open' : ''}`}
+                onClick={() => setMobileOpen((open) => !open)}
+                aria-label={mobileOpen ? 'Close menu' : 'Open menu'}
                 aria-expanded={mobileOpen}
+                aria-controls="mobile-menu"
               >
                 <span />
                 <span />
@@ -98,10 +124,16 @@ export default function Navbar() {
             </div>
           </div>
 
-          <div className={`site-nav-row ${navExpanded ? 'is-open' : ''}`} aria-hidden={!navExpanded}>
+          <div className={`site-nav-row ${navExpanded ? 'is-open' : ''}`} aria-hidden={!navExpanded} inert={!navExpanded}>
             <div className="site-nav-links">
               {links.map(({ to, label }) => (
-                <Link key={to} to={to} onClick={closeMobileMenu} className={isActive(to) ? 'is-active' : ''}>
+                <Link
+                  key={to}
+                  to={to}
+                  onClick={closeMobileMenu}
+                  className={isActive(to) ? 'is-active' : ''}
+                  aria-current={isActive(to) ? 'page' : undefined}
+                >
                   {label}
                 </Link>
               ))}
@@ -113,17 +145,34 @@ export default function Navbar() {
         </button>
       </nav>
 
-      <div className={`site-nav-backdrop ${mobileOpen ? 'is-open' : ''}`} onClick={closeMobileMenu} />
-      <aside className={`site-nav-mobile-panel ${mobileOpen ? 'is-open' : ''}`} aria-hidden={!mobileOpen}>
+      <div className={`site-nav-backdrop ${mobileOpen ? 'is-open' : ''}`} onClick={closeMobileMenu} aria-hidden="true" />
+      <aside
+        id="mobile-menu"
+        className={`site-nav-mobile-panel ${mobileOpen ? 'is-open' : ''}`}
+        aria-label="Mobile menu"
+        aria-hidden={!mobileOpen}
+        inert={!mobileOpen}
+      >
         <div className="site-nav-mobile-links">
           {links.map(({ to, label }) => (
-            <Link key={to} to={to} onClick={closeMobileMenu} className={isActive(to) ? 'is-active' : ''}>{label}</Link>
+            <Link
+              key={to}
+              to={to}
+              onClick={closeMobileMenu}
+              className={isActive(to) ? 'is-active' : ''}
+              aria-current={isActive(to) ? 'page' : undefined}
+            >
+              {label}
+            </Link>
           ))}
         </div>
         <div className="site-nav-mobile-settings">
-          <Link to="/favorites" onClick={closeMobileMenu} className="site-nav-mobile-favorites">♡ {t('favorites')} {favoriteIds.length > 0 && `(${favoriteIds.length})`}</Link>
+          <Link to="/favorites" onClick={closeMobileMenu} className="site-nav-mobile-favorites">
+            <HeartIcon />
+            {favoritesLabel}
+          </Link>
           <button type="button" onClick={toggleLanguage}>{t('language')}</button>
-          <button type="button" onClick={toggleTheme} aria-label={theme === 'light' ? 'Switch to dark mode' : 'Switch to light mode'}><ThemeIcon theme={theme} /></button>
+          <button type="button" className="theme-toggle" onClick={toggleTheme} aria-label={theme === 'light' ? 'Switch to dark mode' : 'Switch to light mode'}><ThemeIcon theme={theme} /></button>
         </div>
       </aside>
     </>
