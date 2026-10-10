@@ -216,6 +216,10 @@ const translations = {
     clearFilters: 'Clear filters',
     page: 'Page',
     goToPage: 'Go to',
+    completeTheLook: 'Complete the Look',
+    pairsWellWith: 'Pairs well with',
+    completeTheLookDesc: 'Fabrics from our collection that work beautifully alongside this piece.',
+    pairCategory: 'Pair by category',
   },
   ar: {
     home: 'الرئيسية',
@@ -413,6 +417,10 @@ const translations = {
     clearFilters: 'مسح الفلاتر',
     page: 'صفحة',
     goToPage: 'انتقل إلى',
+    completeTheLook: 'أكمل الإطار',
+    pairsWellWith: 'يتناسب مع',
+    completeTheLookDesc: 'أقمشة من مجموعتنا تتناغم بشكل رائع مع هذه القطعة.',
+    pairCategory: 'تصفية حسب الفئة',
   },
 }
 

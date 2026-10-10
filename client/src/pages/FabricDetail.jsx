@@ -5,6 +5,7 @@ import { useSite } from '../context/SiteContext'
 import { getCategoryTranslationKey, getSpecTranslationKey } from '../lib/i18nHelpers'
 import SEO from '../components/SEO'
 import { useFavorites } from '../hooks/useFavorites'
+import CompleteTheLook from '../components/CompleteTheLook'
 
 function HeartIcon({ filled = false }) {
   return (
@@ -352,7 +353,10 @@ export default function FabricDetail() {
         </div>
       </div>
 
-      {/* Related fabrics */}
+      {/* Complete the Look — cross-category pairings */}
+      <CompleteTheLook fabric={fabric} />
+
+      {/* More in same category */}
       {related.length > 0 && (
         <div className="px-8 lg:px-16 py-16 border-t border-cream-dark">
           <h2 className="font-serif text-3xl font-light text-charcoal mb-8">
