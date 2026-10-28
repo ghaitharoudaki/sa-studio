@@ -3,6 +3,7 @@ import { Routes, Route } from 'react-router-dom'
 import Navbar from './components/Navbar'
 import Footer from './components/Footer'
 import ScrollToTop from './util/ScrollToTop'
+import MobileBottomNav from './components/MobileBottomNav'
 
 const Home = lazy(() => import('./pages/Home'))
 const Collections = lazy(() => import('./pages/Collections'))
@@ -42,6 +43,7 @@ export default function App() {
         </Suspense>
       </main>
       <Footer />
+      <MobileBottomNav />
     </div>
   )
 }

@@ -50,7 +50,7 @@ export default function Home() {
 
   return (
     <div>
-      <SEO title="Luxury Textiles & Wallpaper in Damascus | SA Studio" description="Discover SA Studio's curated fabrics and wallpaper for distinctive interiors in Damascus and the wider region." image="https://sa-studio.sy/hero-texture.webp" />
+      <SEO title="Luxury Textiles & Wallpaper in Damascus | SA Studio" description="Discover SA Studio's curated fabrics and wallpaper for distinctive interiors in Damascus and the wider region." image="/hero-texture.jpg" />
 
       {/* HERO CAROUSEL */}
       <HeroCarousel />

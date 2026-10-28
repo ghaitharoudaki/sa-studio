@@ -2,3 +2,4 @@ User-agent: *
 Allow: /
 Disallow: /admin
 Sitemap: https://sastudio-sy.com/sitemap.xml
+Sitemap: https://sastudio-sy.com/fabric-sitemap.xml
