@@ -71,10 +71,10 @@ function FabricCard({ fabric, compareIds, onToggleCompare }) {
           className={`collections-compare-button ${compareIds.includes(fabric.id) ? 'is-selected' : ''}`}
           onClick={() => onToggleCompare(fabric.id)}
           aria-pressed={compareIds.includes(fabric.id)}
-          aria-label={`${compareIds.includes(fabric.id) ? 'Remove' : 'Add'} ${fabric.name} ${compareIds.includes(fabric.id) ? 'from' : 'to'} comparison`}
-          title={compareIds.includes(fabric.id) ? 'Remove from comparison' : 'Add to comparison'}
+          aria-label={`${compareIds.includes(fabric.id) ? t('compareRemoveFrom') : t('compareAdd')}: ${fabric.name}`}
+          title={compareIds.includes(fabric.id) ? t('compareRemoveFrom') : t('compareAdd')}
         >
-          {compareIds.includes(fabric.id) ? 'Selected' : 'Compare'}
+          {compareIds.includes(fabric.id) ? t('selected') : t('compare')}
         </button>
       </div>
       <Link to={{ pathname: `/collections/${fabric.id}`, search: location.search }} className="collections-product-copy">
@@ -86,17 +86,65 @@ function FabricCard({ fabric, compareIds, onToggleCompare }) {
 }
 
 function ComparisonDialog({ fabrics, onClose, onRemove }) {
+  const { t } = useSite()
+  const [showDetails, setShowDetails] = useState(false)
   const specKeys = [...new Set(fabrics.flatMap((fabric) => Object.keys(fabric.specs || {})))]
+  const detailRows = [
+    { label: t('compareDescription'), values: fabrics.map((fabric) => fabric.description || '—') },
+    { label: t('compareCollection'), values: fabrics.map((fabric) => fabric.collection || '—') },
+    { label: t('compareColorVariants'), values: fabrics.map((fabric) => fabric.colorCount || (fabric.image ? t('compareGalleryAvailable') : t('compareUnavailable'))) },
+    ...specKeys.map((key) => ({ label: key, values: fabrics.map((fabric) => fabric.specs?.[key] || '—') })),
+  ]
+
   return (
     <div className="comparison-backdrop" role="presentation" onMouseDown={(event) => { if (event.target === event.currentTarget) onClose() }}>
       <section className="comparison-dialog" role="dialog" aria-modal="true" aria-labelledby="comparison-title">
         <div className="comparison-dialog-header">
           <div>
-            <p className="eyebrow">SA Studio / Compare</p>
-            <h2 id="comparison-title">A closer look, side by side.</h2>
+            <p className="eyebrow">{t('compareEyebrow')}</p>
+            <h2 id="comparison-title">{t('compareTitle')}</h2>
           </div>
-          <button type="button" className="comparison-close" onClick={onClose} aria-label="Close comparison">×</button>
+          <div className="comparison-dialog-actions">
+            <button type="button" className="comparison-details-toggle" onClick={() => setShowDetails((current) => !current)} aria-expanded={showDetails}>
+              {showDetails ? t('hideCompareDetails') : t('compareDetails')}
+            </button>
+            <button type="button" className="comparison-close" onClick={onClose} aria-label={t('close')}>×</button>
+          </div>
         </div>
+        <div className="comparison-mobile-products">
+          {fabrics.map((fabric) => (
+            <article className="comparison-mobile-product" key={fabric.id}>
+              <div className={`comparison-mobile-image ${fabric.texture || 'tex-forest'}`}>
+                {fabric.image ? (
+                  <picture>
+                    {getWebpSource(fabric.image) && <source srcSet={getWebpSource(fabric.image)} type="image/webp" />}
+                    <img src={fabric.image} alt={`${t('compareImageAlt')}: ${fabric.name}`} loading="lazy" decoding="async" />
+                  </picture>
+                ) : null}
+              </div>
+              <strong>{fabric.name}</strong>
+              <button type="button" onClick={() => onRemove(fabric.id)}>{t('compareRemove')}</button>
+            </article>
+          ))}
+        </div>
+        {showDetails && (
+          <div className="comparison-mobile-details is-visible">
+            {detailRows.map((row) => (
+              <section className="comparison-mobile-detail-row" key={row.label}>
+                <h3>{row.label}</h3>
+                <div>
+                  {row.values.map((value, index) => <p key={`${row.label}-${fabrics[index].id}`}><strong>{fabrics[index].name}</strong>{value}</p>)}
+                </div>
+              </section>
+            ))}
+            <section className="comparison-mobile-detail-row">
+              <h3>{t('compareQuote')}</h3>
+              <div>
+                {fabrics.map((fabric) => <p key={fabric.id}><strong>{fabric.name}</strong><Link to={`/collections/${fabric.id}`} className="comparison-quote-link">{t('compareViewQuote')}</Link></p>)}
+              </div>
+            </section>
+          </div>
+        )}
         <div className="comparison-table-wrap">
           <table className="comparison-table">
             <thead>
@@ -108,22 +156,22 @@ function ComparisonDialog({ fabrics, onClose, onRemove }) {
                       {fabric.image ? (
                         <picture>
                           {getWebpSource(fabric.image) && <source srcSet={getWebpSource(fabric.image)} type="image/webp" />}
-                          <img src={fabric.image} alt="" loading="lazy" decoding="async" />
+                          <img src={fabric.image} alt={`${t('compareImageAlt')}: ${fabric.name}`} loading="lazy" decoding="async" />
                         </picture>
                       ) : <div className={`comparison-product-placeholder ${fabric.texture || 'tex-forest'}`} />}
                       <strong>{fabric.name}</strong>
-                      <button type="button" onClick={() => onRemove(fabric.id)}>Remove</button>
+                      <button type="button" onClick={() => onRemove(fabric.id)}>{t('compareRemove')}</button>
                     </div>
                   </th>
                 ))}
               </tr>
             </thead>
             <tbody>
-              <tr><th scope="row">Description</th>{fabrics.map((fabric) => <td key={fabric.id}>{fabric.description || '—'}</td>)}</tr>
-              <tr><th scope="row">Collection</th>{fabrics.map((fabric) => <td key={fabric.id}>{fabric.collection || '—'}</td>)}</tr>
-              <tr><th scope="row">Color variants</th>{fabrics.map((fabric) => <td key={fabric.id}>{fabric.colorCount || (fabric.image ? 'Gallery available' : '—')}</td>)}</tr>
+              <tr><th scope="row">{t('compareDescription')}</th>{fabrics.map((fabric) => <td key={fabric.id}>{fabric.description || '—'}</td>)}</tr>
+              <tr><th scope="row">{t('compareCollection')}</th>{fabrics.map((fabric) => <td key={fabric.id}>{fabric.collection || '—'}</td>)}</tr>
+              <tr><th scope="row">{t('compareColorVariants')}</th>{fabrics.map((fabric) => <td key={fabric.id}>{fabric.colorCount || (fabric.image ? t('compareGalleryAvailable') : t('compareUnavailable'))}</td>)}</tr>
               {specKeys.map((key) => <tr key={key}><th scope="row">{key}</th>{fabrics.map((fabric) => <td key={fabric.id}>{fabric.specs?.[key] || '—'}</td>)}</tr>)}
-              <tr><th scope="row">Request a quote</th>{fabrics.map((fabric) => <td key={fabric.id}><Link to={`/collections/${fabric.id}`} className="comparison-quote-link">View & quote</Link></td>)}</tr>
+              <tr><th scope="row">{t('compareQuote')}</th>{fabrics.map((fabric) => <td key={fabric.id}><Link to={`/collections/${fabric.id}`} className="comparison-quote-link">{t('compareViewQuote')}</Link></td>)}</tr>
             </tbody>
           </table>
         </div>
@@ -423,10 +471,10 @@ export default function Collections() {
 
         {compareFabrics.length > 0 && (
           <aside className="compare-bar" aria-live="polite">
-            <span>{compareFabrics.length} of 4 fabrics selected</span>
+            <span>{compareFabrics.length} / 4 {t('compareSelected')}</span>
             <div className="compare-bar-actions">
-              <button type="button" onClick={() => setCompareIds([])}>Clear</button>
-              <button type="button" className="compare-bar-primary" disabled={compareFabrics.length < 2} onClick={() => setShowComparison(true)}>Compare fabrics</button>
+              <button type="button" onClick={() => setCompareIds([])}>{t('compareClear')}</button>
+              <button type="button" className="compare-bar-primary" disabled={compareFabrics.length < 2} onClick={() => setShowComparison(true)}>{t('compareAction')}</button>
             </div>
           </aside>
         )}
