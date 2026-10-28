@@ -1,5 +1,5 @@
 import { useParams, Link, useNavigate } from 'react-router-dom'
-import { WHATSAPP_BASE, SHOWROOMS, fetchFabricColors } from '../data/fabrics'
+import { WHATSAPP_BASE, SHOWROOMS, fetchFabricColors, getWebpSource } from '../data/fabrics'
 import { useState, useEffect } from 'react'
 import { useSite } from '../context/SiteContext'
 import { getCategoryTranslationKey, getSpecTranslationKey } from '../lib/i18nHelpers'
@@ -73,11 +73,16 @@ export default function FabricDetail() {
   const [activeImage, setActiveImage] = useState('')
   const [colors, setColors] = useState([])
   const [activeColor, setActiveColor] = useState(null)
+  const [touchStart, setTouchStart] = useState(null)
   const { t, fabrics, isLoadingFabrics } = useSite()
   const { isFavorite, toggleFavorite } = useFavorites()
 
   useEffect(() => {
     if (!id) return
+    try {
+      const recent = JSON.parse(localStorage.getItem('sa-studio-recently-viewed') || '[]')
+      localStorage.setItem('sa-studio-recently-viewed', JSON.stringify([id, ...recent.filter((value) => value !== id)].slice(0, 8)))
+    } catch { /* optional preference */ }
     fetchFabricColors(id).then((rows) => {
       setColors(rows)
       if (rows.length) {
@@ -102,6 +107,14 @@ export default function FabricDetail() {
   const fabric = fabrics.find((f) => f.id === id)
   const imageUrls = fabric?.images?.length ? fabric.images : (fabric?.image ? [fabric.image] : [])
   const displayedImage = activeImage || imageUrls[0]
+  const galleryImages = [...new Set([...imageUrls, ...colors.map((color) => color.image).filter(Boolean)])]
+  const selectGalleryImage = (direction) => {
+    const index = Math.max(0, galleryImages.indexOf(displayedImage))
+    const nextIndex = (index + direction + galleryImages.length) % galleryImages.length
+    setActiveImage(galleryImages[nextIndex])
+    setActiveColor(colors.find((color) => color.image === galleryImages[nextIndex]) || null)
+    setMagnifier(null)
+  }
 
      const handleBack = () => {
     const savedUrl = sessionStorage.getItem('sa-studio-collections-url')
@@ -147,7 +160,7 @@ export default function FabricDetail() {
 
   return (
     <div>
-      <SEO title={detailTitle} description={detailDescription} image={fabric.image || undefined} />
+      <SEO title={detailTitle} description={detailDescription} image={fabric.image || undefined} product={fabric} />
       <div className="fixed top-0 left-0 right-0 h-[3px] z-[70] pointer-events-none" aria-hidden="true">
         <div
           className="h-full bg-forest origin-left transition-transform duration-150"
@@ -194,14 +207,26 @@ export default function FabricDetail() {
                 })
               }}
               onPointerLeave={() => setMagnifier(null)}
+              onTouchStart={(event) => setTouchStart(event.changedTouches[0].clientX)}
+              onTouchEnd={(event) => {
+                if (touchStart === null) return
+                const delta = event.changedTouches[0].clientX - touchStart
+                if (Math.abs(delta) > 40) selectGalleryImage(delta < 0 ? 1 : -1)
+                setTouchStart(null)
+              }}
+              onKeyDown={(event) => {
+                if (event.key === 'ArrowRight') { event.preventDefault(); selectGalleryImage(1) }
+                if (event.key === 'ArrowLeft') { event.preventDefault(); selectGalleryImage(-1) }
+              }}
+              tabIndex={galleryImages.length > 1 ? 0 : undefined}
+              role={galleryImages.length > 1 ? 'group' : undefined}
+              aria-label={galleryImages.length > 1 ? `${fabric.name} image gallery. Use left and right arrow keys or swipe to browse.` : undefined}
             >
               <div className="w-full h-full flex items-center justify-center overflow-hidden">
-                <img
-                  src={displayedImage}
-                  alt={`${fabric.name} ${fabric.collection || ''} textile detail`}
-                  decoding="async"
-                  className="w-full h-full object-contain"
-                />
+                <picture className="w-full h-full">
+                  {getWebpSource(displayedImage) && <source srcSet={getWebpSource(displayedImage)} type="image/webp" />}
+                  <img src={displayedImage} alt={`${fabric.name} ${fabric.collection || ''} textile detail`} decoding="async" fetchPriority="high" className="w-full h-full object-contain" />
+                </picture>
               </div>
               {magnifier && (
                 <div
@@ -220,6 +245,13 @@ export default function FabricDetail() {
           ) : (
             <div className={`w-full max-w-[550px] aspect-square ${fabric.texture}`} />
           )}
+          {galleryImages.length > 1 && (
+            <div className="gallery-arrow-controls" aria-label="Gallery controls">
+              <button type="button" onClick={() => selectGalleryImage(-1)} aria-label="Previous image">←</button>
+              <span>{galleryImages.indexOf(displayedImage) + 1} / {galleryImages.length}</span>
+              <button type="button" onClick={() => selectGalleryImage(1)} aria-label="Next image">→</button>
+            </div>
+          )}
           {imageUrls.length > 1 && (
             <div className="absolute bottom-6 left-6 right-6 flex gap-2 overflow-x-auto">
               {imageUrls.map((image, index) => (
@@ -231,7 +263,7 @@ export default function FabricDetail() {
                   aria-pressed={image === displayedImage}
                   className={`shrink-0 border-2 transition-colors ${image === displayedImage ? 'border-forest' : 'border-white/70 hover:border-white'}`}
                 >
-                  <img src={image} alt={`${fabric.name} photo ${index + 1}`} className="h-16 w-16 object-cover" />
+                  <picture><img src={image} alt={`${fabric.name} photo ${index + 1}`} loading="lazy" decoding="async" className="h-16 w-16 object-cover" /></picture>
                 </button>
               ))}
             </div>
@@ -243,21 +275,19 @@ export default function FabricDetail() {
           </div>
         </div>
                 {colors.length > 0 && (
-          <div className="flex justify-center gap-3 py-4 px-4 bg-cream-light overflow-x-auto no-scrollbar">
-            {colors.map((color) => (
-              <button
-                key={color.id}
-                type="button"
-                onClick={() => { setActiveColor(color); setActiveImage(color.image); setMagnifier(null) }}
-                title={color.color_name}
-                aria-label={`View ${color.color_name} colorway`}
-                aria-pressed={activeColor?.id === color.id}
-                className={`h-11 w-11 rounded-full border-2 overflow-hidden shrink-0 transition-transform hover:scale-105 ${activeColor?.id === color.id ? 'border-forest ring-2 ring-offset-2 ring-[var(--green)] ring-offset-[var(--bg)]' : 'border-charcoal/20'}`}
-              >
-                <img src={color.image} alt="" className="h-full w-full object-cover" />
-              </button>
-            ))}
-          </div>
+                  <div className="color-variant-gallery" aria-label="All color variants">
+                    {colors.map((color) => (
+                      <figure
+                        key={color.id}
+                        className={`color-variant-card ${activeColor?.id === color.id ? 'is-active' : ''}`}
+                      >
+                        <button type="button" onClick={() => { setActiveColor(color); setActiveImage(color.image); setMagnifier(null) }} title={color.color_name} aria-label={`View ${color.color_name} colorway`} aria-pressed={activeColor?.id === color.id}>
+                          <picture>{getWebpSource(color.image) && <source srcSet={getWebpSource(color.image)} type="image/webp" />}<img src={color.image} alt={`${fabric.name}, ${color.color_name} color variant`} loading="lazy" decoding="async" /></picture>
+                        </button>
+                        <figcaption>{color.color_name}</figcaption>
+                      </figure>
+                    ))}
+                  </div>
         )}
         </div>
 

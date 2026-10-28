@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState } from 'react'
-import { createFabric, uploadFabricImage, updateFabric, validateFabricImage, saveFabricColors, fetchFabricColors } from '../data/fabrics'
+import { createFabric, uploadFabricImage, updateFabric, validateFabricImage, saveFabricColors, fetchFabricColors, optimizeImageFile } from '../data/fabrics'
 import CategoryPicker from './CategoryPicker'
 import { useSite } from '../context/SiteContext'
 
@@ -134,7 +134,8 @@ export default function FabricForm({ fabric = null, onSubmit, onCancel, isLoadin
 
     setSaving(true)
     setMessage('')
-    const imageUploads = await Promise.all(imageFiles.map((imageFile) => uploadFabricImage(imageFile)))
+    const optimizedImages = await Promise.all(imageFiles.map((imageFile) => optimizeImageFile(imageFile)))
+    const imageUploads = await Promise.all(optimizedImages.map((imageFile) => uploadFabricImage(imageFile)))
     const failedUpload = imageUploads.find(({ error }) => error)
     if (failedUpload) {
       setSaving(false)
@@ -174,8 +175,8 @@ export default function FabricForm({ fabric = null, onSubmit, onCancel, isLoadin
 
     const savedId = result.data?.id || fabric?.id
     if (savedId && colorVariants.length) {
-      const colorUploads = await Promise.all(colorVariants.map((variant) => (
-        variant.file ? uploadFabricImage(variant.file) : Promise.resolve({ data: variant.image, error: null })
+      const colorUploads = await Promise.all(colorVariants.map(async (variant) => (
+        variant.file ? uploadFabricImage(await optimizeImageFile(variant.file, { maxDimension: 1400, quality: 0.82 })) : Promise.resolve({ data: variant.image, error: null })
       )))
       const failedColorUpload = colorUploads.find(({ error }) => error)
       if (failedColorUpload) {
