@@ -400,6 +400,28 @@
   }
   .collections-favorite-button svg { width: 18px; height: 18px; }
   .collections-favorite-button.is-favorite { color: var(--burgundy); }
+  .collections-compare-button {
+    position: absolute;
+    top: 8px;
+    right: 52px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 36px;
+    height: 36px;
+    background: var(--bg-elevated);
+    color: var(--text-primary);
+    transition: all 0.2s ease;
+  }
+  .collections-compare-button:disabled {
+    opacity: 0.4;
+    cursor: not-allowed;
+  }
+  .collections-compare-button.is-comparing {
+    color: var(--green);
+    background: var(--accent-soft);
+  }
+  .collections-compare-button svg { width: 18px; height: 18px; }
   .collections-search {
     display: flex;
     align-items: center;

@@ -5,6 +5,8 @@ import { useSite } from '../context/SiteContext'
 import { getCategoryTranslationKey } from '../lib/i18nHelpers'
 import SEO from '../components/SEO'
 import { useFavorites } from '../hooks/useFavorites'
+import { useCompareFabrics } from '../hooks/useCompareFabrics'
+import CompareFabrics from '../components/CompareFabrics'
 
 const PAGE_SIZE = 12
 
@@ -15,10 +17,26 @@ const normalizeSearchText = (value = '') => String(value)
   .trim()
   .replace(/\s+/g, ' ')
 
-const getSearchFields = (fabric) => [
-  fabric.name,
-  fabric.collection,
-].map(normalizeSearchText).filter(Boolean)
+const escapeRegex = (str) => str.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')
+
+const getSearchFields = (fabric) => {
+  const fields = [
+    fabric.name,
+    fabric.collection,
+    fabric.reference,
+    fabric.description,
+    ...(fabric.categories || []),
+  ]
+
+  // Add specs values
+  if (fabric.specs) {
+    Object.values(fabric.specs).forEach((specValue) => {
+      if (specValue) fields.push(String(specValue))
+    })
+  }
+
+  return fields.map(normalizeSearchText).filter(Boolean)
+}
 
 function HeartIcon({ filled = false }) {
   return (
@@ -28,18 +46,39 @@ function HeartIcon({ filled = false }) {
   )
 }
 
+function CompareIcon() {
+  return (
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+      <rect x="3" y="4" width="7" height="16" rx="1" />
+      <rect x="14" y="4" width="7" height="16" rx="1" />
+    </svg>
+  )
+}
+
 function FabricCard({ fabric }) {
   const { t } = useSite()
   const { isFavorite, toggleFavorite } = useFavorites()
+  const { addToCompare, removeFromCompare, isInCompare, canAddToCompare } = useCompareFabrics()
   const location = useLocation()
   const detail = fabric.collection || fabric.specs?.Composition || 'SA Studio textile'
 
+  const handleCompareToggle = (event) => {
+    event.preventDefault()
+    if (isInCompare(fabric.id)) {
+      removeFromCompare(fabric.id)
+    } else if (canAddToCompare) {
+      addToCompare(fabric.id)
+    }
+  }
+  const comparing = isInCompare(fabric.id)
+  const compareBlocked = !comparing && !canAddToCompare
+
   return (
-    <Link 
+    <Link
       to={{
         pathname: `/collections/${fabric.id}`,
         search: location.search
-      }} 
+      }}
       className="collections-product-card group"
     >
       <div className="collections-product-image">
@@ -51,13 +90,24 @@ function FabricCard({ fabric }) {
         <span className="collections-product-tag">
           {getCategoryTranslationKey(fabric.categories?.[0]) ? t(getCategoryTranslationKey(fabric.categories[0])) : fabric.categories?.[0] || t('newArrival')}
         </span>
-        <button 
-          type="button" 
-          className={`collections-favorite-button ${isFavorite(fabric.id) ? 'is-favorite' : ''}`} 
-          onClick={(event) => { event.preventDefault(); toggleFavorite(fabric.id) }} 
+        <button
+          type="button"
+          className={`collections-favorite-button ${isFavorite(fabric.id) ? 'is-favorite' : ''}`}
+          onClick={(event) => { event.preventDefault(); toggleFavorite(fabric.id) }}
           aria-label={isFavorite(fabric.id) ? `Remove ${fabric.name} from favorites` : `Add ${fabric.name} to favorites`}
         >
           <HeartIcon filled={isFavorite(fabric.id)} />
+        </button>
+        <button
+          type="button"
+          className={`collections-compare-button ${comparing ? 'is-comparing' : ''}`}
+          onClick={handleCompareToggle}
+          aria-disabled={compareBlocked || undefined}
+          aria-pressed={comparing}
+          aria-label={comparing ? `${t('removeFromCompare')}: ${fabric.name}` : `${t('addToCompare')}: ${fabric.name}`}
+          title={comparing ? t('removeFromCompare') : compareBlocked ? t('compareFull') : t('addToCompare')}
+        >
+          <CompareIcon />
         </button>
       </div>
       <div className="collections-product-copy">
@@ -72,6 +122,9 @@ export default function Collections() {
   const { t, fabrics, isLoadingFabrics } = useSite()
   const [searchParams, setSearchParams] = useSearchParams()
   const location = useLocation()
+  const [localSearchQuery, setLocalSearchQuery] = useState(searchParams.get('q') || '')
+  const [showCompareModal, setShowCompareModal] = useState(false)
+  const { compareCount } = useCompareFabrics()
 
   const pageParam = parseInt(searchParams.get('page') || '1', 10)
   const page = isNaN(pageParam) || pageParam < 1 ? 1 : pageParam
@@ -81,6 +134,30 @@ export default function Collections() {
     ? searchParams.get('sort')
     : 'featured'
   const searchQuery = searchParams.get('q') || ''
+
+  // Keep the input in step when the URL's q changes from outside (back/forward, links).
+  const [syncedQuery, setSyncedQuery] = useState(searchQuery)
+  if (syncedQuery !== searchQuery) {
+    setSyncedQuery(searchQuery)
+    if (localSearchQuery.trim() !== searchQuery.trim()) setLocalSearchQuery(searchQuery)
+  }
+
+  // Debounced push of the typed query into the URL. Only fires when the text
+  // actually differs, so landing on ?page=3 (or coming back to it) keeps the page.
+  useEffect(() => {
+    const next = localSearchQuery.trim()
+    if (next === searchQuery.trim()) return undefined
+    const timer = setTimeout(() => {
+      setSearchParams((previous) => {
+        const params = new URLSearchParams(previous)
+        if (next) params.set('q', next)
+        else params.delete('q')
+        params.delete('page')
+        return params
+      }, { replace: true })
+    }, 300)
+    return () => clearTimeout(timer)
+  }, [localSearchQuery, searchQuery, setSearchParams])
   const updatePage = useCallback((newPage) => {
     setSearchParams((prevParams) => {
       const params = new URLSearchParams(prevParams)
@@ -105,7 +182,17 @@ export default function Collections() {
       const query = normalizeSearchText(searchQuery)
       const fields = getSearchFields(fabric)
       const searchableText = fields.join(' ')
-      return searchableText.includes(query)
+
+      // Check for exact phrase match first
+      if (searchableText.includes(query)) return true
+
+      // Check for word boundary matches for each token
+      const tokens = query.split(' ').filter(Boolean)
+      return tokens.every((token) => {
+        // Unicode-aware word start (\b only understands Latin letters, not Arabic).
+        const wordBoundaryRegex = new RegExp(`(?:^|[^\\p{L}\\p{N}])${escapeRegex(token)}`, 'iu')
+        return fields.some((field) => wordBoundaryRegex.test(field))
+      })
     }), [activeCategory, fabrics, searchQuery])
 
   const sorted = useMemo(() => [...filtered].sort((a, b) => {
@@ -113,13 +200,62 @@ export default function Collections() {
       const query = normalizeSearchText(searchQuery)
       const tokens = query.split(' ').filter(Boolean)
       const score = (fabric) => {
-        const fields = getSearchFields(fabric)
         const name = normalizeSearchText(fabric.name)
+        const collection = normalizeSearchText(fabric.collection || '')
+        const reference = normalizeSearchText(fabric.reference || '')
+        const description = normalizeSearchText(fabric.description || '')
+        const categories = (fabric.categories || []).map(normalizeSearchText)
+        const fields = getSearchFields(fabric)
+
         return tokens.reduce((total, token) => {
-          const fieldScore = fields.reduce((fieldTotal, field, index) => (
-            fieldTotal + (field.includes(token) ? Math.max(1, 8 - index) : 0)
-          ), 0)
-          return total + fieldScore + (name === token ? 30 : name.includes(token) ? 12 : 0)
+          let tokenScore = 0
+
+          // Exact name match - highest weight
+          if (name === token) tokenScore += 100
+          // Name starts with token
+          else if (name.startsWith(token)) tokenScore += 80
+          // Name contains token
+          else if (name.includes(token)) tokenScore += 60
+
+          // Exact collection match
+          if (collection === token) tokenScore += 50
+          // Collection starts with token
+          else if (collection.startsWith(token)) tokenScore += 40
+          // Collection contains token
+          else if (collection.includes(token)) tokenScore += 30
+
+          // Exact reference match
+          if (reference === token) tokenScore += 45
+          // Reference starts with token
+          else if (reference.startsWith(token)) tokenScore += 35
+          // Reference contains token
+          else if (reference.includes(token)) tokenScore += 25
+
+          // Description matches - lower weight
+          if (description.includes(token)) tokenScore += 15
+
+          // Category matches
+          categories.forEach((cat) => {
+            if (cat === token) tokenScore += 20
+            else if (cat.startsWith(token)) tokenScore += 15
+            else if (cat.includes(token)) tokenScore += 10
+          })
+
+          // Specs matches
+          if (fabric.specs) {
+            Object.values(fabric.specs).forEach((specValue) => {
+              const spec = normalizeSearchText(String(specValue))
+              if (spec === token) tokenScore += 18
+              else if (spec.startsWith(token)) tokenScore += 12
+              else if (spec.includes(token)) tokenScore += 8
+            })
+          }
+
+          // Bonus for multiple tokens matching in same field
+          const matchCount = fields.filter((field) => field.includes(token)).length
+          if (matchCount > 1) tokenScore += matchCount * 5
+
+          return total + tokenScore
         }, 0)
       }
       return score(b) - score(a)
@@ -131,15 +267,10 @@ export default function Collections() {
 
   const hasFilters = activeCategory !== 'All' || Boolean(searchQuery)
   const setSearchQueryParam = (nextQuery) => {
-    setSearchParams((previous) => {
-      const params = new URLSearchParams(previous)
-      if (nextQuery.trim()) params.set('q', nextQuery)
-      else params.delete('q')
-      params.delete('page')
-      return params
-    }, { replace: true })
+    setLocalSearchQuery(nextQuery)
   }
   const clearFilters = () => {
+    setLocalSearchQuery('')
     setSearchParams((previous) => {
       const params = new URLSearchParams(previous)
       params.delete('category')
@@ -227,12 +358,12 @@ export default function Collections() {
               </svg>
               <input
                 type="search"
-                value={searchQuery}
+                value={localSearchQuery}
                 onChange={(event) => setSearchQueryParam(event.target.value)}
                 placeholder={t('searchCollections')}
                 aria-label={t('searchCollections')}
               />
-              {searchQuery && (
+              {localSearchQuery && (
                 <button type="button" className="collections-search-clear" onClick={() => setSearchQueryParam('')} aria-label="Clear search">
                   <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" aria-hidden="true" style={{ width: 14, height: 14, margin: 0 }}>
                     <path d="M6 6l12 12M18 6 6 18" />
@@ -256,10 +387,37 @@ export default function Collections() {
             </select>
           </div>
           {!isLoadingFabrics && (
-            <p className="collections-result-count" role="status">
-              {sorted.length} {sorted.length === 1 ? t('result') : t('results')}
-              {hasFilters && <button type="button" onClick={clearFilters}>{t('clearFilters')}</button>}
-            </p>
+            <div className="flex items-center justify-between gap-4 flex-wrap">
+              <p className="collections-result-count" role="status">
+                {sorted.length} {sorted.length === 1 ? t('result') : t('results')}
+              </p>
+              <div className="flex items-center gap-3">
+                {compareCount > 0 && (
+                  <button
+                    type="button"
+                    onClick={() => setShowCompareModal(true)}
+                    className="inline-flex items-center gap-2 px-4 py-2 text-[11px] tracking-[0.2em] uppercase text-forest border border-forest hover:bg-forest hover:text-white transition-colors min-h-[44px]"
+                    aria-haspopup="dialog"
+                  >
+                    <span className="inline-flex h-4 w-4"><CompareIcon /></span>
+                    {t('compare')} ({compareCount})
+                  </button>
+                )}
+                {hasFilters && (
+                  <button
+                    type="button"
+                    onClick={clearFilters}
+                    className="inline-flex items-center gap-2 px-4 py-2 text-[11px] tracking-[0.2em] uppercase text-forest border border-forest hover:bg-forest hover:text-white transition-colors min-h-[44px]"
+                  >
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                      <path d="M3 12a9 9 0 1 0 9-9 9.75 9.75 0 0 0-6.74 2.74L3 8" />
+                      <path d="M3 3v5h5" />
+                    </svg>
+                    {t('clearFilters')}
+                  </button>
+                )}
+              </div>
+            </div>
           )}
         </section>
 
@@ -367,6 +525,11 @@ export default function Collections() {
           </Link>
         </section>
       </div>
+
+      {/* Compare Modal */}
+      {showCompareModal && (
+        <CompareFabrics onClose={() => setShowCompareModal(false)} />
+      )}
     </div>
   )
 }

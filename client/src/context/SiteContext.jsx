@@ -220,6 +220,13 @@ const translations = {
     pairsWellWith: 'Pairs well with',
     completeTheLookDesc: 'Fabrics from our collection that work beautifully alongside this piece.',
     pairCategory: 'Pair by category',
+    compare: 'Compare',
+    compareFabrics: 'Compare fabrics',
+    addToCompare: 'Add to comparison',
+    removeFromCompare: 'Remove from comparison',
+    compareFull: 'Comparison is full (max 4)',
+    clearAll: 'Clear all',
+    viewGallery: 'View full-screen gallery',
   },
   ar: {
     home: 'الرئيسية',
@@ -421,6 +428,13 @@ const translations = {
     pairsWellWith: 'يتناسب مع',
     completeTheLookDesc: 'أقمشة من مجموعتنا تتناغم بشكل رائع مع هذه القطعة.',
     pairCategory: 'تصفية حسب الفئة',
+    compare: 'مقارنة',
+    compareFabrics: 'مقارنة الأقمشة',
+    addToCompare: 'أضف إلى المقارنة',
+    removeFromCompare: 'إزالة من المقارنة',
+    compareFull: 'المقارنة ممتلئة (4 كحد أقصى)',
+    clearAll: 'مسح الكل',
+    viewGallery: 'عرض المعرض بملء الشاشة',
   },
 }
 

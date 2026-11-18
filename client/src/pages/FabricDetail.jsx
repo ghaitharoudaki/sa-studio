@@ -6,6 +6,7 @@ import { getCategoryTranslationKey, getSpecTranslationKey } from '../lib/i18nHel
 import SEO from '../components/SEO'
 import { useFavorites } from '../hooks/useFavorites'
 import CompleteTheLook from '../components/CompleteTheLook'
+import Lightbox from '../components/Lightbox'
 
 function HeartIcon({ filled = false }) {
   return (
@@ -73,18 +74,35 @@ export default function FabricDetail() {
   const [activeImage, setActiveImage] = useState('')
   const [colors, setColors] = useState([])
   const [activeColor, setActiveColor] = useState(null)
+  const [lightboxOpen, setLightboxOpen] = useState(false)
+  const [lightboxIndex, setLightboxIndex] = useState(0)
   const { t, fabrics, isLoadingFabrics } = useSite()
   const { isFavorite, toggleFavorite } = useFavorites()
 
+  // The route element is reused between fabrics (e.g. via Complete the Look),
+  // so clear the previous fabric's colorway and gallery state when the id changes.
+  const [currentId, setCurrentId] = useState(id)
+  if (currentId !== id) {
+    setCurrentId(id)
+    setColors([])
+    setActiveColor(null)
+    setActiveImage('')
+    setMagnifier(null)
+    setLightboxOpen(false)
+  }
+
   useEffect(() => {
-    if (!id) return
+    if (!id) return undefined
+    let cancelled = false
     fetchFabricColors(id).then((rows) => {
+      if (cancelled) return
       setColors(rows)
       if (rows.length) {
         setActiveColor(rows[0])
         setActiveImage(rows[0].image)
       }
     })
+    return () => { cancelled = true }
   }, [id])
 
   useEffect(() => {
@@ -102,6 +120,17 @@ export default function FabricDetail() {
   const fabric = fabrics.find((f) => f.id === id)
   const imageUrls = fabric?.images?.length ? fabric.images : (fabric?.image ? [fabric.image] : [])
   const displayedImage = activeImage || imageUrls[0]
+
+  // Combine main images with color variant images for lightbox
+  const allGalleryImages = [
+    ...imageUrls,
+    ...colors.map((c) => c.image).filter((img) => !imageUrls.includes(img))
+  ]
+
+  const openLightbox = (image = displayedImage) => {
+    setLightboxIndex(Math.max(0, allGalleryImages.indexOf(image)))
+    setLightboxOpen(true)
+  }
 
      const handleBack = () => {
     const savedUrl = sessionStorage.getItem('sa-studio-collections-url')
@@ -173,7 +202,8 @@ export default function FabricDetail() {
         {/* Image - Fixed square aspect ratio */}
         <div className="relative bg-cream-light flex items-center justify-center p-6 sm:p-8 lg:p-12">          {displayedImage ? (
             <div
-              className="relative w-full max-w-[550px] aspect-square cursor-default lg:cursor-crosshair"
+              className="relative w-full max-w-[550px] aspect-square cursor-pointer lg:cursor-crosshair"
+              onClick={() => openLightbox()}
               onPointerMove={(event) => {
                 // Magnifier is for mouse/pen only so touch users can still scroll past the image
                 if (event.pointerType === 'touch') return
@@ -227,6 +257,7 @@ export default function FabricDetail() {
                   key={image}
                   type="button"
                   onClick={() => { setActiveImage(image); setMagnifier(null) }}
+                  onDoubleClick={() => openLightbox(image)}
                   aria-label={`Show photo ${index + 1}`}
                   aria-pressed={image === displayedImage}
                   className={`shrink-0 border-2 transition-colors ${image === displayedImage ? 'border-forest' : 'border-white/70 hover:border-white'}`}
@@ -235,6 +266,21 @@ export default function FabricDetail() {
                 </button>
               ))}
             </div>
+          )}
+
+          {/* Full-screen gallery button */}
+          {displayedImage && (
+          <button
+            type="button"
+            onClick={() => openLightbox()}
+            className="absolute top-6 right-6 h-11 w-11 bg-charcoal/70 hover:bg-charcoal text-white transition-colors flex items-center justify-center"
+            aria-label={t('viewGallery')}
+            title={t('viewGallery')}
+          >
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" aria-hidden="true">
+              <path d="M15 3h6v6M9 21H3v-6M21 3l-7 7M3 21l7-7" />
+            </svg>
+          </button>
           )}
           <div className="absolute top-6 left-6 bg-charcoal/70 px-4 py-1.5">
             <span className="text-white text-[10px] tracking-[0.2em] uppercase">
@@ -396,6 +442,17 @@ export default function FabricDetail() {
             ))}
           </div>
         </div>
+      )}
+
+      {/* Lightbox */}
+      {lightboxOpen && (
+        <Lightbox
+          images={allGalleryImages}
+          initialIndex={lightboxIndex}
+          onClose={() => setLightboxOpen(false)}
+          fabricName={fabric.name}
+          fabricCollection={fabric.collection}
+        />
       )}
     </div>
   )
