@@ -1,12 +1,11 @@
-import { useCallback, useEffect, useMemo, useState } from 'react'
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { Link, useSearchParams, useLocation } from 'react-router-dom'
-import { getCategoryList } from '../data/fabrics'
+import { getCategoryList, getWebpSource } from '../data/fabrics'
 import { useSite } from '../context/SiteContext'
 import { getCategoryTranslationKey } from '../lib/i18nHelpers'
 import SEO from '../components/SEO'
 import { useFavorites } from '../hooks/useFavorites'
-import { useCompareFabrics } from '../hooks/useCompareFabrics'
-import CompareFabrics from '../components/CompareFabrics'
+import { useModalBehavior } from '../hooks/useModalBehavior'
 
 const PAGE_SIZE = 12
 
@@ -17,25 +16,29 @@ const normalizeSearchText = (value = '') => String(value)
   .trim()
   .replace(/\s+/g, ' ')
 
-const escapeRegex = (str) => str.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')
+const getSearchFields = (fabric) => [
+  fabric.name,
+  fabric.collection,
+  fabric.reference,
+  fabric.description,
+  ...(fabric.categories || []),
+  ...Object.values(fabric.specs || {}),
+].map(normalizeSearchText).filter(Boolean)
 
-const getSearchFields = (fabric) => {
-  const fields = [
-    fabric.name,
-    fabric.collection,
-    fabric.reference,
-    fabric.description,
-    ...(fabric.categories || []),
-  ]
+const escapeRegex = (value) => value.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')
 
-  // Add specs values
-  if (fabric.specs) {
-    Object.values(fabric.specs).forEach((specValue) => {
-      if (specValue) fields.push(String(specValue))
-    })
-  }
-
-  return fields.map(normalizeSearchText).filter(Boolean)
+// A fabric matches if the whole phrase appears, or if every word of the query
+// starts a word somewhere in its fields (in any order). Unicode-aware, so it
+// works for Arabic as well as Latin text.
+const matchesQuery = (fabric, rawQuery) => {
+  const query = normalizeSearchText(rawQuery)
+  if (!query) return true
+  const fields = getSearchFields(fabric)
+  if (fields.join(' ').includes(query)) return true
+  return query.split(' ').every((token) => {
+    const wordStart = new RegExp(`(?:^|[^\\p{L}\\p{N}])${escapeRegex(token)}`, 'u')
+    return fields.some((field) => wordStart.test(field))
+  })
 }
 
 function HeartIcon({ filled = false }) {
@@ -46,75 +49,160 @@ function HeartIcon({ filled = false }) {
   )
 }
 
-function CompareIcon() {
-  return (
-    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
-      <rect x="3" y="4" width="7" height="16" rx="1" />
-      <rect x="14" y="4" width="7" height="16" rx="1" />
-    </svg>
-  )
-}
-
-function FabricCard({ fabric }) {
+function FabricCard({ fabric, compareIds, onToggleCompare }) {
   const { t } = useSite()
   const { isFavorite, toggleFavorite } = useFavorites()
-  const { addToCompare, removeFromCompare, isInCompare, canAddToCompare } = useCompareFabrics()
   const location = useLocation()
   const detail = fabric.collection || fabric.specs?.Composition || 'SA Studio textile'
 
-  const handleCompareToggle = (event) => {
-    event.preventDefault()
-    if (isInCompare(fabric.id)) {
-      removeFromCompare(fabric.id)
-    } else if (canAddToCompare) {
-      addToCompare(fabric.id)
-    }
-  }
-  const comparing = isInCompare(fabric.id)
-  const compareBlocked = !comparing && !canAddToCompare
-
   return (
-    <Link
-      to={{
-        pathname: `/collections/${fabric.id}`,
-        search: location.search
-      }}
-      className="collections-product-card group"
-    >
-      <div className="collections-product-image">
-        {fabric.image ? (
-          <img src={fabric.image} alt={`${fabric.name} ${fabric.collection || ''} textile`} loading="lazy" decoding="async" />
-        ) : (
-          <div className={`h-full w-full ${fabric.texture || 'tex-forest'}`} />
-        )}
+    <article className="collections-product-card group">
+      <div className={`collections-product-image ${fabric.texture || 'tex-forest'}`}>
+        <Link to={{ pathname: `/collections/${fabric.id}`, search: location.search }} aria-label={`View ${fabric.name}`}>
+          {fabric.image ? (
+            <picture>
+              {getWebpSource(fabric.image) && <source srcSet={getWebpSource(fabric.image)} type="image/webp" />}
+              <img
+                src={fabric.image}
+                alt={`${fabric.name} ${fabric.collection || ''} textile`}
+                loading="lazy"
+                decoding="async"
+              />
+            </picture>
+          ) : (
+            <div className={`h-full w-full ${fabric.texture || 'tex-forest'}`} />
+          )}
+        </Link>
         <span className="collections-product-tag">
           {getCategoryTranslationKey(fabric.categories?.[0]) ? t(getCategoryTranslationKey(fabric.categories[0])) : fabric.categories?.[0] || t('newArrival')}
         </span>
-        <button
-          type="button"
-          className={`collections-favorite-button ${isFavorite(fabric.id) ? 'is-favorite' : ''}`}
-          onClick={(event) => { event.preventDefault(); toggleFavorite(fabric.id) }}
+        <button 
+          type="button" 
+          className={`collections-favorite-button ${isFavorite(fabric.id) ? 'is-favorite' : ''}`} 
+          onClick={() => toggleFavorite(fabric.id)}
           aria-label={isFavorite(fabric.id) ? `Remove ${fabric.name} from favorites` : `Add ${fabric.name} to favorites`}
         >
           <HeartIcon filled={isFavorite(fabric.id)} />
         </button>
         <button
           type="button"
-          className={`collections-compare-button ${comparing ? 'is-comparing' : ''}`}
-          onClick={handleCompareToggle}
-          aria-disabled={compareBlocked || undefined}
-          aria-pressed={comparing}
-          aria-label={comparing ? `${t('removeFromCompare')}: ${fabric.name}` : `${t('addToCompare')}: ${fabric.name}`}
-          title={comparing ? t('removeFromCompare') : compareBlocked ? t('compareFull') : t('addToCompare')}
+          className={`collections-compare-button ${compareIds.includes(fabric.id) ? 'is-selected' : ''}`}
+          onClick={() => onToggleCompare(fabric.id)}
+          aria-pressed={compareIds.includes(fabric.id)}
+          aria-label={`${compareIds.includes(fabric.id) ? t('compareRemoveFrom') : t('compareAdd')}: ${fabric.name}`}
+          title={compareIds.includes(fabric.id) ? t('compareRemoveFrom') : t('compareAdd')}
         >
-          <CompareIcon />
+          {compareIds.includes(fabric.id) ? t('selected') : t('compare')}
         </button>
       </div>
-      <div className="collections-product-copy">
+      <Link to={{ pathname: `/collections/${fabric.id}`, search: location.search }} className="collections-product-copy">
         <h2>{fabric.name}</h2>
         <p>{detail}</p>
-      </div>
-    </Link>
+      </Link>
+    </article>
+  )
+}
+
+function ComparisonDialog({ fabrics, onClose, onRemove }) {
+  const { t } = useSite()
+  const [showDetails, setShowDetails] = useState(false)
+  const closeRef = useRef(null)
+  useModalBehavior(onClose, closeRef)
+
+  // Removing fabrics can drop the selection below two; close instead of showing a near-empty table.
+  const tooFew = fabrics.length < 2
+  useEffect(() => {
+    if (tooFew) onClose()
+  }, [tooFew, onClose])
+  const specKeys = [...new Set(fabrics.flatMap((fabric) => Object.keys(fabric.specs || {})))]
+  const detailRows = [
+    { label: t('compareDescription'), values: fabrics.map((fabric) => fabric.description || '—') },
+    { label: t('compareCollection'), values: fabrics.map((fabric) => fabric.collection || '—') },
+    { label: t('compareColorVariants'), values: fabrics.map((fabric) => fabric.colorCount || (fabric.image ? t('compareGalleryAvailable') : t('compareUnavailable'))) },
+    ...specKeys.map((key) => ({ label: key, values: fabrics.map((fabric) => fabric.specs?.[key] || '—') })),
+  ]
+
+  return (
+    <div className="comparison-backdrop" role="presentation" onMouseDown={(event) => { if (event.target === event.currentTarget) onClose() }}>
+      <section className="comparison-dialog" role="dialog" aria-modal="true" aria-labelledby="comparison-title">
+        <div className="comparison-dialog-header">
+          <div>
+            <p className="eyebrow">{t('compareEyebrow')}</p>
+            <h2 id="comparison-title">{t('compareTitle')}</h2>
+          </div>
+          <div className="comparison-dialog-actions">
+            <button type="button" className="comparison-details-toggle" onClick={() => setShowDetails((current) => !current)} aria-expanded={showDetails}>
+              {showDetails ? t('hideCompareDetails') : t('compareDetails')}
+            </button>
+            <button ref={closeRef} type="button" className="comparison-close" onClick={onClose} aria-label={t('close')}>×</button>
+          </div>
+        </div>
+        <div className="comparison-mobile-products">
+          {fabrics.map((fabric) => (
+            <article className="comparison-mobile-product" key={fabric.id}>
+              <div className={`comparison-mobile-image ${fabric.texture || 'tex-forest'}`}>
+                {fabric.image ? (
+                  <picture>
+                    {getWebpSource(fabric.image) && <source srcSet={getWebpSource(fabric.image)} type="image/webp" />}
+                    <img src={fabric.image} alt={`${t('compareImageAlt')}: ${fabric.name}`} loading="lazy" decoding="async" />
+                  </picture>
+                ) : null}
+              </div>
+              <strong>{fabric.name}</strong>
+              <button type="button" onClick={() => onRemove(fabric.id)}>{t('compareRemove')}</button>
+            </article>
+          ))}
+        </div>
+        {showDetails && (
+          <div className="comparison-mobile-details is-visible">
+            {detailRows.map((row) => (
+              <section className="comparison-mobile-detail-row" key={row.label}>
+                <h3>{row.label}</h3>
+                <div>
+                  {row.values.map((value, index) => <p key={`${row.label}-${fabrics[index].id}`}><strong>{fabrics[index].name}</strong>{value}</p>)}
+                </div>
+              </section>
+            ))}
+            <section className="comparison-mobile-detail-row">
+              <h3>{t('compareQuote')}</h3>
+              <div>
+                {fabrics.map((fabric) => <p key={fabric.id}><strong>{fabric.name}</strong><Link to={`/collections/${fabric.id}`} className="comparison-quote-link">{t('compareViewQuote')}</Link></p>)}
+              </div>
+            </section>
+          </div>
+        )}
+        <div className="comparison-table-wrap">
+          <table className="comparison-table">
+            <thead>
+              <tr>
+                <th scope="col">Detail</th>
+                {fabrics.map((fabric) => (
+                  <th scope="col" key={fabric.id}>
+                    <div className="comparison-product">
+                      {fabric.image ? (
+                        <picture>
+                          {getWebpSource(fabric.image) && <source srcSet={getWebpSource(fabric.image)} type="image/webp" />}
+                          <img src={fabric.image} alt={`${t('compareImageAlt')}: ${fabric.name}`} loading="lazy" decoding="async" />
+                        </picture>
+                      ) : <div className={`comparison-product-placeholder ${fabric.texture || 'tex-forest'}`} />}
+                      <strong>{fabric.name}</strong>
+                      <button type="button" onClick={() => onRemove(fabric.id)}>{t('compareRemove')}</button>
+                    </div>
+                  </th>
+                ))}
+              </tr>
+            </thead>
+            <tbody>
+              <tr><th scope="row">{t('compareDescription')}</th>{fabrics.map((fabric) => <td key={fabric.id}>{fabric.description || '—'}</td>)}</tr>
+              <tr><th scope="row">{t('compareCollection')}</th>{fabrics.map((fabric) => <td key={fabric.id}>{fabric.collection || '—'}</td>)}</tr>
+              <tr><th scope="row">{t('compareColorVariants')}</th>{fabrics.map((fabric) => <td key={fabric.id}>{fabric.colorCount || (fabric.image ? t('compareGalleryAvailable') : t('compareUnavailable'))}</td>)}</tr>
+              {specKeys.map((key) => <tr key={key}><th scope="row">{key}</th>{fabrics.map((fabric) => <td key={fabric.id}>{fabric.specs?.[key] || '—'}</td>)}</tr>)}
+              <tr><th scope="row">{t('compareQuote')}</th>{fabrics.map((fabric) => <td key={fabric.id}><Link to={`/collections/${fabric.id}`} className="comparison-quote-link">{t('compareViewQuote')}</Link></td>)}</tr>
+            </tbody>
+          </table>
+        </div>
+      </section>
+    </div>
   )
 }
 
@@ -122,9 +210,11 @@ export default function Collections() {
   const { t, fabrics, isLoadingFabrics } = useSite()
   const [searchParams, setSearchParams] = useSearchParams()
   const location = useLocation()
-  const [localSearchQuery, setLocalSearchQuery] = useState(searchParams.get('q') || '')
-  const [showCompareModal, setShowCompareModal] = useState(false)
-  const { compareCount } = useCompareFabrics()
+  const [compareIds, setCompareIds] = useState(() => {
+    try { return JSON.parse(localStorage.getItem('sa-studio-compare') || '[]').slice(0, 4) } catch { return [] }
+  })
+  const [showComparison, setShowComparison] = useState(false)
+  const restoredFilters = useRef(false)
 
   const pageParam = parseInt(searchParams.get('page') || '1', 10)
   const page = isNaN(pageParam) || pageParam < 1 ? 1 : pageParam
@@ -134,30 +224,34 @@ export default function Collections() {
     ? searchParams.get('sort')
     : 'featured'
   const searchQuery = searchParams.get('q') || ''
+  const suggestions = useMemo(() => [...new Set(fabrics.flatMap((fabric) => [fabric.name, fabric.collection, ...(fabric.categories || [])].filter(Boolean)))].slice(0, 24), [fabrics])
 
-  // Keep the input in step when the URL's q changes from outside (back/forward, links).
-  const [syncedQuery, setSyncedQuery] = useState(searchQuery)
-  if (syncedQuery !== searchQuery) {
-    setSyncedQuery(searchQuery)
-    if (localSearchQuery.trim() !== searchQuery.trim()) setLocalSearchQuery(searchQuery)
-  }
-
-  // Debounced push of the typed query into the URL. Only fires when the text
-  // actually differs, so landing on ?page=3 (or coming back to it) keeps the page.
   useEffect(() => {
-    const next = localSearchQuery.trim()
-    if (next === searchQuery.trim()) return undefined
-    const timer = setTimeout(() => {
-      setSearchParams((previous) => {
-        const params = new URLSearchParams(previous)
-        if (next) params.set('q', next)
-        else params.delete('q')
-        params.delete('page')
-        return params
-      }, { replace: true })
-    }, 300)
-    return () => clearTimeout(timer)
-  }, [localSearchQuery, searchQuery, setSearchParams])
+    try { localStorage.setItem('sa-studio-compare', JSON.stringify(compareIds)) } catch { /* optional preference */ }
+  }, [compareIds])
+
+  useEffect(() => {
+    if (restoredFilters.current) return
+    restoredFilters.current = true
+    const hasUrlState = ['category', 'q', 'sort', 'page'].some((key) => searchParams.has(key))
+    if (hasUrlState) return
+    try {
+      const saved = JSON.parse(localStorage.getItem('sa-studio-collection-filters') || 'null')
+      if (saved?.category || saved?.q || saved?.sort) {
+        setSearchParams((previous) => {
+          const params = new URLSearchParams(previous)
+          if (saved.category && saved.category !== 'All') params.set('category', saved.category)
+          if (saved.q) params.set('q', saved.q)
+          if (saved.sort && saved.sort !== 'featured') params.set('sort', saved.sort)
+          return params
+        }, { replace: true })
+      }
+    } catch { /* optional preference */ }
+  }, [searchParams, setSearchParams])
+
+  useEffect(() => {
+    try { localStorage.setItem('sa-studio-collection-filters', JSON.stringify({ category: activeCategory, q: searchQuery, sort: sortMode })) } catch { /* optional preference */ }
+  }, [activeCategory, searchQuery, sortMode])
   const updatePage = useCallback((newPage) => {
     setSearchParams((prevParams) => {
       const params = new URLSearchParams(prevParams)
@@ -177,85 +271,20 @@ export default function Collections() {
   const categories = getCategoryList(fabrics)
   const filtered = useMemo(() => (activeCategory === 'All'
     ? fabrics
-    : fabrics.filter((fabric) => fabric.categories?.includes(activeCategory))).filter((fabric) => {
-      if (!searchQuery) return true
-      const query = normalizeSearchText(searchQuery)
-      const fields = getSearchFields(fabric)
-      const searchableText = fields.join(' ')
-
-      // Check for exact phrase match first
-      if (searchableText.includes(query)) return true
-
-      // Check for word boundary matches for each token
-      const tokens = query.split(' ').filter(Boolean)
-      return tokens.every((token) => {
-        // Unicode-aware word start (\b only understands Latin letters, not Arabic).
-        const wordBoundaryRegex = new RegExp(`(?:^|[^\\p{L}\\p{N}])${escapeRegex(token)}`, 'iu')
-        return fields.some((field) => wordBoundaryRegex.test(field))
-      })
-    }), [activeCategory, fabrics, searchQuery])
+    : fabrics.filter((fabric) => fabric.categories?.includes(activeCategory))).filter((fabric) => matchesQuery(fabric, searchQuery)), [activeCategory, fabrics, searchQuery])
 
   const sorted = useMemo(() => [...filtered].sort((a, b) => {
     if (sortMode === 'relevant' && searchQuery) {
       const query = normalizeSearchText(searchQuery)
       const tokens = query.split(' ').filter(Boolean)
       const score = (fabric) => {
-        const name = normalizeSearchText(fabric.name)
-        const collection = normalizeSearchText(fabric.collection || '')
-        const reference = normalizeSearchText(fabric.reference || '')
-        const description = normalizeSearchText(fabric.description || '')
-        const categories = (fabric.categories || []).map(normalizeSearchText)
         const fields = getSearchFields(fabric)
-
+        const name = normalizeSearchText(fabric.name)
         return tokens.reduce((total, token) => {
-          let tokenScore = 0
-
-          // Exact name match - highest weight
-          if (name === token) tokenScore += 100
-          // Name starts with token
-          else if (name.startsWith(token)) tokenScore += 80
-          // Name contains token
-          else if (name.includes(token)) tokenScore += 60
-
-          // Exact collection match
-          if (collection === token) tokenScore += 50
-          // Collection starts with token
-          else if (collection.startsWith(token)) tokenScore += 40
-          // Collection contains token
-          else if (collection.includes(token)) tokenScore += 30
-
-          // Exact reference match
-          if (reference === token) tokenScore += 45
-          // Reference starts with token
-          else if (reference.startsWith(token)) tokenScore += 35
-          // Reference contains token
-          else if (reference.includes(token)) tokenScore += 25
-
-          // Description matches - lower weight
-          if (description.includes(token)) tokenScore += 15
-
-          // Category matches
-          categories.forEach((cat) => {
-            if (cat === token) tokenScore += 20
-            else if (cat.startsWith(token)) tokenScore += 15
-            else if (cat.includes(token)) tokenScore += 10
-          })
-
-          // Specs matches
-          if (fabric.specs) {
-            Object.values(fabric.specs).forEach((specValue) => {
-              const spec = normalizeSearchText(String(specValue))
-              if (spec === token) tokenScore += 18
-              else if (spec.startsWith(token)) tokenScore += 12
-              else if (spec.includes(token)) tokenScore += 8
-            })
-          }
-
-          // Bonus for multiple tokens matching in same field
-          const matchCount = fields.filter((field) => field.includes(token)).length
-          if (matchCount > 1) tokenScore += matchCount * 5
-
-          return total + tokenScore
+          const fieldScore = fields.reduce((fieldTotal, field, index) => (
+            fieldTotal + (field.includes(token) ? Math.max(1, 8 - index) : 0)
+          ), 0)
+          return total + fieldScore + (name === token ? 30 : name.includes(token) ? 12 : 0)
         }, 0)
       }
       return score(b) - score(a)
@@ -267,10 +296,15 @@ export default function Collections() {
 
   const hasFilters = activeCategory !== 'All' || Boolean(searchQuery)
   const setSearchQueryParam = (nextQuery) => {
-    setLocalSearchQuery(nextQuery)
+    setSearchParams((previous) => {
+      const params = new URLSearchParams(previous)
+      if (nextQuery.trim()) params.set('q', nextQuery)
+      else params.delete('q')
+      params.delete('page')
+      return params
+    }, { replace: true })
   }
   const clearFilters = () => {
-    setLocalSearchQuery('')
     setSearchParams((previous) => {
       const params = new URLSearchParams(previous)
       params.delete('category')
@@ -281,8 +315,22 @@ export default function Collections() {
     }, { replace: true })
   }
 
+  const toggleCompare = (id) => {
+    setCompareIds((current) => current.includes(id)
+      ? current.filter((value) => value !== id)
+      : current.length < 4 ? [...current, id] : current)
+  }
+
   const pageCount = Math.max(1, Math.ceil(sorted.length / PAGE_SIZE))
   const paged = sorted.slice((page - 1) * PAGE_SIZE, page * PAGE_SIZE)
+  const compareFabrics = compareIds.map((id) => fabrics.find((fabric) => fabric.id === id)).filter(Boolean)
+  const newArrivals = [...fabrics].sort((a, b) => new Date(b.created_at || 0) - new Date(a.created_at || 0)).slice(0, 4)
+  const recentlyViewed = (() => {
+    try {
+      const ids = JSON.parse(localStorage.getItem('sa-studio-recently-viewed') || '[]')
+      return ids.map((id) => fabrics.find((fabric) => fabric.id === id)).filter(Boolean).slice(0, 4)
+    } catch { return [] }
+  })()
 
   const [jumpValue, setJumpValue] = useState('')
   const goToPage = useCallback((target) => {
@@ -324,7 +372,7 @@ export default function Collections() {
 
   return (
     <div className="collections-page">
-      <SEO title="Collections | SA Studio Luxury Fabrics" description="Explore SA Studio's considered edit of exceptional fabrics, upholstery, wallpaper and materials for interiors with character." image="https://sa-studio.sy/collections-bg.webp" />
+      <SEO title="Collections | SA Studio Luxury Fabrics" description="Explore SA Studio's considered edit of exceptional fabrics, upholstery, wallpaper and materials for interiors with character." image="/collections-bg.jpg" />
       <div className="collections-page-background" aria-hidden="true" />
       <div className="collections-content-card">
         <section className="collections-intro">
@@ -332,94 +380,86 @@ export default function Collections() {
           <h1>{t('theCollections')}</h1>
           <p className="collections-intro-description">{t('collectionIntro')}</p>
           <div className="collections-controls" aria-label={t('collections')}>
-            <select
-              value={activeCategory}
-              onChange={(event) => {
-                setSearchParams((previous) => {
-                  const params = new URLSearchParams(previous)
-                  if (event.target.value === 'All') params.delete('category')
-                  else params.set('category', event.target.value)
-                  params.delete('page')
-                  return params
-                }, { replace: true })
-              }}
-              aria-label={t('collections')}
-            >
-              {categories.map((category) => (
-                <option key={category} value={category}>
-                  {categoryLabel(category)}
-                </option>
-              ))}
-            </select>
-            <div className="collections-search">
+            <label className="collections-control-field">
+              <span>Collection</span>
+              <select
+                value={activeCategory}
+                onChange={(event) => {
+                  setSearchParams((previous) => {
+                    const params = new URLSearchParams(previous)
+                    if (event.target.value === 'All') params.delete('category')
+                    else params.set('category', event.target.value)
+                    params.delete('page')
+                    return params
+                  }, { replace: true })
+                }}
+                aria-label={t('collections')}
+              >
+                {categories.map((category) => (
+                  <option key={category} value={category}>
+                    {categoryLabel(category)}
+                  </option>
+                ))}
+              </select>
+            </label>
+            <label className="collections-search">
+              <span className="sr-only">{t('searchCollections')}</span>
               <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" aria-hidden="true">
                 <circle cx="11" cy="11" r="7" />
                 <path d="m20 20-3.5-3.5" />
               </svg>
               <input
                 type="search"
-                value={localSearchQuery}
+                value={searchQuery}
                 onChange={(event) => setSearchQueryParam(event.target.value)}
                 placeholder={t('searchCollections')}
                 aria-label={t('searchCollections')}
+                list="fabric-search-suggestions"
               />
-              {localSearchQuery && (
+              <datalist id="fabric-search-suggestions">{suggestions.map((suggestion) => <option value={suggestion} key={suggestion} />)}</datalist>
+              {searchQuery && (
                 <button type="button" className="collections-search-clear" onClick={() => setSearchQueryParam('')} aria-label="Clear search">
                   <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" aria-hidden="true" style={{ width: 14, height: 14, margin: 0 }}>
                     <path d="M6 6l12 12M18 6 6 18" />
                   </svg>
                 </button>
               )}
-            </div>
-            <select value={sortMode} onChange={(event) => {
-              setSearchParams((previous) => {
-                const params = new URLSearchParams(previous)
-                if (event.target.value === 'featured') params.delete('sort')
-                else params.set('sort', event.target.value)
-                params.delete('page')
-                return params
-              }, { replace: true })
-            }} aria-label={t('sort')}>
-              <option value="featured">{t('sortFeatured')}</option>
-              <option value="newest">{t('sortNewest')}</option>
-              <option value="oldest">{t('sortOldest')}</option>
-              {searchQuery && <option value="relevant">{t('sortRelevant')}</option>}
-            </select>
+            </label>
+            <label className="collections-control-field">
+              <span>Sort by</span>
+              <select value={sortMode} onChange={(event) => {
+                setSearchParams((previous) => {
+                  const params = new URLSearchParams(previous)
+                  if (event.target.value === 'featured') params.delete('sort')
+                  else params.set('sort', event.target.value)
+                  params.delete('page')
+                  return params
+                }, { replace: true })
+              }} aria-label={t('sort')}>
+                <option value="featured">{t('sortFeatured')}</option>
+                <option value="newest">{t('sortNewest')}</option>
+                <option value="oldest">{t('sortOldest')}</option>
+                {searchQuery && <option value="relevant">{t('sortRelevant')}</option>}
+              </select>
+            </label>
+            <button type="button" className="collections-reset-button" onClick={clearFilters} disabled={!hasFilters}>
+              Reset filters
+            </button>
           </div>
           {!isLoadingFabrics && (
-            <div className="flex items-center justify-between gap-4 flex-wrap">
-              <p className="collections-result-count" role="status">
-                {sorted.length} {sorted.length === 1 ? t('result') : t('results')}
-              </p>
-              <div className="flex items-center gap-3">
-                {compareCount > 0 && (
-                  <button
-                    type="button"
-                    onClick={() => setShowCompareModal(true)}
-                    className="inline-flex items-center gap-2 px-4 py-2 text-[11px] tracking-[0.2em] uppercase text-forest border border-forest hover:bg-forest hover:text-white transition-colors min-h-[44px]"
-                    aria-haspopup="dialog"
-                  >
-                    <span className="inline-flex h-4 w-4"><CompareIcon /></span>
-                    {t('compare')} ({compareCount})
-                  </button>
-                )}
-                {hasFilters && (
-                  <button
-                    type="button"
-                    onClick={clearFilters}
-                    className="inline-flex items-center gap-2 px-4 py-2 text-[11px] tracking-[0.2em] uppercase text-forest border border-forest hover:bg-forest hover:text-white transition-colors min-h-[44px]"
-                  >
-                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                      <path d="M3 12a9 9 0 1 0 9-9 9.75 9.75 0 0 0-6.74 2.74L3 8" />
-                      <path d="M3 3v5h5" />
-                    </svg>
-                    {t('clearFilters')}
-                  </button>
-                )}
-              </div>
+            <div className="collections-results-meta" role="status">
+              <p>{sorted.length} {sorted.length === 1 ? t('result') : t('results')}</p>
+              {hasFilters && <button type="button" onClick={clearFilters}>{t('clearFilters')}</button>}
             </div>
           )}
         </section>
+
+        {newArrivals.length > 0 && page === 1 && !searchQuery && activeCategory === 'All' && (
+          <section className="collections-featured-strip" aria-labelledby="new-arrivals-title">
+            <div className="collections-section-heading"><div><p className="eyebrow">Just in</p><h2 id="new-arrivals-title">New Arrivals</h2></div><span>Fresh references from the studio edit</span></div>
+            <div className="collections-strip-grid">{newArrivals.map((fabric) => <FabricCard key={`new-${fabric.id}`} fabric={fabric} compareIds={compareIds} onToggleCompare={toggleCompare} />)}</div>
+          </section>
+        )}
 
         <section className="collections-products" aria-label="Fabric collections" aria-busy={isLoadingFabrics}>
           {isLoadingFabrics ? (
@@ -433,7 +473,7 @@ export default function Collections() {
               </div>
             ))
           ) : sorted.length > 0 ? (
-            paged.map((fabric) => <FabricCard key={fabric.id} fabric={fabric} />)
+            paged.map((fabric) => <FabricCard key={fabric.id} fabric={fabric} compareIds={compareIds} onToggleCompare={toggleCompare} />)
           ) : (
             <div className="collections-empty">
               <p>{hasFilters ? `${t('noFabricsFound')}.` : t('noCollections')}</p>
@@ -441,6 +481,25 @@ export default function Collections() {
             </div>
           )}
         </section>
+
+        {recentlyViewed.length > 0 && !searchQuery && (
+          <section className="collections-recent-strip" aria-labelledby="recently-viewed-title">
+            <div className="collections-section-heading"><div><p className="eyebrow">Your trail</p><h2 id="recently-viewed-title">Recently Viewed</h2></div></div>
+            <div className="collections-strip-grid">{recentlyViewed.map((fabric) => <FabricCard key={`recent-${fabric.id}`} fabric={fabric} compareIds={compareIds} onToggleCompare={toggleCompare} />)}</div>
+          </section>
+        )}
+
+        {compareFabrics.length > 0 && (
+          <aside className="compare-bar" aria-live="polite">
+            <span>{compareFabrics.length} / 4 {t('compareSelected')}</span>
+            <div className="compare-bar-actions">
+              <button type="button" onClick={() => setCompareIds([])}>{t('compareClear')}</button>
+              <button type="button" className="compare-bar-primary" disabled={compareFabrics.length < 2} onClick={() => setShowComparison(true)}>{t('compareAction')}</button>
+            </div>
+          </aside>
+        )}
+
+        {showComparison && <ComparisonDialog fabrics={compareFabrics} onClose={() => setShowComparison(false)} onRemove={toggleCompare} />}
 
         {pageCount > 1 && (
           <nav className="collections-pagination" aria-label="Collections pages">
@@ -525,11 +584,6 @@ export default function Collections() {
           </Link>
         </section>
       </div>
-
-      {/* Compare Modal */}
-      {showCompareModal && (
-        <CompareFabrics onClose={() => setShowCompareModal(false)} />
-      )}
     </div>
   )
 }

@@ -14,6 +14,10 @@ export default function AdminDashboard() {
   const [deleteConfirm, setDeleteConfirm] = useState(null)
   const [selectedIds, setSelectedIds] = useState([])
   const [toast, setToast] = useState(null)
+  const [featuredOrder, setFeaturedOrder] = useState(() => {
+    try { return JSON.parse(localStorage.getItem('sa-studio-featured-order') || '[]') } catch { return [] }
+  })
+  const [draggedId, setDraggedId] = useState(null)
 
   const loadFabrics = useCallback(async () => {
     setLoading(true)
@@ -124,7 +128,30 @@ export default function AdminDashboard() {
       || (fabric.categories || []).some((c) => c.toLowerCase().includes(searchTerm.toLowerCase())),
   )
   const featuredFabrics = filteredFabrics.filter((fabric) => fabric.featured)
+  const orderedFeaturedFabrics = [...featuredFabrics].sort((a, b) => {
+    const aIndex = featuredOrder.indexOf(a.id)
+    const bIndex = featuredOrder.indexOf(b.id)
+    return (aIndex === -1 ? Number.MAX_SAFE_INTEGER : aIndex) - (bIndex === -1 ? Number.MAX_SAFE_INTEGER : bIndex)
+  })
   const allVisibleSelected = filteredFabrics.length > 0 && filteredFabrics.every((fabric) => selectedIds.includes(fabric.id))
+
+  useEffect(() => {
+    try { localStorage.setItem('sa-studio-featured-order', JSON.stringify(featuredOrder)) } catch { /* optional preference */ }
+  }, [featuredOrder])
+
+  const moveFeatured = (targetId) => {
+    if (!draggedId || draggedId === targetId) return
+    setFeaturedOrder((current) => {
+      const currentOrder = [...orderedFeaturedFabrics.map((fabric) => fabric.id)]
+      const fromIndex = currentOrder.indexOf(draggedId)
+      const toIndex = currentOrder.indexOf(targetId)
+      if (fromIndex < 0 || toIndex < 0) return current
+      currentOrder.splice(fromIndex, 1)
+      currentOrder.splice(toIndex, 0, draggedId)
+      return currentOrder
+    })
+    setDraggedId(null)
+  }
 
   useEffect(() => {
     if (!toast) return undefined
@@ -222,8 +249,8 @@ export default function AdminDashboard() {
                 </div>
               )}
               <div className={view === 'featured' ? 'overflow-x-auto border border-cream-dark' : 'grid gap-4'}>
-              {(view === 'featured' ? featuredFabrics : filteredFabrics).map((fabric, index) => (
-                <div key={fabric.id} className="bg-cream border border-cream-dark p-6 grid grid-cols-1 md:grid-cols-4 gap-6 items-start hover:border-charcoal-light transition-colors">
+              {(view === 'featured' ? orderedFeaturedFabrics : filteredFabrics).map((fabric, index) => (
+                <div key={fabric.id} draggable={view === 'featured'} onDragStart={() => setDraggedId(fabric.id)} onDragOver={(event) => { if (view === 'featured') event.preventDefault() }} onDrop={() => view === 'featured' && moveFeatured(fabric.id)} className="bg-cream border border-cream-dark p-6 grid grid-cols-1 md:grid-cols-4 gap-6 items-start hover:border-charcoal-light transition-colors">
                   {view === 'list' && (
                     <label className="absolute ml-2 mt-2 z-10">
                       <input type="checkbox" checked={selectedIds.includes(fabric.id)} onChange={() => toggleSelected(fabric.id)} aria-label={`${t('selectAll')} ${fabric.name}`} />
@@ -297,7 +324,7 @@ export default function AdminDashboard() {
                     )}
                     {view === 'featured' && (
                       <p className="mt-3 text-xs text-charcoal-light">
-                        {t('rank')}: {index + 1} · {t('homepagePreview')}: <span className="text-forest">{t('visibleOnHomepage')}</span>
+                        {t('rank')}: {index + 1} · Drag to reorder · {t('homepagePreview')}: <span className="text-forest">{t('visibleOnHomepage')}</span>
                       </p>
                     )}
                   </div>

@@ -64,7 +64,7 @@ export default function Contact() {
 
   return (
     <div className="contact-page" style={{ background: 'var(--bg)' }}>
-      <SEO title="Contact SA Studio | Request a Quotation" description="Contact SA Studio in Damascus for luxury fabrics, wallpaper, interior collaborations and tailored quotations." image="https://sa-studio.sy/Contact%20Page%20Pic.webp" />
+      <SEO title="Contact SA Studio | Request a Quotation" description="Contact SA Studio in Damascus for luxury fabrics, wallpaper, interior collaborations and tailored quotations." image="/Contact%20Page%20Pic.jpg" />
       <section className="mx-auto max-w-6xl px-6 py-14 md:px-10 md:py-20 lg:px-16">
         <div className="mx-auto max-w-2xl text-center">
           <p className="eyebrow">{t('getInTouch')}</p>

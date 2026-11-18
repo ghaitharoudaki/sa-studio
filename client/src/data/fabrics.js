@@ -57,6 +57,37 @@ export function validateFabricImage(file) {
   return ''
 }
 
+export function optimizeImageFile(file, { maxDimension = 2400, quality = 0.86 } = {}) {
+  if (!file || typeof document === 'undefined' || !file.type.startsWith('image/')) return Promise.resolve(file)
+
+  return new Promise((resolve) => {
+    const image = new Image()
+    const objectUrl = URL.createObjectURL(file)
+    image.onload = () => {
+      URL.revokeObjectURL(objectUrl)
+      const scale = Math.min(1, maxDimension / Math.max(image.naturalWidth, image.naturalHeight))
+      const canvas = document.createElement('canvas')
+      canvas.width = Math.max(1, Math.round(image.naturalWidth * scale))
+      canvas.height = Math.max(1, Math.round(image.naturalHeight * scale))
+      canvas.getContext('2d')?.drawImage(image, 0, 0, canvas.width, canvas.height)
+      canvas.toBlob((blob) => {
+        resolve(blob ? new File([blob], file.name.replace(/\.[^.]+$/, '.jpg'), { type: 'image/jpeg' }) : file)
+      }, 'image/jpeg', quality)
+    }
+    image.onerror = () => {
+      URL.revokeObjectURL(objectUrl)
+      resolve(file)
+    }
+    image.src = objectUrl
+  })
+}
+
+export const getWebpSource = (url = '') => {
+  if (!url || /^blob:|^data:|\.webp(?:$|\?)/i.test(url)) return ''
+  if (/^https?:\/\//i.test(url)) return ''
+  return url.replace(/\.(jpe?g|png|avif)(\?.*)?$/i, '.webp$2')
+}
+
 const makeId = (value = '') => {
   const slug = value.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '') || 'fabric'
   const suffix = globalThis.crypto?.randomUUID?.() || `${Date.now()}-${Math.random().toString(36).slice(2, 10)}`
