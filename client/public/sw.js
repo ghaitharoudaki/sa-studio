@@ -1,5 +1,12 @@
-const CACHE_NAME = 'sa-studio-v2'
-const APP_SHELL = ['/', '/collections', '/favicon.svg']
+const CACHE_NAME = 'sa-studio-v3'
+const APP_SHELL = ['/', '/favicon.svg']
+
+// Pages are fetched network-first so a new deploy (including security fixes)
+// reaches returning visitors straight away; the cached shell is only an
+// offline fallback. Fingerprinted build assets and static images are safe to
+// serve cache-first. The admin area and cross-origin requests (Supabase API,
+// auth, storage) are never cached.
+const isCacheableAsset = (url) => url.pathname.startsWith('/assets/') || url.pathname.startsWith('/images/')
 
 self.addEventListener('install', (event) => {
   event.waitUntil(caches.open(CACHE_NAME).then((cache) => cache.addAll(APP_SHELL)).then(() => self.skipWaiting()))
@@ -10,14 +17,25 @@ self.addEventListener('activate', (event) => {
 })
 
 self.addEventListener('fetch', (event) => {
-  if (event.request.method !== 'GET') return
+  const { request } = event
+  if (request.method !== 'GET') return
+  const url = new URL(request.url)
+  if (url.origin !== self.location.origin || url.pathname.startsWith('/admin')) return
+
+  if (request.mode === 'navigate') {
+    event.respondWith(fetch(request).catch(() => caches.match('/')))
+    return
+  }
+
+  if (!isCacheableAsset(url)) return
+
   event.respondWith(
-    caches.match(event.request).then((cached) => cached || fetch(event.request).then((response) => {
-      if (response.ok && new URL(event.request.url).origin === self.location.origin) {
+    caches.match(request).then((cached) => cached || fetch(request).then((response) => {
+      if (response.ok) {
         const copy = response.clone()
-        caches.open(CACHE_NAME).then((cache) => cache.put(event.request, copy))
+        caches.open(CACHE_NAME).then((cache) => cache.put(request, copy))
       }
       return response
-    }).catch(() => caches.match('/'))),
+    })),
   )
 })
