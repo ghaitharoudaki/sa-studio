@@ -94,15 +94,20 @@ using (public.is_admin());
 
 create index if not exists fabrics_created_at_idx on public.fabrics (created_at desc);
 
-insert into storage.buckets (id, name, public)
-values ('fabric-images', 'fabric-images', true)
-on conflict (id) do update set public = true;
+insert into storage.buckets (id, name, public, file_size_limit, allowed_mime_types)
+values ('fabric-images', 'fabric-images', true, 10485760, array['image/jpeg', 'image/png', 'image/webp', 'image/avif'])
+on conflict (id) do update set
+  public = true,
+  file_size_limit = excluded.file_size_limit,
+  allowed_mime_types = excluded.allowed_mime_types;
 
+-- Public object URLs work without a SELECT policy; listing the bucket is admin-only.
 drop policy if exists "Fabric images are publicly readable" on storage.objects;
-create policy "Fabric images are publicly readable"
+drop policy if exists "Admins can list fabric images" on storage.objects;
+create policy "Admins can list fabric images"
 on storage.objects for select
-to anon, authenticated
-using (bucket_id = 'fabric-images');
+to authenticated
+using (bucket_id = 'fabric-images' and public.is_admin());
 
 drop policy if exists "Admins can upload fabric images" on storage.objects;
 create policy "Admins can upload fabric images"
