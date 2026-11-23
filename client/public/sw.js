@@ -4,8 +4,8 @@ const APP_SHELL = ['/', '/favicon.svg']
 // Pages are fetched network-first so a new deploy (including security fixes)
 // reaches returning visitors straight away; the cached shell is only an
 // offline fallback. Fingerprinted build assets and static images are safe to
-// serve cache-first. The admin area and cross-origin requests (Supabase API,
-// auth, storage) are never cached.
+// serve cache-first. Pages (including the admin area) are never stored, and
+// cross-origin requests (Supabase API, auth, storage) are left alone.
 const isCacheableAsset = (url) => url.pathname.startsWith('/assets/') || url.pathname.startsWith('/images/')
 
 self.addEventListener('install', (event) => {
@@ -20,7 +20,7 @@ self.addEventListener('fetch', (event) => {
   const { request } = event
   if (request.method !== 'GET') return
   const url = new URL(request.url)
-  if (url.origin !== self.location.origin || url.pathname.startsWith('/admin')) return
+  if (url.origin !== self.location.origin) return
 
   if (request.mode === 'navigate') {
     event.respondWith(fetch(request).catch(() => caches.match('/')))
