@@ -12,8 +12,7 @@ const Favorites = lazy(() => import('./pages/Favorites'))
 const About = lazy(() => import('./pages/About'))
 const Contact = lazy(() => import('./pages/Contact'))
 const Privacy = lazy(() => import('./pages/Privacy'))
-const NotFound = lazy(() => import('./pages/NotFound'))
-const AdminRoute = lazy(() => import('./components/AdminRoute'))
+const HiddenAdminGate = lazy(() => import('./components/HiddenAdminGate'))
 
 export default function App() {
   return (
@@ -37,8 +36,8 @@ export default function App() {
             <Route path="/about"           element={<About />} />
             <Route path="/contact"         element={<Contact />} />
             <Route path="/privacy"         element={<Privacy />} />
-            <Route path="/admin"           element={<AdminRoute />} />
-            <Route path="*"                element={<NotFound />} />
+            {/* Unknown URLs show "not found"; the admin area lives at a secret path checked inside. */}
+            <Route path="*"                element={<HiddenAdminGate />} />
           </Routes>
         </Suspense>
       </main>
